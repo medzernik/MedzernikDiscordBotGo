@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/bwmarrin/discordgo"
@@ -30,11 +31,12 @@ func main() {
 		return
 	}
 
+	// In this example, we only care about receiving message events.
+	dg.Identify.Intents = discordgo.IntentsGuildMessages + discordgo.IntentsGuildEmojis
+
 	// Register the messageCreate func as a callback for MessageCreate events.
 	dg.AddHandler(messageCreate)
-
-	// In this example, we only care about receiving message events.
-	dg.Identify.Intents = discordgo.IntentsGuildMessages
+	dg.AddHandler(reactionAdded)
 
 	// Open a websocket connection to Discord and begin listening.
 	err = dg.Open()
@@ -70,5 +72,13 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// If the message is "pong" reply with "Ping!"
 	if m.Content == "pong" {
 		s.ChannelMessageSend(m.ChannelID, "Ping!")
+	}
+}
+
+func reactionAdded(s *discordgo.Session, mr *discordgo.MessageReactionAdd) {
+	fmt.Println("reactionAdded: Message received, comparing..")
+	if strings.Contains(strings.ToLower(mr.Emoji.Name), "kekw") {
+		s.MessageReactionAdd(mr.ChannelID, mr.MessageID, mr.Emoji.APIName())
+		fmt.Println("Trying to react")
 	}
 }
