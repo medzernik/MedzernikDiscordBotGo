@@ -9,6 +9,8 @@ import (
 func RegisterPlugin(s *discordgo.Session) {
 	s.AddHandler(messageCreated)
 	s.AddHandler(reactionAdded)
+	s.AddHandler(ready)
+
 }
 
 // This function will be called (due to AddHandler above) every time a new
@@ -35,4 +37,11 @@ func reactionAdded(s *discordgo.Session, mr *discordgo.MessageReactionAdd) {
 	if strings.Contains(strings.ToLower(mr.Emoji.Name), "kekw") {
 		s.MessageReactionAdd(mr.ChannelID, mr.MessageID, mr.Emoji.APIName())
 	}
+}
+
+// This function will be called (due to AddHandler above) when the bot receives
+// the "ready" event from Discord.
+func ready(s *discordgo.Session, event *discordgo.Ready) {
+	// Set the status.
+	s.UpdateGameStatus(5, "test")
 }
