@@ -3,7 +3,6 @@ package responder
 import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
-	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -46,15 +45,16 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 		//rayman_time_string := strconv.FormatFloat(rayman_time, 'f', 5, 64)
 		rayman_time_days_string := rayman_time.Hours() / 24
 		fmt.Println(rayman_time_days_string)
+		rayman_time_days_string_pure := strconv.FormatFloat(rayman_time_days_string, 'f', 0, 64)
 
 		rayman_time_string := rayman_time.String()
 		rayman_time_string = strings.ReplaceAll(rayman_time_string, "h", " Hodín\n ")
 		rayman_time_string = strings.ReplaceAll(rayman_time_string, "m", " Minút\n ")
-		rayman_time_string = strings.ReplaceAll(rayman_time_string, "s", " Sekúnd\n ")
+		rayman_time_string = strings.ReplaceAll(rayman_time_string, "s", " Sekúnd ")
 
 		fmt.Println("log -rayman: ", rayman_time_string)
 
-		s.ChannelMessageSend(m.ChannelID, "Rayman je tu s nami už:\n "+strconv.FormatFloat(math.Round(rayman_time_days_string), 'f', 0, 64)+" Dní\n "+rayman_time_string+" <:peepoLove:687313976043765810>")
+		s.ChannelMessageSend(m.ChannelID, "Rayman je tu s nami už:\n "+rayman_time_days_string_pure+" Dní\n "+rayman_time_string+"<:peepoLove:687313976043765810>")
 
 	}
 }
