@@ -2,17 +2,18 @@ package responder
 
 import (
 	"fmt"
-	"github.com/bwmarrin/discordgo"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/bwmarrin/discordgo"
+	"github.com/medzernik/SlovakiaDiscordBotGo/command"
 )
 
 func RegisterPlugin(s *discordgo.Session) {
 	s.AddHandler(messageCreated)
 	s.AddHandler(reactionAdded)
 	s.AddHandler(ready)
-	s.AddHandler(SnowflakeTimestamp)
 
 }
 
@@ -30,19 +31,47 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
+
+	cmd, err := command.ParseCommand(m.Content)
+
+	if err != nil {
+		println(err.Error())
+		return
+	}
+
 	// If the message is "ping" reply with "Pong!"
-	if m.Content == "Zasielkovna" {
+	if command.IsCommand(&cmd, "Zasielkovna") {
+		err := command.VerifyArguments(&cmd, 0)
+		if err != nil {
+			println(err.Error())
+			return
+		}
 		s.ChannelMessageSend(m.ChannelID, "OVER 200% <a:medzernikShake:814055147583438848>")
 	}
 
 	// If the message is "pong" reply with "Ping!"
-	if m.Content == "pong" {
+	if command.IsCommand(&cmd, "pong") {
+		err := command.VerifyArguments(&cmd, 0)
+		if err != nil {
+			println(err.Error())
+			return
+		}
 		s.ChannelMessageSend(m.ChannelID, "Ping!")
 	}
 
 	//a personal reward for our founder of the server that tracks his time on the guild
 	//TODO: implement a user-inspecific argument way of checking a specific users' time on the guild
-	if m.Content == "-rayman" {
+	if command.IsCommand(&cmd, "age") {
+		err := command.VerifyArguments(&cmd, 1)
+		if err != nil {
+			println(err.Error())
+			return
+		}
+
+		if cmd.Arguments[0] != "rayman" {
+			return
+		}
+
 		rayman_time_raw, _ := SnowflakeTimestamp("242318670079066112")
 
 		rayman_time := time.Now().Sub(rayman_time_raw)
@@ -67,7 +96,13 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	//TODO: check if the users can be >1000
 	//TODO: implement a raid protection checker that checks every 1 hour for accounts <2 hours of age and if finds more than 5 -> alert the admins
 	//TODO: change the output message to be a single message in a single output to protect from spam. Change the information.
-	if m.Content == "-check users" {
+	if command.IsCommand(&cmd, "check-users") {
+		err := command.VerifyArguments(&cmd, 0)
+		if err != nil {
+			println(err.Error())
+			return
+		}
+
 		members, _ := s.GuildMembers("513274646406365184", "0", 1000)
 
 		//iterate over the members array. Maximum limit is 1000.
