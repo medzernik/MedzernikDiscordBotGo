@@ -16,6 +16,11 @@ func RegisterPlugin(s *discordgo.Session) {
 
 }
 
+//This is the main logic and command file for now
+//TODO: implement a config system
+//TODO: implement a command parser
+//TODO: implement a system of an internal user database
+
 // This function will be called (due to AddHandler above) every time a new
 // message is created on any channel that the authenticated bot has access to.
 func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -35,6 +40,8 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 		s.ChannelMessageSend(m.ChannelID, "Ping!")
 	}
 
+	//a personal reward for our founder of the server that tracks his time on the guild
+	//TODO: implement a user-inspecific argument way of checking a specific users' time on the guild
 	if m.Content == "-rayman" {
 		rayman_time_raw, _ := SnowflakeTimestamp("242318670079066112")
 
@@ -56,14 +63,18 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		s.ChannelMessageSend(m.ChannelID, "Rayman je tu s nami už:\n "+rayman_time_days_string_pure+" (celkovo dní), rozpis:\n----------\n "+rayman_time_string+"<:peepoLove:687313976043765810>")
 	}
-
+	//right now this command checks for any 1000 users on the guild that have a join time less than 24hours, then prints the names one by one.
+	//TODO: check if the users can be >1000
+	//TODO: implement a raid protection checker that checks every 1 hour for accounts <2 hours of age and if finds more than 5 -> alert the admins
+	//TODO: change the output message to be a single message in a single output to protect from spam. Change the information.
 	if m.Content == "-check users" {
 		members, _ := s.GuildMembers("513274646406365184", "0", 1000)
 
+		//iterate over the members array. Maximum limit is 1000.
 		for itera, _ := range members {
 			user_time_join, _ := members[itera].JoinedAt.Parse()
-
 			timevar := user_time_join.Sub(time.Now()).Hours()
+
 			fmt.Println(timevar)
 
 			if timevar > -24 {
@@ -76,7 +87,7 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 			//println(usertime)
 		}
-
+		//print out the amount of members (max is currently 1000)
 		fmt.Println(len(members))
 
 		//s.ChannelMessageSend(m.ChannelID, user_warn)
@@ -84,8 +95,14 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 }
+
+//this function adds a +1 to a specific emoji reaction to an already added one by a user
+//TODO: make it a bit more modular and expand the amount of reactions. Ideally a variable level system
 func reactionAdded(s *discordgo.Session, mr *discordgo.MessageReactionAdd) {
 	if strings.Contains(strings.ToLower(mr.Emoji.Name), "kekw") {
+		s.MessageReactionAdd(mr.ChannelID, mr.MessageID, mr.Emoji.APIName())
+	}
+	if strings.Contains(strings.ToLower(mr.Emoji.Name), "okayChamp") {
 		s.MessageReactionAdd(mr.ChannelID, mr.MessageID, mr.Emoji.APIName())
 	}
 
