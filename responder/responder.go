@@ -35,7 +35,7 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	cmd, err := command.ParseCommand(m.Content)
 
 	if err != nil {
-		println(err)
+		println(err.Error())
 		return
 	}
 
@@ -53,7 +53,7 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if command.IsCommand(&cmd, "pong") {
 		err := command.VerifyArguments(&cmd, 0)
 		if err != nil {
-			println(err)
+			println(err.Error())
 			return
 		}
 		s.ChannelMessageSend(m.ChannelID, "Ping!")
