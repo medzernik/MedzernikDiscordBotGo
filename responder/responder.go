@@ -54,9 +54,35 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		fmt.Println("log -rayman: ", rayman_time_string)
 
-		s.ChannelMessageSend(m.ChannelID, "Rayman je tu s nami už:\n "+rayman_time_days_string_pure+" Dní\n "+rayman_time_string+"<:peepoLove:687313976043765810>")
+		s.ChannelMessageSend(m.ChannelID, "Rayman je tu s nami už:\n "+rayman_time_days_string_pure+" (celkovo dní), rozpis:\n----------\n "+rayman_time_string+"<:peepoLove:687313976043765810>")
+	}
+
+	if m.Content == "-check users" {
+		members, _ := s.GuildMembers("513274646406365184", "0", 1000)
+
+		for itera, _ := range members {
+			user_time_join, _ := members[itera].JoinedAt.Parse()
+
+			timevar := user_time_join.Sub(time.Now()).Hours()
+			fmt.Println(timevar)
+
+			if timevar > -24 {
+				println("THIS USER IS TOO YOUNG")
+
+				s.ChannelMessageSend(m.ChannelID, "This user is too young (less than 24h join age): "+members[itera].User.Username)
+			}
+
+			//fmt.Printf("difference = %v\n", difference)
+
+			//println(usertime)
+		}
+
+		fmt.Println(len(members))
+
+		//s.ChannelMessageSend(m.ChannelID, user_warn)
 
 	}
+
 }
 func reactionAdded(s *discordgo.Session, mr *discordgo.MessageReactionAdd) {
 	if strings.Contains(strings.ToLower(mr.Emoji.Name), "kekw") {
@@ -70,6 +96,7 @@ func reactionAdded(s *discordgo.Session, mr *discordgo.MessageReactionAdd) {
 func ready(s *discordgo.Session, event *discordgo.Ready) {
 	// Set the status.
 	s.UpdateGameStatus(0, "Welcome to Slovakia")
+
 }
 
 func SnowflakeTimestamp(ID string) (t time.Time, err error) {
