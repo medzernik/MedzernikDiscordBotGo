@@ -117,16 +117,9 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 				s.ChannelMessageSend(m.ChannelID, "This user is too young (less than 24h join age): "+members[itera].User.Username)
 			}
-
-			//fmt.Printf("difference = %v\n", difference)
-
-			//println(usertime)
 		}
 		//print out the amount of members (max is currently 1000)
 		fmt.Println(len(members))
-
-		//s.ChannelMessageSend(m.ChannelID, user_warn)
-
 	}
 
 }
@@ -135,6 +128,7 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 //TODO: make it a bit more modular and expand the amount of reactions. Ideally a variable level system
 func reactionAdded(s *discordgo.Session, mr *discordgo.MessageReactionAdd) {
 	if strings.Contains(strings.ToLower(mr.Emoji.Name), "kekw") {
+
 		s.MessageReactionAdd(mr.ChannelID, mr.MessageID, mr.Emoji.APIName())
 	}
 	if strings.Contains(strings.ToLower(mr.Emoji.Name), "okayChamp") {

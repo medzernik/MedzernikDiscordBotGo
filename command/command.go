@@ -11,8 +11,10 @@ type Command struct {
 	Arguments []string
 }
 
+var prefix = "."
+
 func ParseCommand(s string) (Command, error) {
-	if !strings.HasPrefix(s, "--") && len(s) < 3 {
+	if !strings.HasPrefix(s, prefix) && len(s) < len(prefix)+1 {
 		return Command{}, errors.New("parseCommand: Not a command")
 	}
 
@@ -22,7 +24,7 @@ func ParseCommand(s string) (Command, error) {
 
 	fields := strings.Fields(s)
 
-	cmd := Command{fields[0][2:], fields[1:]}
+	cmd := Command{fields[0][len(prefix):], fields[1:]}
 
 	return cmd, nil
 }
