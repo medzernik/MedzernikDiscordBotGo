@@ -12,7 +12,7 @@ import (
 
 func RegisterPlugin(s *discordgo.Session) {
 	s.AddHandler(messageCreated)
-	s.AddHandler(reactionAdded)
+	//s.AddHandler(reactionAdded)
 	s.AddHandler(ready)
 
 }
@@ -68,30 +68,39 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 			return
 		}
 
-		if cmd.Arguments[0] != "rayman" {
+		user_id := cmd.Arguments[0]
+		fmt.Println(user_id)
+
+		user_time_raw, err := SnowflakeTimestamp(user_id)
+		if err != nil {
+			s.ChannelMessageSend(m.ChannelID, "Zlé ID slováka")
+
 			return
 		}
 
-		rayman_time_raw, _ := SnowflakeTimestamp("242318670079066112")
+		if user_id < "0" {
+			return
+		}
 
-		rayman_time := time.Now().Sub(rayman_time_raw)
-		rayman_time_days := rayman_time.Hours() / 24
-		rayman_time_days = rayman_time_days / 24
+		user_time := time.Now().Sub(user_time_raw)
+		user_time_days := user_time.Hours() / 24
+		user_time_days = user_time_days / 24
 
-		//rayman_time_string := strconv.FormatFloat(rayman_time, 'f', 5, 64)
-		rayman_time_days_string := rayman_time.Hours() / 24
-		fmt.Println(rayman_time_days_string)
-		rayman_time_days_string_pure := strconv.FormatFloat(rayman_time_days_string, 'f', 0, 64)
+		user_time_days_string := user_time.Hours() / 24
+		fmt.Println(user_time_days_string)
+		user_time_days_string_pure := strconv.FormatFloat(user_time_days_string, 'f', 0, 64)
 
-		rayman_time_string := rayman_time.String()
-		rayman_time_string = strings.ReplaceAll(rayman_time_string, "h", " Hodín\n ")
-		rayman_time_string = strings.ReplaceAll(rayman_time_string, "m", " Minút\n ")
-		rayman_time_string = strings.ReplaceAll(rayman_time_string, "s", " Sekúnd ")
+		user_time_string := user_time.String()
+		user_time_string = strings.ReplaceAll(user_time_string, "h", " Hodín\n ")
+		user_time_string = strings.ReplaceAll(user_time_string, "m", " Minút\n ")
+		user_time_string = strings.ReplaceAll(user_time_string, "s", " Sekúnd ")
 
-		fmt.Println("log -rayman: ", rayman_time_string)
+		fmt.Println("log -rayman: ", user_time_string)
 
-		s.ChannelMessageSend(m.ChannelID, "Rayman je tu s nami už:\n "+rayman_time_days_string_pure+" (celkovo dní), rozpis:\n----------\n "+rayman_time_string+"<:peepoLove:687313976043765810>")
+		s.ChannelMessageSend(m.ChannelID, user_id+" je tu s nami už:\n "+user_time_days_string_pure+" (celkovo dní), rozpis:\n----------\n "+user_time_string+"<:peepoLove:687313976043765810>")
+
 	}
+
 	//right now this command checks for any 1000 users on the guild that have a join time less than 24hours, then prints the names one by one.
 	//TODO: check if the users can be >1000
 	//TODO: implement a raid protection checker that checks every 1 hour for accounts <2 hours of age and if finds more than 5 -> alert the admins
@@ -124,6 +133,7 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 }
 
+/*
 //this function adds a +1 to a specific emoji reaction to an already added one by a user
 //TODO: make it a bit more modular and expand the amount of reactions. Ideally a variable level system
 func reactionAdded(s *discordgo.Session, mr *discordgo.MessageReactionAdd) {
@@ -136,7 +146,7 @@ func reactionAdded(s *discordgo.Session, mr *discordgo.MessageReactionAdd) {
 	}
 
 }
-
+*/
 // This function will be called (due to AddHandler above) when the bot receives
 // the "ready" event from Discord.
 func ready(s *discordgo.Session, event *discordgo.Ready) {
