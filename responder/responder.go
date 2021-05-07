@@ -19,7 +19,7 @@ func RegisterPlugin(s *discordgo.Session) {
 
 //This is the main logic and command file for now
 //TODO: implement a config system
-//TODO: implement a command parser
+//TODO: implement a command parser ..DONE
 //TODO: implement a system of an internal user database
 
 // This function will be called (due to AddHandler above) every time a new
@@ -68,6 +68,18 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 
 		user_id := cmd.Arguments[0]
+		//Every time a command is run, get a list of all users. This serves the purpose to then print the name of the corresponding user.
+		//TODO: Make this list a (ideally cached) variable that at least is shared and not run every time a command is run.
+		members, _ := s.GuildMembers("513274646406365184", "0", 1000)
+		var user_name string
+
+		for itera, _ := range members {
+			if members[itera].User.ID == user_id {
+				user_name = members[itera].User.Username
+				fmt.Println(user_name)
+			}
+		}
+
 		fmt.Println(user_id)
 
 		user_time_raw, err := SnowflakeTimestamp(user_id)
@@ -96,7 +108,7 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		fmt.Println("log -rayman: ", user_time_string)
 
-		s.ChannelMessageSend(m.ChannelID, user_id+" je tu s nami už:\n "+user_time_days_string_pure+" (celkovo dní), rozpis:\n----------\n "+user_time_string+"<:peepoLove:687313976043765810>")
+		s.ChannelMessageSend(m.ChannelID, "**"+user_name+"**"+" je tu s nami už:\n "+user_time_days_string_pure+" (celkovo dní), rozpis:\n----------\n "+user_time_string+"<:peepoLove:687313976043765810>")
 
 	}
 
@@ -110,8 +122,10 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 			s.ChannelMessageSend(m.ChannelID, err.Error())
 			return
 		}
-
+		//variable definitons
 		members, _ := s.GuildMembers("513274646406365184", "0", 1000)
+		var temp_msg string
+		time_to_check_users := (24.0 * -1.0)
 
 		//iterate over the members array. Maximum limit is 1000.
 		for itera, _ := range members {
@@ -120,14 +134,15 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 			fmt.Println(timevar)
 
-			if timevar > -24 {
+			if timevar > time_to_check_users {
 				println("THIS USER IS TOO YOUNG")
 
-				s.ChannelMessageSend(m.ChannelID, "This user is too young (less than 24h join age): "+members[itera].User.Username)
+				temp_msg += "This user is too young (less than 24h join age): " + members[itera].User.Username + "\n"
 			}
 		}
 		//print out the amount of members (max is currently 1000)
 		fmt.Println(len(members))
+		s.ChannelMessageSend(m.ChannelID, temp_msg)
 	}
 
 }
