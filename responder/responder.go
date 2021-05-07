@@ -59,7 +59,7 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 		s.ChannelMessageSend(m.ChannelID, "Ping!")
 	}
 
-	//a personal reward for our founder of the server that tracks his time on the guild
+	//a personal reward for our founder of the server that tracks his time on the guilds
 	if command.IsCommand(&cmd, "age") {
 		err := command.VerifyArguments(&cmd, command.RegexArg{`^<@!(\d+)>$`, 1})
 		if err != nil {
