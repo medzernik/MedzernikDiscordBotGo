@@ -41,9 +41,9 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	// If the message is "ping" reply with "Pong!"
 	if command.IsCommand(&cmd, "Zasielkovna") {
-		err := command.VerifyArguments(&cmd, 0)
+		err := command.VerifyArguments(&cmd)
 		if err != nil {
-			println(err.Error())
+			s.ChannelMessageSend(m.ChannelID, err.Error())
 			return
 		}
 		s.ChannelMessageSend(m.ChannelID, "OVER 200% <a:medzernikShake:814055147583438848>")
@@ -51,20 +51,19 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	// If the message is "pong" reply with "Ping!"
 	if command.IsCommand(&cmd, "pong") {
-		err := command.VerifyArguments(&cmd, 0)
+		err := command.VerifyArguments(&cmd)
 		if err != nil {
-			println(err.Error())
+			s.ChannelMessageSend(m.ChannelID, err.Error())
 			return
 		}
 		s.ChannelMessageSend(m.ChannelID, "Ping!")
 	}
 
 	//a personal reward for our founder of the server that tracks his time on the guild
-	//TODO: implement a user-inspecific argument way of checking a specific users' time on the guild
 	if command.IsCommand(&cmd, "age") {
-		err := command.VerifyArguments(&cmd, 1)
+		err := command.VerifyArguments(&cmd, command.RegexArg{`^<@!(\d+)>$`, 1})
 		if err != nil {
-			println(err.Error())
+			s.ChannelMessageSend(m.ChannelID, err.Error())
 			return
 		}
 
@@ -106,9 +105,9 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	//TODO: implement a raid protection checker that checks every 1 hour for accounts <2 hours of age and if finds more than 5 -> alert the admins
 	//TODO: change the output message to be a single message in a single output to protect from spam. Change the information.
 	if command.IsCommand(&cmd, "check-users") {
-		err := command.VerifyArguments(&cmd, 0)
+		err := command.VerifyArguments(&cmd)
 		if err != nil {
-			println(err.Error())
+			s.ChannelMessageSend(m.ChannelID, err.Error())
 			return
 		}
 
