@@ -179,3 +179,13 @@ func SnowflakeTimestamp(ID string) (t time.Time, err error) {
 	fmt.Println(t)
 	return
 }
+
+func GetMemberListFromGuild(s *discordgo.Session, m *discordgo.MessageCreate, guildID string) []string {
+	members_list, err := s.GuildMembers("513274646406365184", "0", 1000)
+	if err != nil {
+		s.ChannelMessageSend(m.ChannelID, "Error getting the memberlist: "+guildID)
+	}
+
+	return members_list
+
+}
