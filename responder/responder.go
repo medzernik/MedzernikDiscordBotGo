@@ -16,17 +16,19 @@ func RegisterPlugin(s *discordgo.Session) {
 	s.AddHandler(ready)
 
 }
+//SETTINGS
+//guildID. Change this to represent your server.
+var guildidnumber = "513274646406365184"
+
 
 //This is the main logic and command file for now
-//TODO: implement a config system
-//TODO: implement a command parser ..DONE
 //TODO: implement a system of an internal user database
 
 // This function will be called (due to AddHandler above) every time a new
 // message is created on any channel that the authenticated bot has access to.
 func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 
-	// Ignore all messages created by the bot itself
+	// Ignore all messages created by the bot itsel
 	// This isn't required in this specific example but it's a good practice.
 	if m.Author.ID == s.State.User.ID {
 		return
@@ -47,16 +49,7 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 			return
 		}
 		s.ChannelMessageSend(m.ChannelID, "OVER 200% <a:medzernikShake:814055147583438848>")
-	}
 
-	// If the message is "pong" reply with "Ping!"
-	if command.IsCommand(&cmd, "pong") {
-		err := command.VerifyArguments(&cmd)
-		if err != nil {
-			s.ChannelMessageSend(m.ChannelID, err.Error())
-			return
-		}
-		s.ChannelMessageSend(m.ChannelID, "Ping!")
 	}
 
 	//a personal reward for our founder of the server that tracks his time on the guilds
@@ -67,55 +60,57 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 			return
 		}
 
-		user_id := cmd.Arguments[0]
+		userId := cmd.Arguments[0]
 		//Every time a command is run, get a list of all users. This serves the purpose to then print the name of the corresponding user.
 		//TODO: Make this list a (ideally cached) variable that at least is shared and not run every time a command is run.
-		members, _ := s.GuildMembers("513274646406365184", "0", 1000)
-		var user_name string
+		membersCached := GetMemberListFromGuild(s, guildidnumber)
 
-		for itera, _ := range members {
-			if members[itera].User.ID == user_id {
-				user_name = members[itera].User.Username
-				fmt.Println(user_name)
+		var userName string
+
+		for itera := range membersCached {
+			if membersCached[itera].User.ID == userId {
+				userName = membersCached[itera].User.Username
+				fmt.Println(userName)
 			}
 		}
 
-		fmt.Println(user_id)
+		fmt.Println(userId)
 
-		user_time_raw, err := SnowflakeTimestamp(user_id)
+		userTimeRaw, err := SnowflakeTimestamp(userId)
 		if err != nil {
 			s.ChannelMessageSend(m.ChannelID, "Zlé ID slováka")
 
 			return
 		}
 
-		if user_id < "0" {
+		if userId < "0" {
 			return
 		}
 
-		user_time := time.Now().Sub(user_time_raw)
-		user_time_days := user_time.Hours() / 24
-		user_time_days = user_time_days / 24
+		userTime := time.Now().Sub(userTimeRaw)
+		userTimeDays := userTime.Hours() / 24
+		userTimeDays = userTimeDays / 24
 
-		user_time_days_string := user_time.Hours() / 24
-		fmt.Println(user_time_days_string)
-		user_time_days_string_pure := strconv.FormatFloat(user_time_days_string, 'f', 0, 64)
+		userTimeDaysString := userTime.Hours() / 24
+		fmt.Println(userTimeDaysString)
+		userTimeDaysStringPure := strconv.FormatFloat(userTimeDaysString, 'f', 0, 64)
 
-		user_time_string := user_time.String()
-		user_time_string = strings.ReplaceAll(user_time_string, "h", " Hodín\n ")
-		user_time_string = strings.ReplaceAll(user_time_string, "m", " Minút\n ")
-		user_time_string = strings.ReplaceAll(user_time_string, "s", " Sekúnd ")
+		userTimeString := userTime.String()
+		userTimeString = strings.ReplaceAll(userTimeString, "h", " Hodín\n ")
+		userTimeString = strings.ReplaceAll(userTimeString, "m", " Minút\n ")
+		userTimeString = strings.ReplaceAll(userTimeString, "s", " Sekúnd ")
 
-		fmt.Println("log -rayman: ", user_time_string)
+		fmt.Println("log -rayman: ", userTimeString)
 
-		s.ChannelMessageSend(m.ChannelID, "**"+user_name+"**"+" je tu s nami už:\n "+user_time_days_string_pure+" (celkovo dní), rozpis:\n----------\n "+user_time_string+"<:peepoLove:687313976043765810>")
+		s.ChannelMessageSend(m.ChannelID, "**"+userName+"**"+" je tu s nami už:\n "+userTimeDaysStringPure+" (celkovo dní), rozpis:\n----------\n "+userTimeString+"<:peepoLove:687313976043765810>")
 
 	}
+
 
 	//right now this command checks for any 1000 users on the guild that have a join time less than 24hours, then prints the names one by one.
 	//TODO: check if the users can be >1000
 	//TODO: implement a raid protection checker that checks every 1 hour for accounts <2 hours of age and if finds more than 5 -> alert the admins
-	//TODO: change the output message to be a single message in a single output to protect from spam. Change the information.
+	//TODO [DONE]: change the output message to be a single message in a single output to protect from spam. Change the information.
 	if command.IsCommand(&cmd, "check-users") {
 		err := command.VerifyArguments(&cmd)
 		if err != nil {
@@ -123,35 +118,36 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 			return
 		}
 		//variable definitons
-		members, _ := s.GuildMembers("513274646406365184", "0", 1000)
-		var temp_msg string
-		time_to_check_users := (24.0 * -1.0)
+		//members_cached, _ := s.GuildMembers("513274646406365184", "0", 1000)
+		membersCached := GetMemberListFromGuild(s, guildidnumber)
+		var tempMsg string
+		timeToCheckUsers := 24.0 * -1.0
 
-		//iterate over the members array. Maximum limit is 1000.
-		for itera, _ := range members {
-			user_time_join, _ := members[itera].JoinedAt.Parse()
-			timevar := user_time_join.Sub(time.Now()).Hours()
+		//iterate over the members_cached array. Maximum limit is 1000.
+		for itera := range membersCached {
+			userTimeJoin, _ := membersCached[itera].JoinedAt.Parse()
+			timevar := userTimeJoin.Sub(time.Now()).Hours()
 
 			fmt.Println(timevar)
 
-			if timevar > time_to_check_users {
+			if timevar > timeToCheckUsers {
 				println("THIS USER IS TOO YOUNG")
 
-				temp_msg += "This user is too young (less than 24h join age): " + members[itera].User.Username + "\n"
+				tempMsg += "This user is too young (less than 24h join age): " + membersCached[itera].User.Username + "\n"
 			}
 		}
-		//print out the amount of members (max is currently 1000)
-		fmt.Println(len(members))
-		s.ChannelMessageSend(m.ChannelID, temp_msg)
+		//print out the amount of members_cached (max is currently 1000)
+		fmt.Println(len(membersCached))
+		s.ChannelMessageSend(m.ChannelID, tempMsg)
 	}
 
 }
 
 /*
-//this function adds a +1 to a specific emoji reaction to an already added one by a user
+//this function adds a +1 to a specific emoji reaction to an already added one by a use
 //TODO: make it a bit more modular and expand the amount of reactions. Ideally a variable level system
 func reactionAdded(s *discordgo.Session, mr *discordgo.MessageReactionAdd) {
-	if strings.Contains(strings.ToLower(mr.Emoji.Name), "kekw") {
+	if strings.ToUpper(mess) == , "kekw") {
 
 		s.MessageReactionAdd(mr.ChannelID, mr.MessageID, mr.Emoji.APIName())
 	}
@@ -161,11 +157,14 @@ func reactionAdded(s *discordgo.Session, mr *discordgo.MessageReactionAdd) {
 
 }
 */
+
+
+
 // This function will be called (due to AddHandler above) when the bot receives
 // the "ready" event from Discord.
 func ready(s *discordgo.Session, event *discordgo.Ready) {
 	// Set the status.
-	s.UpdateGameStatus(0, "Welcome to Slovakia")
+	s.UpdateGameStatus(0, "Gde mozog")
 
 }
 
@@ -180,12 +179,12 @@ func SnowflakeTimestamp(ID string) (t time.Time, err error) {
 	return
 }
 
-func GetMemberListFromGuild(s *discordgo.Session, m *discordgo.MessageCreate, guildID string) []string {
-	members_list, err := s.GuildMembers("513274646406365184", "0", 1000)
+func GetMemberListFromGuild(s *discordgo.Session, guildID string) []*discordgo.Member {
+	membersList, err := s.GuildMembers(guildID, "0", 1000)
 	if err != nil {
-		s.ChannelMessageSend(m.ChannelID, "Error getting the memberlist: "+guildID)
+		fmt.Println("Error getting the memberlist (probably invalid guildID): " + guildID)
 	}
 
-	return members_list
+	return membersList
 
 }
