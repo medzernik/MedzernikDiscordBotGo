@@ -18,12 +18,12 @@ func RegisterPlugin(s *discordgo.Session) {
 }
 
 //SETTINGS
-//guildID. Change this to represent your server.
+//guildID. Change this to represent your server. ID of channel and server, String data type
 var guildidnumber = "513274646406365184"
 var adminchannel = "837987736416813076"
 
 //This is the main logic and command file for now
-//TODO: implement a system of an internal user database
+//TODO: implement a system of an internal user database (redis?)
 
 // This function will be called (due to AddHandler above) every time a new
 // message is created on any channel that the authenticated bot has access to.
@@ -63,7 +63,7 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		userId := cmd.Arguments[0]
 		//Every time a command is run, get a list of all users. This serves the purpose to then print the name of the corresponding user.
-		//TODO: Make this list a (ideally cached) variable that at least is shared and not run every time a command is run.
+		//TODO: cache it in redis
 		membersCached := GetMemberListFromGuild(s, guildidnumber)
 
 		var userName string
@@ -109,8 +109,6 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	//right now this command checks for any 1000 users on the guild that have a join time less than 24hours, then prints the names one by one.
 	//TODO: check if the users can be >1000
-	//TODO: implement a raid protection checker that checks every 1 hour for accounts <2 hours of age and if finds more than 5 -> alert the admins
-	//TODO [DONE]: change the output message to be a single message in a single output to protect from spam. Change the information.
 	if command.IsCommand(&cmd, "check-users") {
 		err := command.VerifyArguments(&cmd)
 		if err != nil {
@@ -161,8 +159,9 @@ func reactionAdded(s *discordgo.Session, mr *discordgo.MessageReactionAdd) {
 // This function will be called (due to AddHandler above) when the bot receives
 // the "ready" event from Discord.
 func ready(s *discordgo.Session, event *discordgo.Ready) {
-	// Set the status.
+	//set the status
 	s.UpdateGameStatus(0, "Gde mozog")
+	//run the raid checker function
 	go CheckRegularSpamAttack(s)
 
 }
@@ -194,7 +193,7 @@ func CheckRegularSpamAttack(s *discordgo.Session) {
 	var tempMsg string
 	var spamcounter int64
 	var checkinterval time.Duration = 90
-	var timeToCheckUsers = 24.0 * -1.0
+	var timeToCheckUsers = 0.5 * -1.0
 
 	for {
 		//iterate over the members_cached array. Maximum limit is 1000.
