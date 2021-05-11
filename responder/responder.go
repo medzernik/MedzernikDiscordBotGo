@@ -16,10 +16,11 @@ func RegisterPlugin(s *discordgo.Session) {
 	s.AddHandler(ready)
 
 }
+
 //SETTINGS
 //guildID. Change this to represent your server.
 var guildidnumber = "513274646406365184"
-
+var adminchannel = "837987736416813076"
 
 //This is the main logic and command file for now
 //TODO: implement a system of an internal user database
@@ -106,7 +107,6 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	}
 
-
 	//right now this command checks for any 1000 users on the guild that have a join time less than 24hours, then prints the names one by one.
 	//TODO: check if the users can be >1000
 	//TODO: implement a raid protection checker that checks every 1 hour for accounts <2 hours of age and if finds more than 5 -> alert the admins
@@ -158,13 +158,12 @@ func reactionAdded(s *discordgo.Session, mr *discordgo.MessageReactionAdd) {
 }
 */
 
-
-
 // This function will be called (due to AddHandler above) when the bot receives
 // the "ready" event from Discord.
 func ready(s *discordgo.Session, event *discordgo.Ready) {
 	// Set the status.
 	s.UpdateGameStatus(0, "Gde mozog")
+	go CheckRegularSpamAttack(s)
 
 }
 
@@ -186,5 +185,35 @@ func GetMemberListFromGuild(s *discordgo.Session, guildID string) []*discordgo.M
 	}
 
 	return membersList
+
+}
+
+func CheckRegularSpamAttack(s *discordgo.Session) {
+	//variable definitons
+	var membersCached = GetMemberListFromGuild(s, guildidnumber)
+	var tempMsg string
+	var spamcounter int64
+	var checkinterval time.Duration = 90
+	var timeToCheckUsers = 24.0 * -1.0
+
+	for {
+		//iterate over the members_cached array. Maximum limit is 1000.
+		for itera := range membersCached {
+			userTimeJoin, _ := membersCached[itera].JoinedAt.Parse()
+			timevar := userTimeJoin.Sub(time.Now()).Hours()
+
+			if timevar > timeToCheckUsers {
+				println("Checking " + membersCached[itera].User.Username + " for possible raid attack")
+				tempMsg += "This user is too young" + membersCached[itera].User.Username + "join age: " + strconv.FormatFloat(timeToCheckUsers, 'f', 0, 64) + "\n"
+				spamcounter += 1
+			}
+
+		}
+		if spamcounter > 4 {
+			s.ChannelMessageSend(adminchannel, "WARN: Possible RAID ATTACK detected!!! ("+strconv.FormatInt(spamcounter, 10)+" users joined in the last "+strconv.FormatFloat(timeToCheckUsers, 'f', 0, 64)+" hours)")
+		}
+		spamcounter = 0
+		time.Sleep(checkinterval * time.Second)
+	}
 
 }
