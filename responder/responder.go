@@ -3,7 +3,6 @@ package responder
 import (
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -72,6 +71,8 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 			if membersCached[itera].User.ID == userId {
 				userName = membersCached[itera].User.Username
 				fmt.Println(userName)
+			} else if membersCached[itera].User.ID != userId && membersCached[itera].User.ID == "" {
+				s.ChannelMessageSend(m.ChannelID, "Zlé ID slováka")
 			}
 		}
 
@@ -80,30 +81,23 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 		userTimeRaw, err := SnowflakeTimestamp(userId)
 		if err != nil {
 			s.ChannelMessageSend(m.ChannelID, "Zlé ID slováka")
-
-			return
-		}
-
-		if userId < "0" {
 			return
 		}
 
 		userTime := time.Now().Sub(userTimeRaw)
-		userTimeDays := userTime.Hours() / 24
-		userTimeDays = userTimeDays / 24
+		//userTimeDays := (((userTime.Seconds() / 60) / 60)/ 24)
 
-		userTimeDaysString := userTime.Hours() / 24
-		fmt.Println(userTimeDaysString)
-		userTimeDaysStringPure := strconv.FormatFloat(userTimeDaysString, 'f', 0, 64)
+		dny := int64(userTime.Hours() / 24)
+		hodiny := int64(userTime.Hours()) - dny*24
+		minuty := int64(userTime.Minutes()) - int64(userTime.Hours())*60
+		sekundy := int64(userTime.Seconds()) - int64(userTime.Minutes())*60
 
-		userTimeString := userTime.String()
-		userTimeString = strings.ReplaceAll(userTimeString, "h", " Hodín\n ")
-		userTimeString = strings.ReplaceAll(userTimeString, "m", " Minút\n ")
-		userTimeString = strings.ReplaceAll(userTimeString, "s", " Sekúnd ")
+		dnyString := strconv.FormatInt(dny, 10)
+		hodinyString := strconv.FormatInt(hodiny, 10)
+		minutyString := strconv.FormatInt(minuty, 10)
+		sekundyString := strconv.FormatInt(sekundy, 10)
 
-		fmt.Println("log -rayman: ", userTimeString)
-
-		s.ChannelMessageSend(m.ChannelID, "**"+userName+"**"+" je tu s nami už:\n "+userTimeDaysStringPure+" (celkovo dní), rozpis:\n----------\n "+userTimeString+"<:peepoLove:687313976043765810>")
+		s.ChannelMessageSend(m.ChannelID, "**"+userName+"**"+" je tu s nami už:\n"+dnyString+" dni\n"+hodinyString+" hodin\n"+minutyString+" minut\n"+sekundyString+" sekund"+"<:peepoLove:687313976043765810>")
 
 	}
 
