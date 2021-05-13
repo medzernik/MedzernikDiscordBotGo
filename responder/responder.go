@@ -85,7 +85,6 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 
 		userTime := time.Now().Sub(userTimeRaw)
-		//userTimeDays := (((userTime.Seconds() / 60) / 60)/ 24)
 
 		dny := int64(userTime.Hours() / 24)
 		hodiny := int64(userTime.Hours()) - dny*24
@@ -133,6 +132,32 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 		s.ChannelMessageSend(m.ChannelID, tempMsg)
 	}
 
+	if command.IsCommand(&cmd, "plan") {
+		var gameName string
+		var gameTime string
+		//var tempMsg string
+
+		fmt.Println(len(cmd.Arguments))
+
+		if len(cmd.Arguments) < 3 {
+			s.ChannelMessageSend(m.ChannelID, "Insufficient arguments. Provided "+strconv.FormatInt(int64(len(cmd.Arguments)), 10)+" , Expected at least 3")
+			return
+		}
+
+		gameName = cmd.Arguments[0]
+		gameTime = cmd.Arguments[1]
+
+		for i := 2; i < len(cmd.Arguments); i++ {
+			err := command.VerifyArguments(&cmd, command.RegexArg{`^<@!(\d+)>$`, 1})
+			if err != nil {
+				s.ChannelMessageSend(m.ChannelID, err.Error())
+			}
+		}
+		fmt.Println(gameName, gameTime)
+		fmt.Println(cmd)
+
+	}
+
 }
 
 /*
@@ -152,6 +177,7 @@ func reactionAdded(s *discordgo.Session, mr *discordgo.MessageReactionAdd) {
 
 // This function will be called (due to AddHandler above) when the bot receives
 // the "ready" event from Discord.
+
 func ready(s *discordgo.Session, event *discordgo.Ready) {
 	//set the status
 	s.UpdateGameStatus(0, "Gde mozog")
