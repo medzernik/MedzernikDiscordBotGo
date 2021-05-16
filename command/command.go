@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+var prefix = "."
+
 type Command struct {
 	Command   string
 	Arguments []string
@@ -22,8 +24,6 @@ type RegexArg struct {
 	Expression   string
 	CaptureGroup int
 }
-
-var prefix = "."
 
 func ParseCommand(s string) (Command, error) {
 	if !strings.HasPrefix(s, prefix) && len(s) < len(prefix)+1 {
