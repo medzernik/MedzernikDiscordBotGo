@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/medzernik/SlovakiaDiscordBotGo/command"
+	"strings"
+
 	//_ "modernc.org/sqlite"
 	"strconv"
 	"time"
@@ -20,6 +22,7 @@ func RegisterPlugin(s *discordgo.Session) {
 //guildID. Change this to represent your server. ID of channel and server, String data type
 var guildidnumber = "513274646406365184"
 var adminchannel = "837987736416813076"
+var logchannel = "513280604507340804"
 
 //This is the main logic and command file for now
 //TODO: implement a system of an internal user database (redis?)
@@ -58,7 +61,7 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	}
 
-	//a personal reward for our founder of the server that tracks his time on the guilds
+	//Time since joined command
 	if command.IsCommand(&cmd, "age") {
 		err := command.VerifyArguments(&cmd, command.RegexArg{Expression: `^<@!(\d+)>$`, CaptureGroup: 1})
 		if err != nil {
@@ -117,6 +120,68 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 
 	}
+	if command.IsCommand(&cmd, "mute") {
+		var muteUser string
+		var timeMute uint64
+		var roleMuteID string = "684159104901709825"
+		var priviledgedRole string = "513275201375698954"
+		membersCached := GetMemberListFromGuild(s, guildidnumber)
+
+		if len(cmd.Arguments) < 1 {
+			_, err := s.ChannelMessageSend(m.ChannelID, "Insufficient arguments provded (help: .mute **@user time**)")
+			if err != nil {
+				return
+			}
+			return
+		}
+		muteUserRaw := cmd.Arguments[0]
+		muteUser = command.ParseMentionToString(cmd.Arguments[0])
+
+		if len(cmd.Arguments) > 1 {
+			timeMute, err = strconv.ParseUint(cmd.Arguments[1], 10, 64)
+			if err != nil {
+				s.ChannelMessageSend(m.ChannelID, "**Error parsing the time** (help: second argument should be number in minutes, max 64-bit sized.) \nExample: .mute user **30**"+"\nYou can also use the command without time specified"+"\n"+err.Error())
+				return
+			}
+		}
+
+		for itera := range membersCached {
+			if membersCached[itera].User.ID == muteUser {
+				for i := range membersCached[itera].Roles {
+					if membersCached[itera].Roles[i] == roleMuteID {
+						s.ChannelMessageSend(m.ChannelID, "**Duplicate request:** User "+muteUser+" already has a role Muted "+roleMuteID+" added")
+						return
+					} else if muteUser == "837982234597916672" {
+						s.ChannelMessageSend(m.ChannelID, "***You fucking donkey. WHO DO YOU THINK YOU ARE MUTING YOU FUCK*** <:pocem:683715405407059968> <:pocem:683715405407059968> <:pocem:683715405407059968> <:pocem:683715405407059968>")
+						return
+					} else if membersCached[itera].Roles[i] == priviledgedRole && membersCached[itera].User.ID == muteUser {
+						s.ChannelMessageSend(m.ChannelID, "**Refusing to mute user** "+muteUserRaw+" **who has a privileged role** "+priviledgedRole+"\n The role is set as priviledged and can't be assigned role id: "+roleMuteID)
+						return
+
+					} else {
+						var err error
+						err = s.GuildMemberMute(guildidnumber, muteUser, true)
+						if err != nil {
+						}
+						err = s.GuildMemberRoleAdd(guildidnumber, muteUser, roleMuteID)
+						if err != nil {
+							s.ChannelMessageSend(m.ChannelID, "Error adding muted role to user "+muteUserRaw+"\n"+err.Error())
+							return
+						}
+						s.ChannelMessageSend(m.ChannelID, "User muted successfully.")
+						s.ChannelMessageSend(logchannel, "User "+muteUserRaw+" muted successfully - assigned role "+roleMuteID)
+						return
+
+					}
+
+				}
+
+			}
+		}
+
+		fmt.Println(muteUser, timeMute, roleMuteID)
+
+	}
 
 	//right now this command checks for any 1000 users on the guild that have a join time less than 24hours, then prints the names one by one.
 	//TODO: check if the users can be >1000
@@ -140,16 +205,12 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 			userTimeJoin, _ := membersCached[itera].JoinedAt.Parse()
 			timevar := userTimeJoin.Sub(time.Now()).Hours()
 
-			fmt.Println(timevar)
-
 			if timevar > timeToCheckUsers {
-				println("THIS USER IS TOO YOUNG")
-
 				tempMsg += "This user is too young (less than 24h join age): " + membersCached[itera].User.Username + "\n"
 			}
+			fmt.Println("Found ", strings.Contains(tempMsg, "\n"), " very young users...")
 		}
 		//print out the amount of members_cached (max is currently 1000)
-		fmt.Println(len(membersCached))
 		_, err = s.ChannelMessageSend(m.ChannelID, tempMsg)
 		if err != nil {
 			return

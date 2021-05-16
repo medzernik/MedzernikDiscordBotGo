@@ -41,6 +41,15 @@ func ParseCommand(s string) (Command, error) {
 	return cmd, nil
 }
 
+func ParseMentionToString(s string) string {
+	s = strings.Replace(s, "<", "", 1)
+	s = strings.Replace(s, ">", "", 1)
+	s = strings.Replace(s, "!", "", 1)
+	s = strings.Replace(s, "@", "", 1)
+
+	return s
+}
+
 func IsCommand(c *Command, name string) bool {
 	return c.Command == name
 }
