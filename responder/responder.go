@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/medzernik/SlovakiaDiscordBotGo/command"
-	"github.com/medzernik/SlovakiaDiscordBotGo/database"
-
 	//_ "modernc.org/sqlite"
 	"strconv"
 	"time"
@@ -47,18 +45,27 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if command.IsCommand(&cmd, "Zasielkovna") {
 		err := command.VerifyArguments(&cmd)
 		if err != nil {
-			s.ChannelMessageSend(m.ChannelID, err.Error())
+			_, err := s.ChannelMessageSend(m.ChannelID, err.Error())
+			if err != nil {
+				return
+			}
 			return
 		}
-		s.ChannelMessageSend(m.ChannelID, "OVER 200% <a:medzernikShake:814055147583438848>")
+		_, err = s.ChannelMessageSend(m.ChannelID, "OVER 200% <a:medzernikShake:814055147583438848>")
+		if err != nil {
+			return
+		}
 
 	}
 
 	//a personal reward for our founder of the server that tracks his time on the guilds
 	if command.IsCommand(&cmd, "age") {
-		err := command.VerifyArguments(&cmd, command.RegexArg{`^<@!(\d+)>$`, 1})
+		err := command.VerifyArguments(&cmd, command.RegexArg{Expression: `^<@!(\d+)>$`, CaptureGroup: 1})
 		if err != nil {
-			s.ChannelMessageSend(m.ChannelID, err.Error())
+			_, err := s.ChannelMessageSend(m.ChannelID, err.Error())
+			if err != nil {
+				return
+			}
 			return
 		}
 
@@ -74,7 +81,10 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 				userName = membersCached[itera].User.Username
 				fmt.Println(userName)
 			} else if membersCached[itera].User.ID != userId && membersCached[itera].User.ID == "" {
-				s.ChannelMessageSend(m.ChannelID, "Zlé ID slováka")
+				_, err := s.ChannelMessageSend(m.ChannelID, "Zlé ID slováka")
+				if err != nil {
+					return
+				}
 			}
 		}
 
@@ -82,7 +92,10 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		userTimeRaw, err := SnowflakeTimestamp(userId)
 		if err != nil {
-			s.ChannelMessageSend(m.ChannelID, "Zlé ID slováka")
+			_, err := s.ChannelMessageSend(m.ChannelID, "Zlé ID slováka")
+			if err != nil {
+				return
+			}
 			return
 		}
 
@@ -98,7 +111,10 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 		minutyString := strconv.FormatInt(minuty, 10)
 		sekundyString := strconv.FormatInt(sekundy, 10)
 
-		s.ChannelMessageSend(m.ChannelID, "**"+userName+"**"+" je tu s nami už:\n"+dnyString+" dni\n"+hodinyString+" hodin\n"+minutyString+" minut\n"+sekundyString+" sekund"+"<:peepoLove:687313976043765810>")
+		_, err = s.ChannelMessageSend(m.ChannelID, "**"+userName+"**"+" je tu s nami už:\n"+dnyString+" dni\n"+hodinyString+" hodin\n"+minutyString+" minut\n"+sekundyString+" sekund"+"<:peepoLove:687313976043765810>")
+		if err != nil {
+			return
+		}
 
 	}
 
@@ -107,7 +123,10 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if command.IsCommand(&cmd, "check-users") {
 		err := command.VerifyArguments(&cmd)
 		if err != nil {
-			s.ChannelMessageSend(m.ChannelID, err.Error())
+			_, err := s.ChannelMessageSend(m.ChannelID, err.Error())
+			if err != nil {
+				return
+			}
 			return
 		}
 		//variable definitons
@@ -131,12 +150,18 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 		//print out the amount of members_cached (max is currently 1000)
 		fmt.Println(len(membersCached))
-		s.ChannelMessageSend(m.ChannelID, tempMsg)
+		_, err = s.ChannelMessageSend(m.ChannelID, tempMsg)
+		if err != nil {
+			return
+		}
 	}
 
 	if command.IsCommand(&cmd, "plan") {
 		if len(cmd.Arguments) < 3 {
-			s.ChannelMessageSend(m.ChannelID, "Insufficient arguments. Provided "+strconv.FormatInt(int64(len(cmd.Arguments)), 10)+" , Expected at least 3")
+			_, err := s.ChannelMessageSend(m.ChannelID, "Insufficient arguments. Provided "+strconv.FormatInt(int64(len(cmd.Arguments)), 10)+" , Expected at least 3")
+			if err != nil {
+				return
+			}
 			return
 		}
 		GamePlanner(&cmd)
@@ -160,11 +185,13 @@ func GamePlanner(c *command.Command) {
 
 func ready(s *discordgo.Session, event *discordgo.Ready) {
 	//set the status
-	s.UpdateGameStatus(0, "Gde mozog")
+	err := s.UpdateGameStatus(0, "Gde mozog")
+	if err != nil {
+		return
+	}
 	//run the raid checker function
 	go CheckRegularSpamAttack(s)
 	// github.com/mattn/go-sqlite3
-	go database.Databaserun()
 
 }
 
@@ -213,7 +240,10 @@ func CheckRegularSpamAttack(s *discordgo.Session) {
 
 		}
 		if spamcounter > 4 {
-			s.ChannelMessageSend(adminchannel, "WARN: Possible RAID ATTACK detected!!! ("+strconv.FormatInt(spamcounter, 10)+" users joined in the last "+strconv.FormatFloat(timeToCheckUsers, 'f', 0, 64)+" hours)")
+			_, err := s.ChannelMessageSend(adminchannel, "WARN: Possible RAID ATTACK detected!!! ("+strconv.FormatInt(spamcounter, 10)+" users joined in the last "+strconv.FormatFloat(timeToCheckUsers, 'f', 0, 64)+" hours)")
+			if err != nil {
+				return
+			}
 		}
 		spamcounter = 0
 		time.Sleep(checkinterval * time.Second)

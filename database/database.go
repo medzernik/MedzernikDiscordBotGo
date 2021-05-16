@@ -18,14 +18,13 @@ func Databaserun() {
 }
 
 func databaserun1() error {
-	dir, err := ioutil.TempDir("", "test-")
+
+	_, err := ioutil.ReadDir(`C:\\Users\\medze\\GolandProjects\\SlovakiaDiscordBotGo\\database`)
 	if err != nil {
 		return err
 	}
 
-	defer os.RemoveAll(dir)
-
-	fn := filepath.Join(dir, "db")
+	fn := filepath.Dir(`C:\\Users\\medze\\GolandProjects\\SlovakiaDiscordBotGo\\database\sqlite`)
 
 	db, err := sql.Open("sqlite", fn)
 	if err != nil {
