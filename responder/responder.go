@@ -2,11 +2,13 @@ package responder
 
 import (
 	"fmt"
-	"strconv"
-	"time"
-
 	"github.com/bwmarrin/discordgo"
 	"github.com/medzernik/SlovakiaDiscordBotGo/command"
+	"github.com/medzernik/SlovakiaDiscordBotGo/database"
+
+	//_ "modernc.org/sqlite"
+	"strconv"
+	"time"
 )
 
 func RegisterPlugin(s *discordgo.Session) {
@@ -133,58 +135,40 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	if command.IsCommand(&cmd, "plan") {
-		var gameName string
-		var gameTime string
-		//var tempMsg string
-
-		fmt.Println(len(cmd.Arguments))
-
 		if len(cmd.Arguments) < 3 {
 			s.ChannelMessageSend(m.ChannelID, "Insufficient arguments. Provided "+strconv.FormatInt(int64(len(cmd.Arguments)), 10)+" , Expected at least 3")
 			return
 		}
-
-		gameName = cmd.Arguments[0]
-		gameTime = cmd.Arguments[1]
-
-		for i := 2; i < len(cmd.Arguments); i++ {
-			err := command.VerifyArguments(&cmd, command.RegexArg{`^<@!(\d+)>$`, 1})
-			if err != nil {
-				s.ChannelMessageSend(m.ChannelID, err.Error())
-			}
-		}
-		fmt.Println(gameName, gameTime)
-		fmt.Println(cmd)
-
+		GamePlanner(&cmd)
 	}
-
 }
 
-/*
-//this function adds a +1 to a specific emoji reaction to an already added one by a use
-//TODO: make it a bit more modular and expand the amount of reactions. Ideally a variable level system
-func reactionAdded(s *discordgo.Session, mr *discordgo.MessageReactionAdd) {
-	if strings.ToUpper(mess) == , "kekw") {
+func GamePlanner(c *command.Command) {
 
-		s.MessageReactionAdd(mr.ChannelID, mr.MessageID, mr.Emoji.APIName())
-	}
-	if strings.Contains(strings.ToLower(mr.Emoji.Name), "okayChamp") {
-		s.MessageReactionAdd(mr.ChannelID, mr.MessageID, mr.Emoji.APIName())
-	}
+	//db.Ping()
 
+	type PlannedGame struct {
+		ID          uint `gorm:"primaryKey"`
+		Name        string
+		TimePlanned string
+		Mentions    string
+		CreatedAt   time.Time
+		UpdatedAt   time.Time
+	}
+	return
 }
-*/
-
-// This function will be called (due to AddHandler above) when the bot receives
-// the "ready" event from Discord.
 
 func ready(s *discordgo.Session, event *discordgo.Ready) {
 	//set the status
 	s.UpdateGameStatus(0, "Gde mozog")
 	//run the raid checker function
 	go CheckRegularSpamAttack(s)
+	// github.com/mattn/go-sqlite3
+	go database.Databaserun()
 
 }
+
+//var db, err = sql.Open("sqlite", dsnURI)
 
 func SnowflakeTimestamp(ID string) (t time.Time, err error) {
 	i, err := strconv.ParseInt(ID, 10, 64)
@@ -236,3 +220,21 @@ func CheckRegularSpamAttack(s *discordgo.Session) {
 	}
 
 }
+
+/*
+   //this function adds a +1 to a specific emoji reaction to an already added one by a use
+   //TODO: make it a bit more modular and expand the amount of reactions. Ideally a variable level system
+   func reactionAdded(s *discordgo.Session, mr *discordgo.MessageReactionAdd) {
+   	if strings.ToUpper(mess) == , "kekw") {
+
+   		s.MessageReactionAdd(mr.ChannelID, mr.MessageID, mr.Emoji.APIName())
+   	}
+   	if strings.Contains(strings.ToLower(mr.Emoji.Name), "okayChamp") {
+   		s.MessageReactionAdd(mr.ChannelID, mr.MessageID, mr.Emoji.APIName())
+   	}
+
+   }
+*/
+
+// This function will be called (due to AddHandler above) when the bot receives
+// the "ready" event from Discord.
