@@ -158,29 +158,35 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 						s.ChannelMessageSend(m.ChannelID, "**Refusing to mute user** "+muteUserRaw+" **who has a privileged role** "+priviledgedRole+"\n The role is set as priviledged and can't be assigned role id: "+roleMuteID)
 						return
 
-					} else {
-						var err error
-						err = s.GuildMemberMute(guildidnumber, muteUser, true)
-						if err != nil {
-						}
-						err = s.GuildMemberRoleAdd(guildidnumber, muteUser, roleMuteID)
-						if err != nil {
-							s.ChannelMessageSend(m.ChannelID, "Error adding muted role to user "+muteUserRaw+"\n"+err.Error())
-							return
-						}
-						s.ChannelMessageSend(m.ChannelID, "User muted successfully.")
-						s.ChannelMessageSend(logchannel, "User "+muteUserRaw+" muted successfully - assigned role "+roleMuteID)
-						return
-
 					}
 
 				}
 
 			}
 		}
+		for itera := range membersCached {
+			for i := range membersCached[itera].Roles {
+				if membersCached[itera].User.ID == m.Author.ID && membersCached[itera].Roles[i] == priviledgedRole {
+					var err error
+					err = s.GuildMemberMute(guildidnumber, muteUser, true)
+					if err != nil {
+					}
+					err = s.GuildMemberRoleAdd(guildidnumber, muteUser, roleMuteID)
+					if err != nil {
+						s.ChannelMessageSend(m.ChannelID, "Error adding muted role to user "+muteUserRaw+"\n"+err.Error())
+						return
+					}
+					s.ChannelMessageSend(m.ChannelID, "User muted successfully.")
+					s.ChannelMessageSend(logchannel, "User "+muteUserRaw+" muted successfully - assigned role "+roleMuteID)
+					return
+				} else {
+					s.ChannelMessageSend(m.ChannelID, "Insufficient permissions")
+					fmt.Println(timeMute)
+					return
+				}
 
-		fmt.Println(muteUser, timeMute, roleMuteID)
-
+			}
+		}
 	}
 
 	//right now this command checks for any 1000 users on the guild that have a join time less than 24hours, then prints the names one by one.
