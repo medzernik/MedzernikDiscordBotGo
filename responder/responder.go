@@ -48,16 +48,11 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if command.IsCommand(&cmd, "Zasielkovna") {
 		err := command.VerifyArguments(&cmd)
 		if err != nil {
-			_, err := s.ChannelMessageSend(m.ChannelID, err.Error())
-			if err != nil {
-				return
-			}
+			s.ChannelMessageSend(m.ChannelID, err.Error())
+
 			return
 		}
-		_, err = s.ChannelMessageSend(m.ChannelID, "OVER 200% <a:medzernikShake:814055147583438848>")
-		if err != nil {
-			return
-		}
+		s.ChannelMessageSend(m.ChannelID, "OVER 200% <a:medzernikShake:814055147583438848>")
 
 	}
 
@@ -65,10 +60,7 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if command.IsCommand(&cmd, "age") {
 		err := command.VerifyArguments(&cmd, command.RegexArg{Expression: `^<@!(\d+)>$`, CaptureGroup: 1})
 		if err != nil {
-			_, err := s.ChannelMessageSend(m.ChannelID, err.Error())
-			if err != nil {
-				return
-			}
+			s.ChannelMessageSend(m.ChannelID, err.Error())
 			return
 		}
 
@@ -84,10 +76,8 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 				userName = membersCached[itera].User.Username
 				fmt.Println(userName)
 			} else if membersCached[itera].User.ID != userId && membersCached[itera].User.ID == "" {
-				_, err := s.ChannelMessageSend(m.ChannelID, "Zlé ID slováka")
-				if err != nil {
-					return
-				}
+				s.ChannelMessageSend(m.ChannelID, "Zlé ID slováka")
+
 			}
 		}
 
@@ -95,10 +85,7 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		userTimeRaw, err := SnowflakeTimestamp(userId)
 		if err != nil {
-			_, err := s.ChannelMessageSend(m.ChannelID, "Zlé ID slováka")
-			if err != nil {
-				return
-			}
+			s.ChannelMessageSend(m.ChannelID, "Zlé ID slováka")
 			return
 		}
 
@@ -114,10 +101,7 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 		minutyString := strconv.FormatInt(minuty, 10)
 		sekundyString := strconv.FormatInt(sekundy, 10)
 
-		_, err = s.ChannelMessageSend(m.ChannelID, "**"+userName+"**"+" je tu s nami už:\n"+dnyString+" dni\n"+hodinyString+" hodin\n"+minutyString+" minut\n"+sekundyString+" sekund"+"<:peepoLove:687313976043765810>")
-		if err != nil {
-			return
-		}
+		s.ChannelMessageSend(m.ChannelID, "**"+userName+"**"+" je tu s nami už:\n"+dnyString+" dni\n"+hodinyString+" hodin\n"+minutyString+" minut\n"+sekundyString+" sekund"+"<:peepoLove:687313976043765810>")
 
 	}
 	if command.IsCommand(&cmd, "mute") {
@@ -194,10 +178,7 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if command.IsCommand(&cmd, "check-users") {
 		err := command.VerifyArguments(&cmd)
 		if err != nil {
-			_, err := s.ChannelMessageSend(m.ChannelID, err.Error())
-			if err != nil {
-				return
-			}
+			s.ChannelMessageSend(m.ChannelID, err.Error())
 			return
 		}
 		//variable definitons
@@ -217,22 +198,18 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 			fmt.Println("Found ", strings.Contains(tempMsg, "\n"), " very young users...")
 		}
 		//print out the amount of members_cached (max is currently 1000)
-		_, err = s.ChannelMessageSend(m.ChannelID, tempMsg)
-		if err != nil {
-			return
-		}
+		s.ChannelMessageSend(m.ChannelID, tempMsg)
+
 	}
 
 	if command.IsCommand(&cmd, "plan") {
 		if len(cmd.Arguments) < 3 {
-			_, err := s.ChannelMessageSend(m.ChannelID, "Insufficient arguments. Provided "+strconv.FormatInt(int64(len(cmd.Arguments)), 10)+" , Expected at least 3")
-			if err != nil {
-				return
-			}
+			s.ChannelMessageSend(m.ChannelID, "Insufficient arguments. Provided "+strconv.FormatInt(int64(len(cmd.Arguments)), 10)+" , Expected at least 3")
 			return
 		}
 		GamePlanner(&cmd)
 	}
+
 }
 
 func GamePlanner(c *command.Command) {
@@ -291,26 +268,23 @@ func CheckRegularSpamAttack(s *discordgo.Session) {
 	var tempMsg string
 	var spamcounter int64
 	var checkinterval time.Duration = 90
-	var timeToCheckUsers = 0.5 * -1.0
+	var timeToCheckUsers = 10 * -1.0
 
 	for {
 		//iterate over the members_cached array. Maximum limit is 1000.
 		for itera := range membersCached {
 			userTimeJoin, _ := membersCached[itera].JoinedAt.Parse()
-			timevar := userTimeJoin.Sub(time.Now()).Hours()
+			timevar := userTimeJoin.Sub(time.Now()).Minutes()
 
 			if timevar > timeToCheckUsers {
 				println("Checking " + membersCached[itera].User.Username + " for possible raid attack")
-				tempMsg += "This user is too young" + membersCached[itera].User.Username + "join age: " + strconv.FormatFloat(timeToCheckUsers, 'f', 0, 64) + "\n"
+				tempMsg += "RAID PROTECTION ALERT!: User" + membersCached[itera].User.Username + "join age: " + strconv.FormatFloat(timeToCheckUsers, 'f', 0, 64) + "\n"
 				spamcounter += 1
 			}
 
 		}
 		if spamcounter > 4 {
-			_, err := s.ChannelMessageSend(adminchannel, "WARN: Possible RAID ATTACK detected!!! ("+strconv.FormatInt(spamcounter, 10)+" users joined in the last "+strconv.FormatFloat(timeToCheckUsers, 'f', 0, 64)+" hours)")
-			if err != nil {
-				return
-			}
+			s.ChannelMessageSend(adminchannel, "WARN: Possible RAID ATTACK detected!!! (<@&513275201375698954>) ("+strconv.FormatInt(spamcounter, 10)+" users joined in the last "+strconv.FormatFloat(timeToCheckUsers, 'f', 0, 64)+" hours)")
 		}
 		spamcounter = 0
 		time.Sleep(checkinterval * time.Second)
