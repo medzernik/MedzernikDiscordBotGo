@@ -9,7 +9,9 @@ The bot passively checks for users connected in the last 10 minutes and alerts a
 # Current syntax:
 
 prefix: .
+
 command: ni space after prefix
+
 arguments: spaces, spaced after command
 
 example: .mute @user
