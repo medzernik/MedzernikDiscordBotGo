@@ -19,14 +19,17 @@ The bot passively checks for users connected in the last 10 minutes and alerts a
 # commands:
 ## muting
 .mute @user
-Mutes a user, except this bot and except the priviledged admin role ID user. admin power checking TBD.
+
+mutes a user, except this bot and except the priviledged admin role ID user. admin power checking TBD.
 
 ## age check
 .age @user
+
 checks the age of the user (account age).
 
 ## user join age check
 .check-users
+
 checks all the users that connected in less than 24h.
 
 
