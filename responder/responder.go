@@ -235,8 +235,38 @@ func GamePlanInsert(c *command.Command, s **discordgo.Session, m **discordgo.Mes
 	sqliteDatabase, _ := sql.Open("sqlite3", "./sqlite-database.db")
 	defer sqliteDatabase.Close()
 
-	//import the commands
-	database.InsertGame(sqliteDatabase, c.Arguments[0], c.Arguments[1], c.Arguments[2])
+	//transform to timestamp
+	splitTimeArgument := strings.Split(c.Arguments[0], ":")
+
+	//TODO: Check the capacity if it's sufficient, otherwise the program is panicking every time...
+	if cap(splitTimeArgument) < 1 {
+		(*s).ChannelMessageSend((*m).ChannelID, "Error parsing time")
+		return
+	}
+
+	//Put hours into timeHour
+	timeHour, err := strconv.Atoi(splitTimeArgument[0])
+	if err != nil {
+		(*s).ChannelMessageSend((*m).ChannelID, "Error converting hours")
+		fmt.Errorf("%s", err)
+		return
+	}
+	//put minutes into timeMinute
+	timeMinute, err := strconv.Atoi(splitTimeArgument[1])
+	if err != nil {
+		(*s).ChannelMessageSend((*m).ChannelID, "Error converting minutes")
+		fmt.Errorf("%s", err)
+		return
+	}
+
+	//get current date and replace hours and minutes with user variables
+	gameTimestamp := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), timeHour, timeMinute, time.Now().Second(), 0, time.Now().Location())
+	gameTimestampInt := gameTimestamp.Unix()
+
+	fmt.Println(gameTimestampInt)
+
+	//export to database
+	database.InsertGame(sqliteDatabase, gameTimestampInt, c.Arguments[1], c.Arguments[2])
 
 	var plannedgames string
 	database.DisplayGamePlanned(sqliteDatabase, &plannedgames)

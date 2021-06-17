@@ -10,6 +10,7 @@ import (
 	"os"
 	_ "path/filepath"
 	"strconv"
+	"time"
 )
 
 func Databaserun() {
@@ -36,7 +37,7 @@ func Databaserun() {
 func createTable(db *sql.DB) {
 	createGamePlanningDB := `CREATE TABLE gameplanning (
 		"idGames" integer NOT NULL PRIMARY KEY AUTOINCREMENT,		
-		"time" TEXT,
+		"time" INTEGER,
 		"gamename" TEXT,
 		"mentions" TEXT		
 	  );` // SQL Statement for Create Table
@@ -51,7 +52,7 @@ func createTable(db *sql.DB) {
 }
 
 // We are passing db reference connection from main to our method with other parameters
-func InsertGame(db *sql.DB, time string, gamename string, mentions string) {
+func InsertGame(db *sql.DB, time int64, gamename string, mentions string) {
 	log.Println("Inserting game record ...")
 	insertGamePlanning := `INSERT INTO gameplanning(time, gamename, mentions) VALUES (?, ?, ?)`
 	statement, err := db.Prepare(insertGamePlanning) // Prepare statement.
@@ -73,12 +74,12 @@ func DisplayGamePlanned(db *sql.DB, output *string) string {
 	defer row.Close()
 	for row.Next() { // Iterate and fetch the records from result cursor
 		var id int
-		var time string
+		var timestamp int64
 		var gamename string
 		var mentions string
-		row.Scan(&id, &time, &gamename, &mentions)
-		log.Println("Game is planned for: ", time, " ", gamename, " ", mentions)
-		*output = "ID: " + strconv.FormatInt(int64(id), 10) + ", cas: " + time + ", hra: " + gamename + ", s ludmi " + mentions + "\n"
+		row.Scan(&id, &timestamp, &gamename, &mentions)
+		log.Println("Game is planned for: ", timestamp, " ", gamename, " ", mentions)
+		*output = "ID: " + strconv.FormatInt(int64(id), 10) + ", cas: " + time.Unix(timestamp, 0).Format(time.RFC822) + ", hra: " + gamename + ", s ludmi " + mentions + "\n"
 	}
 	return *output
 }
@@ -90,12 +91,12 @@ func DisplayAllGamesPlanned(db *sql.DB, output *string) string {
 	defer row.Close()
 	for row.Next() { // Iterate and fetch the records from result cursor
 		var id int
-		var time string
+		var timestamp int64
 		var gamename string
 		var mentions string
-		row.Scan(&id, &time, &gamename, &mentions)
-		log.Println("Game is planned for: ", time, " ", gamename, " ", mentions)
-		*output += "ID: " + strconv.FormatInt(int64(id), 10) + ", cas: " + time + ", hra: " + gamename + ", s ludmi " + mentions + "\n"
+		row.Scan(&id, &timestamp, &gamename, &mentions)
+		log.Println("Game is planned for: ", timestamp, " ", gamename, " ", mentions)
+		*output += "ID: " + strconv.FormatInt(int64(id), 10) + ", cas: " + time.Unix(timestamp, 0).Format(time.RFC822) + ", hra: " + gamename + ", s ludmi " + mentions + "\n"
 	}
 	return *output
 }
