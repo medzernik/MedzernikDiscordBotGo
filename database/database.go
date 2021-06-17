@@ -83,7 +83,7 @@ func DisplayGamePlanned(db *sql.DB, output *string) string {
 	return *output
 }
 func DisplayAllGamesPlanned(db *sql.DB, output *string) string {
-	row, err := db.Query("SELECT * FROM gameplanning ORDER BY gamename")
+	row, err := db.Query("SELECT * FROM gameplanning ORDER BY time")
 	if err != nil {
 		log.Fatal(err)
 	}

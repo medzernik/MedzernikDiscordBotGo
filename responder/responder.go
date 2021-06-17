@@ -27,7 +27,6 @@ var adminchannel = "837987736416813076"
 var logchannel = "513280604507340804"
 
 //This is the main logic and command file for now
-//TODO: implement a system of an internal user database (redis?)
 
 // This function will be called (due to AddHandler above) every time a new
 // message is created on any channel that the authenticated bot has access to.
