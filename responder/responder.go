@@ -1,6 +1,7 @@
 package responder
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/medzernik/SlovakiaDiscordBotGo/command"
@@ -208,23 +209,23 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 			s.ChannelMessageSend(m.ChannelID, "Insufficient arguments. Provided "+strconv.FormatInt(int64(len(cmd.Arguments)), 10)+" , Expected at least 3")
 			return
 		}
-		GamePlanner(&cmd)
+		GamePlanner(&cmd, &s, &m)
 	}
 
 }
 
-func GamePlanner(c *command.Command) {
+func GamePlanner(c *command.Command, s **discordgo.Session, m **discordgo.MessageCreate) {
+	//open database and then close it (defer)
+	sqliteDatabase, _ := sql.Open("sqlite3", "./sqlite-database.db")
+	defer sqliteDatabase.Close()
 
-	//db.Ping()
+	//import the commands
+	database.InsertGame(sqliteDatabase, c.Arguments[0], c.Arguments[1], c.Arguments[2])
 
-	type PlannedGame struct {
-		ID          uint `gorm:"primaryKey"`
-		Name        string
-		TimePlanned string
-		Mentions    string
-		CreatedAt   time.Time
-		UpdatedAt   time.Time
-	}
+	var plannedgames string
+	database.DisplayGamePlanning(sqliteDatabase, &plannedgames)
+
+	(*s).ChannelMessageSend((*m).ChannelID, plannedgames)
 	return
 }
 

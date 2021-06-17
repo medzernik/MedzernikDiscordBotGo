@@ -9,9 +9,12 @@ import (
 	_ "modernc.org/sqlite"
 	"os"
 	_ "path/filepath"
+	"strconv"
 )
 
 func Databaserun() {
+	var test string
+
 	os.Remove("sqlite-database.db") // I delete the file to avoid duplicated records.
 	// SQLite is a file based database.
 
@@ -28,10 +31,10 @@ func Databaserun() {
 	createTable(sqliteDatabase)                                      // Create Database Tables
 
 	// INSERT RECORDS
-	insertGame(sqliteDatabase, "12:45", "Terraria", "medzernik")
+	InsertGame(sqliteDatabase, "12:45", "Terraria", "medzernik")
 
 	// DISPLAY INSERTED RECORDS
-	displayGamePlanning(sqliteDatabase)
+	DisplayGamePlanning(sqliteDatabase, &test)
 }
 func createTable(db *sql.DB) {
 	createGamePlanningDB := `CREATE TABLE gameplanning (
@@ -51,7 +54,7 @@ func createTable(db *sql.DB) {
 }
 
 // We are passing db reference connection from main to our method with other parameters
-func insertGame(db *sql.DB, time string, gamename string, mentions string) {
+func InsertGame(db *sql.DB, time string, gamename string, mentions string) {
 	log.Println("Inserting game record ...")
 	insertGamePlanning := `INSERT INTO gameplanning(time, gamename, mentions) VALUES (?, ?, ?)`
 	statement, err := db.Prepare(insertGamePlanning) // Prepare statement.
@@ -65,7 +68,7 @@ func insertGame(db *sql.DB, time string, gamename string, mentions string) {
 	}
 }
 
-func displayGamePlanning(db *sql.DB) {
+func DisplayGamePlanning(db *sql.DB, output *string) string {
 	row, err := db.Query("SELECT * FROM gameplanning ORDER BY gamename")
 	if err != nil {
 		log.Fatal(err)
@@ -78,5 +81,7 @@ func displayGamePlanning(db *sql.DB) {
 		var mentions string
 		row.Scan(&id, &time, &gamename, &mentions)
 		log.Println("Game is planned for: ", time, " ", gamename, " ", mentions)
+		*output = "ID: " + strconv.FormatInt(int64(id), 10) + ", cas: " + time + ", hra: " + gamename + ", s ludmi " + mentions + "\n"
 	}
+	return *output
 }
