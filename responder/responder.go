@@ -209,12 +209,29 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 			s.ChannelMessageSend(m.ChannelID, "Insufficient arguments. Provided "+strconv.FormatInt(int64(len(cmd.Arguments)), 10)+" , Expected at least 3")
 			return
 		}
-		GamePlanner(&cmd, &s, &m)
+		GamePlanInsert(&cmd, &s, &m)
+	}
+
+	if command.IsCommand(&cmd, "planned") {
+		if len(cmd.Arguments) > 0 {
+			s.ChannelMessageSend(m.ChannelID, "Insufficient arguments. Provided "+strconv.FormatInt(int64(len(cmd.Arguments)), 10)+" , Expected no arguments")
+			return
+		}
+		//open database and then close it (defer)
+		sqliteDatabase, _ := sql.Open("sqlite3", "./sqlite-database.db")
+		defer sqliteDatabase.Close()
+
+		var plannedgames string
+		database.DisplayAllGamesPlanned(sqliteDatabase, &plannedgames)
+
+		//send info to channel
+		(*s).ChannelMessageSend((*m).ChannelID, plannedgames)
+		return
 	}
 
 }
 
-func GamePlanner(c *command.Command, s **discordgo.Session, m **discordgo.MessageCreate) {
+func GamePlanInsert(c *command.Command, s **discordgo.Session, m **discordgo.MessageCreate) {
 	//open database and then close it (defer)
 	sqliteDatabase, _ := sql.Open("sqlite3", "./sqlite-database.db")
 	defer sqliteDatabase.Close()
@@ -223,7 +240,7 @@ func GamePlanner(c *command.Command, s **discordgo.Session, m **discordgo.Messag
 	database.InsertGame(sqliteDatabase, c.Arguments[0], c.Arguments[1], c.Arguments[2])
 
 	var plannedgames string
-	database.DisplayGamePlanning(sqliteDatabase, &plannedgames)
+	database.DisplayGamePlanned(sqliteDatabase, &plannedgames)
 
 	(*s).ChannelMessageSend((*m).ChannelID, plannedgames)
 	return

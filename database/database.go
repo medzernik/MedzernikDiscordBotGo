@@ -30,11 +30,8 @@ func Databaserun() {
 	defer sqliteDatabase.Close()                                     // Defer Closing the database
 	createTable(sqliteDatabase)                                      // Create Database Tables
 
-	// INSERT RECORDS
-	InsertGame(sqliteDatabase, "12:45", "Terraria", "medzernik")
-
 	// DISPLAY INSERTED RECORDS
-	DisplayGamePlanning(sqliteDatabase, &test)
+	DisplayGamePlanned(sqliteDatabase, &test)
 }
 func createTable(db *sql.DB) {
 	createGamePlanningDB := `CREATE TABLE gameplanning (
@@ -68,7 +65,7 @@ func InsertGame(db *sql.DB, time string, gamename string, mentions string) {
 	}
 }
 
-func DisplayGamePlanning(db *sql.DB, output *string) string {
+func DisplayGamePlanned(db *sql.DB, output *string) string {
 	row, err := db.Query("SELECT * FROM gameplanning ORDER BY gamename")
 	if err != nil {
 		log.Fatal(err)
@@ -82,6 +79,23 @@ func DisplayGamePlanning(db *sql.DB, output *string) string {
 		row.Scan(&id, &time, &gamename, &mentions)
 		log.Println("Game is planned for: ", time, " ", gamename, " ", mentions)
 		*output = "ID: " + strconv.FormatInt(int64(id), 10) + ", cas: " + time + ", hra: " + gamename + ", s ludmi " + mentions + "\n"
+	}
+	return *output
+}
+func DisplayAllGamesPlanned(db *sql.DB, output *string) string {
+	row, err := db.Query("SELECT * FROM gameplanning ORDER BY gamename")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer row.Close()
+	for row.Next() { // Iterate and fetch the records from result cursor
+		var id int
+		var time string
+		var gamename string
+		var mentions string
+		row.Scan(&id, &time, &gamename, &mentions)
+		log.Println("Game is planned for: ", time, " ", gamename, " ", mentions)
+		*output += "ID: " + strconv.FormatInt(int64(id), 10) + ", cas: " + time + ", hra: " + gamename + ", s ludmi " + mentions + "\n"
 	}
 	return *output
 }
