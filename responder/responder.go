@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/medzernik/SlovakiaDiscordBotGo/command"
+	"github.com/medzernik/SlovakiaDiscordBotGo/database"
 	"strings"
 
 	//_ "modernc.org/sqlite"
@@ -235,7 +236,7 @@ func ready(s *discordgo.Session, event *discordgo.Ready) {
 	}
 	//run the raid checker function
 	go CheckRegularSpamAttack(s)
-	// github.com/mattn/go-sqlite3
+	go database.Databaserun()
 
 }
 
