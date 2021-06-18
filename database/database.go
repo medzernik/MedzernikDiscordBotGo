@@ -111,7 +111,7 @@ func DisplayAllGamesPlanned(db *sql.DB, output *string) string {
 
 // CheckPlannedGames runs concurrently with the go command at bot startup.
 func CheckPlannedGames(s **discordgo.Session) {
-	var checkInterval time.Duration = 59
+	var checkInterval time.Duration = 60
 	//This is here for the function to wait until the database is created (since it's async). I should *really* make this a proper way, not a fixed wait time...)
 	var initInterval time.Duration = 2
 	//Channel into which to output the information
