@@ -2,7 +2,9 @@ package database
 
 import (
 	"database/sql"
+	"fmt"
 	_ "fmt"
+	"github.com/bwmarrin/discordgo"
 	_ "github.com/mattn/go-sqlite3"
 	_ "io/ioutil"
 	"log"
@@ -13,6 +15,7 @@ import (
 	"time"
 )
 
+// Databaserun will delete the old database and then create a new one, get all the file handlers and basic info
 func Databaserun() {
 	var test string
 
@@ -34,6 +37,8 @@ func Databaserun() {
 	// DISPLAY INSERTED RECORDS
 	DisplayGamePlanned(sqliteDatabase, &test)
 }
+
+// createTable creates a game planning table
 func createTable(db *sql.DB) {
 	createGamePlanningDB := `CREATE TABLE gameplanning (
 		"idGames" integer NOT NULL PRIMARY KEY AUTOINCREMENT,		
@@ -51,7 +56,7 @@ func createTable(db *sql.DB) {
 	log.Println("game table created")
 }
 
-// We are passing db reference connection from main to our method with other parameters
+// InsertGame inserts the requested data into the database
 func InsertGame(db *sql.DB, time int64, gamename string, mentions string) {
 	log.Println("Inserting game record ...")
 	insertGamePlanning := `INSERT INTO gameplanning(time, gamename, mentions) VALUES (?, ?, ?)`
@@ -66,6 +71,7 @@ func InsertGame(db *sql.DB, time int64, gamename string, mentions string) {
 	}
 }
 
+// DisplayGamePlanned will immidiately display the currently planned game into the channel it was planned at as a confirmation for the user. Returns a string with all the neccessary data
 func DisplayGamePlanned(db *sql.DB, output *string) string {
 	row, err := db.Query("SELECT * FROM gameplanning ORDER BY gamename")
 	if err != nil {
@@ -83,6 +89,8 @@ func DisplayGamePlanned(db *sql.DB, output *string) string {
 	}
 	return *output
 }
+
+// DisplayAllGamesPlanned displays all planned games in the database and outputs the result into the channel.
 func DisplayAllGamesPlanned(db *sql.DB, output *string) string {
 	row, err := db.Query("SELECT * FROM gameplanning ORDER BY time")
 	if err != nil {
@@ -99,4 +107,45 @@ func DisplayAllGamesPlanned(db *sql.DB, output *string) string {
 		*output += "ID: " + strconv.FormatInt(int64(id), 10) + ", cas: " + time.Unix(timestamp, 0).Format(time.RFC822) + ", hra: " + gamename + ", s ludmi " + mentions + "\n"
 	}
 	return *output
+}
+
+// CheckPlannedGames runs concurrently with the go command at bot startup.
+func CheckPlannedGames(s **discordgo.Session) {
+	var checkInterval time.Duration = 59
+	//This is here for the function to wait until the database is created (since it's async). I should *really* make this a proper way, not a fixed wait time...)
+	var initInterval time.Duration = 2
+	//Channel into which to output the information
+	var gameReminderChannelID string = "837987736416813076"
+
+	fmt.Println("Initializing CheckPlannedGames module")
+	time.Sleep(initInterval * time.Second)
+	fmt.Println("CheckPlannedGames module initialized successfully...")
+
+	//Loop that continuously runs... With a timer to wait for 59 seconds.
+	for {
+		sqliteDatabase, _ := sql.Open("sqlite3", "./sqlite-database.db")
+		plannedGame, err := sqliteDatabase.Query("SELECT * FROM gameplanning ORDER BY time")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		for plannedGame.Next() {
+			var id int
+			var timestamp int64
+			var gamename string
+			var mentions string
+			plannedGame.Scan(&id, &timestamp, &gamename, &mentions)
+
+			var timestampInt = time.Unix(timestamp, 0)
+
+			if time.Now().Date() == timestampInt.Date() && time.Now().Hour() == timestampInt.Hour() && time.Now().Minute() == timestampInt.Minute() {
+				(*s).ChannelMessageSend(gameReminderChannelID, "**CAS SA HRAT** "+"cas: "+time.Unix(timestamp, 0).Format(time.RFC822)+", hra: "+gamename+", s ludmi "+mentions+"\n")
+			}
+
+		}
+		//Release the database
+		sqliteDatabase.Close()
+		//Wait until checking again for 59 seconds (checkInterval)
+		time.Sleep(checkInterval * time.Second)
+	}
 }

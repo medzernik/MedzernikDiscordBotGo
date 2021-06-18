@@ -284,6 +284,7 @@ func ready(s *discordgo.Session, event *discordgo.Ready) {
 	//run the raid checker function
 	go CheckRegularSpamAttack(s)
 	go database.Databaserun()
+	go database.CheckPlannedGames(&s)
 
 }
 
