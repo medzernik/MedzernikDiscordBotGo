@@ -4,7 +4,11 @@
 
 This is a discord bot written entirely in golang using the discordgo library. The bot itself has a custom command parser and many custom functions. It serves as an example of a bot that can do very basic commands.
 
-The bot passively checks for users connected in the last 10 minutes and alerts admins if there is a possible raid attack. This is done concurrently.
+#Automatic functions:
+#### RAID checking 
+The bot automatically checks for users connected in the last ~10 minutes and alerts admins if there is a possible raid attack. This is done concurrently.
+#### Planned games reminding
+The bot automatically checks for any games planned every minute and reminds people the time is due
 
 # Current syntax:
 
