@@ -138,7 +138,7 @@ func CheckPlannedGames(s **discordgo.Session) {
 
 			var timestampInt = time.Unix(timestamp, 0)
 
-			if time.Now().Date() == timestampInt.Date() && time.Now().Hour() == timestampInt.Hour() && time.Now().Minute() == timestampInt.Minute() {
+			if time.Now().Month() == timestampInt.Month() && time.Now().Year() == timestampInt.Year() && time.Now().Day() == timestampInt.Day() && time.Now().Hour() == timestampInt.Hour() && time.Now().Minute() == timestampInt.Minute() {
 				(*s).ChannelMessageSend(gameReminderChannelID, "**CAS SA HRAT** "+"cas: "+time.Unix(timestamp, 0).Format(time.RFC822)+", hra: "+gamename+", s ludmi "+mentions+"\n")
 			}
 
