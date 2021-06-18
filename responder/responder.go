@@ -244,7 +244,7 @@ func GamePlanInsert(c *command.Command, s **discordgo.Session, m **discordgo.Mes
 		return
 	}
 
-	//Put hours into timeHour
+	//Put hours into timeHours
 	timeHour, err := strconv.Atoi(splitTimeArgument[0])
 	if err != nil {
 		(*s).ChannelMessageSend((*m).ChannelID, "Error converting hours")

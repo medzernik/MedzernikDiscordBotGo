@@ -121,7 +121,7 @@ func CheckPlannedGames(s **discordgo.Session) {
 	time.Sleep(initInterval * time.Second)
 	fmt.Println("CheckPlannedGames module initialized successfully...")
 
-	//Loop that continuously runs... With a timer to wait for 59 seconds.
+	//Loop that continuously runs... With a timer to wait for 59 seconds
 	for {
 		sqliteDatabase, _ := sql.Open("sqlite3", "./sqlite-database.db")
 		plannedGame, err := sqliteDatabase.Query("SELECT * FROM gameplanning ORDER BY time")
