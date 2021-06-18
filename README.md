@@ -32,5 +32,16 @@ checks the age of the user (account age).
 
 checks all the users that connected in less than 24h.
 
+## plan <hours:minutes> gamename @mentions
+.plan 10:40 terraria @medzernik
+
+Plans and writes a UNIX timestamped time + ID and other data into an entry in SQLite database for later use. Confirms with outputting the entry into the Discord channel.
+
+## planned
+.planned
+
+SELECT * from planned games table. Outputs into the same Discord channel.
+
+
 
 More features pending, including a docker image and a custom SQLite database for internal event planning.
