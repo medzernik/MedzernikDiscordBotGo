@@ -11,7 +11,7 @@ import (
 	"github.com/medzernik/SlovakiaDiscordBotGo/responder"
 )
 
-// Variables used for command line parameters
+// Token Variables used for command line parameters
 var (
 	Token string
 )
@@ -51,5 +51,9 @@ func main() {
 	<-sc
 
 	// Cleanly close down the Discord session.
-	dg.Close()
+	err2 := dg.Close()
+	if err2 != nil {
+		fmt.Println("error closing the session", err)
+		return
+	}
 }

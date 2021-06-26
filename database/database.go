@@ -19,7 +19,11 @@ import (
 func Databaserun() {
 	var test string
 
-	os.Remove("sqlite-database.db") // I delete the file to avoid duplicated records.
+	err := os.Remove("sqlite-database.db")
+	if err != nil {
+		fmt.Println("error removing the file")
+		return
+	} // I delete the file to avoid duplicated records.
 	// SQLite is a file based database.
 
 	log.Println("Creating sqlite-database.db...")
@@ -27,12 +31,21 @@ func Databaserun() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	file.Close()
+	err2 := file.Close()
+	if err2 != nil {
+		fmt.Println("error closing the database")
+		return
+	}
 	log.Println("sqlite-database.db created")
 
 	sqliteDatabase, _ := sql.Open("sqlite3", "./sqlite-database.db") // Open the created SQLite File
-	defer sqliteDatabase.Close()                                     // Defer Closing the database
-	createTable(sqliteDatabase)                                      // Create Database Tables
+	defer func(sqliteDatabase *sql.DB) {
+		err := sqliteDatabase.Close()
+		if err != nil {
+			println("error closing the database")
+		}
+	}(sqliteDatabase) // Defer Closing the database
+	createTable(sqliteDatabase) // Create Database Tables
 
 	// DISPLAY INSERTED RECORDS
 	DisplayGamePlanned(sqliteDatabase, &test)
@@ -52,7 +65,11 @@ func createTable(db *sql.DB) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	statement.Exec() // Execute SQL Statements
+	_, err3 := statement.Exec()
+	if err3 != nil {
+		fmt.Println("error executing SQL statements")
+		return
+	} // Execute SQL Statements
 	log.Println("game table created")
 }
 
@@ -77,13 +94,22 @@ func DisplayGamePlanned(db *sql.DB, output *string) string {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer row.Close()
+	defer func(row *sql.Rows) {
+		err := row.Close()
+		if err != nil {
+			fmt.Println("error closing the rows")
+		}
+	}(row)
 	for row.Next() { // Iterate and fetch the records from result cursor
 		var id int
 		var timestamp int64
 		var gamename string
 		var mentions string
-		row.Scan(&id, &timestamp, &gamename, &mentions)
+		err := row.Scan(&id, &timestamp, &gamename, &mentions)
+		if err != nil {
+			fmt.Println("error scanning the table lines")
+			return ""
+		}
 		log.Println("Game is planned for: ", timestamp, " ", gamename, " ", mentions)
 		*output = "ID: " + strconv.FormatInt(int64(id), 10) + ", cas: " + time.Unix(timestamp, 0).Format(time.RFC822) + ", hra: " + gamename + ", s ludmi " + mentions + "\n"
 	}
@@ -96,13 +122,22 @@ func DisplayAllGamesPlanned(db *sql.DB, output *string) string {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer row.Close()
+	defer func(row *sql.Rows) {
+		err := row.Close()
+		if err != nil {
+			fmt.Println("error closing the rows")
+		}
+	}(row)
 	for row.Next() { // Iterate and fetch the records from result cursor
 		var id int
 		var timestamp int64
 		var gamename string
 		var mentions string
-		row.Scan(&id, &timestamp, &gamename, &mentions)
+		err := row.Scan(&id, &timestamp, &gamename, &mentions)
+		if err != nil {
+			fmt.Println("error scanning the rows")
+			return ""
+		}
 		log.Println("Game is planned for: ", timestamp, " ", gamename, " ", mentions)
 		*output += "ID: " + strconv.FormatInt(int64(id), 10) + ", cas: " + time.Unix(timestamp, 0).Format(time.RFC822) + ", hra: " + gamename + ", s ludmi " + mentions + "\n"
 	}
@@ -115,7 +150,7 @@ func CheckPlannedGames(s **discordgo.Session) {
 	//This is here for the function to wait until the database is created (since it's async). I should *really* make this a proper way, not a fixed wait time...)
 	var initInterval time.Duration = 2
 	//Channel into which to output the information
-	var gameReminderChannelID string = "837987736416813076"
+	var gameReminderChannelID = "837987736416813076"
 
 	fmt.Println("Initializing CheckPlannedGames module")
 	time.Sleep(initInterval * time.Second)
@@ -134,7 +169,11 @@ func CheckPlannedGames(s **discordgo.Session) {
 			var timestamp int64
 			var gamename string
 			var mentions string
-			plannedGame.Scan(&id, &timestamp, &gamename, &mentions)
+			err := plannedGame.Scan(&id, &timestamp, &gamename, &mentions)
+			if err != nil {
+				fmt.Println("error scanning the lines")
+				return
+			}
 
 			var timestampInt = time.Unix(timestamp, 0)
 
@@ -144,7 +183,11 @@ func CheckPlannedGames(s **discordgo.Session) {
 
 		}
 		//Release the database
-		sqliteDatabase.Close()
+		err2 := sqliteDatabase.Close()
+		if err2 != nil {
+			fmt.Println("error closing the database")
+			return
+		}
 		//Wait until checking again for 59 seconds (checkInterval)
 		time.Sleep(checkInterval * time.Second)
 	}
