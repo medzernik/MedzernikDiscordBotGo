@@ -1,11 +1,14 @@
 package responder_functions
 
 import (
+	"bufio"
 	"database/sql"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/medzernik/SlovakiaDiscordBotGo/command"
 	"github.com/medzernik/SlovakiaDiscordBotGo/database"
+	"math/rand"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -307,5 +310,43 @@ func CheckRegularSpamAttack(s *discordgo.Session) {
 		spamcounter = 0
 		time.Sleep(checkinterval * time.Second)
 	}
+
+}
+
+func Trivia(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
+	err := command.VerifyArguments(&cmd)
+	if err != nil {
+		s.ChannelMessageSend(m.ChannelID, err.Error())
+		return
+	}
+
+	fileHandle, err := os.Open("trivia_questions.txt")
+	if err != nil {
+		fmt.Println("error reading the file: ", err)
+		s.ChannelMessageSend(m.ChannelID, err.Error())
+		return
+	}
+	defer func(fileHandle *os.File) {
+		err := fileHandle.Close()
+		if err != nil {
+			fmt.Println("error closing the file with trivia")
+		}
+	}(fileHandle)
+
+	fileScanner := bufio.NewScanner(fileHandle)
+
+	var splitTrivia []string
+
+	for fileScanner.Scan() {
+		splitTrivia = append(splitTrivia, fileScanner.Text())
+	}
+
+	a := 0
+	b := len(splitTrivia)
+
+	rand.Seed(time.Now().UnixNano())
+	n := a + rand.Intn(b-a+1)
+
+	s.ChannelMessageSend(m.ChannelID, splitTrivia[n])
 
 }

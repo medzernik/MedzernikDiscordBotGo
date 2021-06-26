@@ -59,6 +59,10 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 		responder_functions.PlannedGames(s, cmd, m)
 	}
 
+	if command.IsCommand(&cmd, "Convo") {
+		responder_functions.Trivia(s, cmd, m)
+	}
+
 }
 
 func ready(s *discordgo.Session, _ *discordgo.Ready) {
