@@ -61,11 +61,11 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 }
 
-func ready(s *discordgo.Session, event *discordgo.Ready) {
+func ready(s *discordgo.Session, _ *discordgo.Ready) {
 	//set the status
 	err := s.UpdateGameStatus(0, "Dying Mozog")
 	if err != nil {
-		fmt.Errorf("error setting the bot status")
+		fmt.Println("error setting the bot status")
 		return
 	}
 	//run the parallel functions

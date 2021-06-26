@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-//SETTINGS
+// GuildIDNumber SETTINGS
 //guildID. Change this to represent your server. ID of channel and server, String data type
 var GuildIDNumber = "513274646406365184"
 var AdminChannel = "837987736416813076"
@@ -81,8 +81,8 @@ func AgeJoined(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCr
 func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate, err error) {
 	var muteUser string
 	var timeMute uint64
-	var roleMuteID string = "684159104901709825"
-	var priviledgedRole string = "513275201375698954"
+	var roleMuteID = "684159104901709825"
+	var priviledgedRole = "513275201375698954"
 	membersCached := GetMemberListFromGuild(s, GuildIDNumber)
 
 	if len(cmd.Arguments) < 1 {
@@ -191,7 +191,12 @@ func PlannedGames(s *discordgo.Session, cmd command.Command, m *discordgo.Messag
 	}
 	//open database and then close it (defer)
 	sqliteDatabase, _ := sql.Open("sqlite3", "./sqlite-database.db")
-	defer sqliteDatabase.Close()
+	defer func(sqliteDatabase *sql.DB) {
+		err := sqliteDatabase.Close()
+		if err != nil {
+			fmt.Println("error closing the database: ", err)
+		}
+	}(sqliteDatabase)
 
 	var plannedgames string
 	database.DisplayAllGamesPlanned(sqliteDatabase, &plannedgames)
@@ -205,7 +210,12 @@ func PlannedGames(s *discordgo.Session, cmd command.Command, m *discordgo.Messag
 func GamePlanInsert(c *command.Command, s **discordgo.Session, m **discordgo.MessageCreate) {
 	//open database and then close it (defer)
 	sqliteDatabase, _ := sql.Open("sqlite3", "./sqlite-database.db")
-	defer sqliteDatabase.Close()
+	defer func(sqliteDatabase *sql.DB) {
+		err := sqliteDatabase.Close()
+		if err != nil {
+
+		}
+	}(sqliteDatabase)
 
 	//transform to timestamp
 	splitTimeArgument := strings.Split(c.Arguments[0], ":")
@@ -220,14 +230,14 @@ func GamePlanInsert(c *command.Command, s **discordgo.Session, m **discordgo.Mes
 	timeHour, err := strconv.Atoi(splitTimeArgument[0])
 	if err != nil {
 		(*s).ChannelMessageSend((*m).ChannelID, "Error converting hours")
-		fmt.Errorf("%s", err)
+		fmt.Printf("%s", err)
 		return
 	}
 	//put minutes into timeMinute
 	timeMinute, err := strconv.Atoi(splitTimeArgument[1])
 	if err != nil {
 		(*s).ChannelMessageSend((*m).ChannelID, "Error converting minutes")
-		fmt.Errorf("%s", err)
+		fmt.Printf("%s", err)
 		return
 	}
 	//get current date and replace hours and minutes with user variables
