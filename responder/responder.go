@@ -1,6 +1,7 @@
 package responder
 
 import (
+	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/medzernik/SlovakiaDiscordBotGo/command"
 	"github.com/medzernik/SlovakiaDiscordBotGo/database"
@@ -62,33 +63,14 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 func ready(s *discordgo.Session, event *discordgo.Ready) {
 	//set the status
-	err := s.UpdateGameStatus(0, "Gde mozog")
+	err := s.UpdateGameStatus(0, "Dying Mozog")
 	if err != nil {
+		fmt.Errorf("error setting the bot status")
 		return
 	}
-	//run the raid checker function
+	//run the parallel functions
 	go responder_functions.CheckRegularSpamAttack(s)
 	go database.Databaserun()
 	go database.CheckPlannedGames(&s)
 
 }
-
-//var db, err = sql.Open("sqlite", dsnURI)
-
-/*
-   //this function adds a +1 to a specific emoji reaction to an already added one by a use
-   //TODO: make it a bit more modular and expand the amount of reactions. Ideally a variable level system
-   func reactionAdded(s *discordgo.Session, mr *discordgo.MessageReactionAdd) {
-   	if strings.ToUpper(mess) == , "kekw") {
-
-   		s.MessageReactionAdd(mr.ChannelID, mr.MessageID, mr.Emoji.APIName())
-   	}
-   	if strings.Contains(strings.ToLower(mr.Emoji.Name), "okayChamp") {
-   		s.MessageReactionAdd(mr.ChannelID, mr.MessageID, mr.Emoji.APIName())
-   	}
-
-   }
-*/
-
-// This function will be called (due to AddHandler above) when the bot receives
-// the "ready" event from Discord.

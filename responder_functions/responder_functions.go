@@ -28,6 +28,7 @@ func Zasielkovna(s *discordgo.Session, cmd command.Command, m *discordgo.Message
 
 }
 
+// AgeJoined Checks the age of the user on join
 func AgeJoined(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
 	err := command.VerifyArguments(&cmd, command.RegexArg{Expression: `^<@!(\d+)>$`, CaptureGroup: 1})
 	if err != nil {
@@ -76,6 +77,7 @@ func AgeJoined(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCr
 
 }
 
+// Mute Muting function
 func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate, err error) {
 	var muteUser string
 	var timeMute uint64
@@ -145,6 +147,7 @@ func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate,
 	}
 }
 
+// CheckUsers Checks the age of users
 func CheckUsers(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
 	err := command.VerifyArguments(&cmd)
 	if err != nil {
@@ -172,6 +175,7 @@ func CheckUsers(s *discordgo.Session, cmd command.Command, m *discordgo.MessageC
 
 }
 
+// PlanGame Plans a game for a person with a timed reminder
 func PlanGame(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
 	if len(cmd.Arguments) < 3 {
 		s.ChannelMessageSend(m.ChannelID, "Insufficient arguments. Provided "+strconv.FormatInt(int64(len(cmd.Arguments)), 10)+" , Expected at least 3")
@@ -197,6 +201,7 @@ func PlannedGames(s *discordgo.Session, cmd command.Command, m *discordgo.Messag
 	return
 }
 
+// GamePlanInsert Inserts the game into the database
 func GamePlanInsert(c *command.Command, s **discordgo.Session, m **discordgo.MessageCreate) {
 	//open database and then close it (defer)
 	sqliteDatabase, _ := sql.Open("sqlite3", "./sqlite-database.db")
@@ -241,6 +246,7 @@ func GamePlanInsert(c *command.Command, s **discordgo.Session, m **discordgo.Mes
 	return
 }
 
+// SnowflakeTimestamp Function to check the user's join date
 func SnowflakeTimestamp(ID string) (t time.Time, err error) {
 	i, err := strconv.ParseInt(ID, 10, 64)
 	if err != nil {
@@ -252,6 +258,7 @@ func SnowflakeTimestamp(ID string) (t time.Time, err error) {
 	return
 }
 
+// GetMemberListFromGuild Gets the member info
 func GetMemberListFromGuild(s *discordgo.Session, guildID string) []*discordgo.Member {
 	membersList, err := s.GuildMembers(guildID, "0", 1000)
 	if err != nil {
@@ -262,6 +269,7 @@ func GetMemberListFromGuild(s *discordgo.Session, guildID string) []*discordgo.M
 
 }
 
+// CheckRegularSpamAttack Checks the server for spam attacks
 func CheckRegularSpamAttack(s *discordgo.Session) {
 	//variable definitons
 	var membersCached = GetMemberListFromGuild(s, GuildIDNumber)
