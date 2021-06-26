@@ -62,6 +62,9 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if command.IsCommand(&cmd, "convo") {
 		responder_functions.Trivia(s, cmd, m)
 	}
+	if command.IsCommand(&cmd, "fox") {
+		responder_functions.Fox(s, cmd, m)
+	}
 
 }
 

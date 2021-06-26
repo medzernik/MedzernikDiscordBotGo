@@ -350,3 +350,7 @@ func Trivia(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreat
 	s.ChannelMessageSend(m.ChannelID, splitTrivia[n])
 
 }
+
+func Fox(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
+	s.ChannelMessageSend(m.ChannelID, "<a:medzernikShake:814055147583438848>")
+}
