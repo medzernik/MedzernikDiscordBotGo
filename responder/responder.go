@@ -42,7 +42,7 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if command.IsCommand(&cmd, "age") {
 		responder_functions.AgeJoined(s, cmd, m)
 	}
-
+	//TODO: rewrite
 	if command.IsCommand(&cmd, "mute") {
 		responder_functions.Mute(s, cmd, m, err)
 	}
@@ -51,23 +51,29 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if command.IsCommand(&cmd, "check-users") {
 		responder_functions.CheckUsers(s, cmd, m)
 	}
-
+	//lets you play a game with a mention
 	if command.IsCommand(&cmd, "plan") {
 		responder_functions.PlanGame(s, cmd, m)
 	}
-
+	//shows the currently planned games in the database
 	if command.IsCommand(&cmd, "planned") {
 		responder_functions.PlannedGames(s, cmd, m)
 	}
-
-	if command.IsCommand(&cmd, "convo") {
+	// outputs a random topic for a discussion
+	if command.IsCommand(&cmd, "topic") {
 		responder_functions.Trivia(s, cmd, m)
 	}
+	//aaaaaa
 	if command.IsCommand(&cmd, "fox") {
 		responder_functions.Fox(s, cmd, m)
 	}
+	//outputs a weather from openweathermap
 	if command.IsCommand(&cmd, "weather") {
 		go responder_functions.GetWeather(s, cmd, m)
+	}
+	//TODO: finish the help system
+	if command.IsCommand(&cmd, "help") {
+		s.ChannelMessageSend(m.ChannelID, "``Help system not implemented yet. For basic help, check the README.MD at:\nhttps://github.com/medzernik/SlovakiaDiscordBotGo/blob/master/README.md``")
 	}
 
 }

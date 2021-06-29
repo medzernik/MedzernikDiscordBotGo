@@ -110,3 +110,14 @@ func printError(command string, cause string) error {
 func printArgError(command string, argument string, cause string) error {
 	return printError(command, fmt.Sprintf("Argument \"%s\" %s", argument, cause))
 }
+
+// JoinArguments takes all arguments separated by space and joins them together into a single string
+//TODO: make this function take arguments as to which fields of the cmd.Arguments[x] to unify
+func JoinArguments(cmd Command) string {
+	var commandString string
+	for _, value := range cmd.Arguments {
+		commandString += value
+		commandString += " "
+	}
+	return commandString
+}

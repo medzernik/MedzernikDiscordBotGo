@@ -388,11 +388,7 @@ func GetWeather(s *discordgo.Session, cmd command.Command, m *discordgo.MessageC
 		log.Fatalln(err)
 	}
 
-	var commandString string
-	for _, value := range cmd.Arguments {
-		commandString += value
-		commandString += " "
-	}
+	var commandString string = command.JoinArguments(cmd)
 
 	err2 := w.CurrentByName(commandString)
 	if err2 != nil {

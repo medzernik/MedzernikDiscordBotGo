@@ -46,6 +46,14 @@ Plans and writes a UNIX timestamped time + ID and other data into an entry in SQ
 
 SELECT * from planned games table. Outputs into the same Discord channel.
 
+## weather
+.weather CityName
 
+Check to see the weather information of a particular city. Supports cities with spaces in names. Runs concurrently.
+
+## topic
+.topic
+
+Outputs a random topic for a discussion.
 
 More features pending, including a docker image and a custom SQLite database for internal event planning.
