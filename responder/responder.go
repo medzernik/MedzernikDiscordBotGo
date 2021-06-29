@@ -1,3 +1,4 @@
+// Package responder defines the trigger words for the chat from users and then runs the appropriate commands.
 package responder
 
 import (

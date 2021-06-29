@@ -1,3 +1,4 @@
+// Package responder_functions contains all the logic and basic config commands for the responder commands.
 package responder_functions
 
 import (
@@ -16,9 +17,9 @@ import (
 
 // GuildIDNumber SETTINGS
 //guildID. Change this to represent your server. ID of channel and server, String data type
-var GuildIDNumber = "513274646406365184"
-var AdminChannel = "837987736416813076"
-var LogChannel = "513280604507340804"
+const GuildIDNumber string = "513274646406365184"
+const AdminChannel string = "837987736416813076"
+const LogChannel string = "513280604507340804"
 
 func Zasielkovna(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
 	err := command.VerifyArguments(&cmd)

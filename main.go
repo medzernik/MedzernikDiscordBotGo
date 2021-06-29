@@ -1,3 +1,4 @@
+//A Discord bot written in Go. Currently has various functions. Some are automatic, some react to chat messages.
 package main
 
 import (

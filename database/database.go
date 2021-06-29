@@ -1,3 +1,4 @@
+// Package database contains the basic commands for interacting with a simple SQLite database. It is used to store various data from users for a reuse.
 package database
 
 import (

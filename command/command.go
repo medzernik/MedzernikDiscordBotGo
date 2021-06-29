@@ -1,3 +1,4 @@
+// Package command Serves to regex and fix command inputs from users. Returns processed string arrays with the command and arguments parts.
 package command
 
 import (
