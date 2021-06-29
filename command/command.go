@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-var prefix = "."
+const prefix string = "."
 
 type Command struct {
 	Command   string
