@@ -67,7 +67,7 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 		responder_functions.Fox(s, cmd, m)
 	}
 	if command.IsCommand(&cmd, "weather") {
-		responder_functions.GetWeather(s, cmd, m)
+		go responder_functions.GetWeather(s, cmd, m)
 	}
 
 }
