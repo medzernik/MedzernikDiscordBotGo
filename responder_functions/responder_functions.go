@@ -5,9 +5,11 @@ import (
 	"bufio"
 	"database/sql"
 	"fmt"
+	owm "github.com/briandowns/openweathermap"
 	"github.com/bwmarrin/discordgo"
 	"github.com/medzernik/SlovakiaDiscordBotGo/command"
 	"github.com/medzernik/SlovakiaDiscordBotGo/database"
+	"log"
 	"math/rand"
 	"os"
 	"strconv"
@@ -354,4 +356,84 @@ func Trivia(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreat
 
 func Fox(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
 	s.ChannelMessageSend(m.ChannelID, "<a:medzernikShake:814055147583438848>")
+}
+
+func GetWeather(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
+
+	if len(cmd.Arguments) < 1 {
+		s.ChannelMessageSend(m.ChannelID, "Usage:\n``.weather CityName``")
+		return
+	}
+
+	type wData struct {
+		name       string
+		weather    string
+		condition  string
+		temp       string
+		tempMax    string
+		tempMin    string
+		tempFeel   string
+		pressure   string
+		humidity   string
+		windSpeed  string
+		rainAmount string
+		sunrise    string
+		sunset     string
+	}
+
+	var apiKey = "65bb37a9ac2af9128d6ceaf670043b39"
+
+	w, err := owm.NewCurrent("C", "en", apiKey)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	var commandString string
+	for _, value := range cmd.Arguments {
+		commandString += value
+		commandString += " "
+	}
+
+	err2 := w.CurrentByName(commandString)
+	if err2 != nil {
+		log.Println(err2)
+		s.ChannelMessageSend(m.ChannelID, "**error: the city **"+commandString+"**does not exist.**")
+		return
+	}
+	fmt.Println(w.Weather[0].Main)
+
+	var weatherData = wData{
+		name:       w.Name,
+		weather:    w.Weather[0].Main,
+		condition:  w.Weather[0].Description,
+		temp:       strconv.FormatFloat(w.Main.Temp, 'f', 1, 64) + " °C",
+		tempMax:    strconv.FormatFloat(w.Main.TempMax, 'f', 1, 64) + " °C",
+		tempMin:    strconv.FormatFloat(w.Main.TempMin, 'f', 1, 64) + " °C",
+		tempFeel:   strconv.FormatFloat(w.Main.FeelsLike, 'f', 1, 64) + " °C",
+		pressure:   strconv.FormatFloat(w.Main.Pressure, 'f', 1, 64) + " hPa",
+		humidity:   strconv.FormatInt(int64(w.Main.Humidity), 10) + " %",
+		windSpeed:  strconv.FormatFloat(w.Wind.Speed, 'f', 1, 64) + " km/h",
+		rainAmount: strconv.FormatFloat(w.Rain.OneH*10, 'f', 1, 64) + " %",
+		sunrise:    time.Unix(int64(w.Sys.Sunrise), 0).Format(time.Kitchen),
+		sunset:     time.Unix(int64(w.Sys.Sunset), 0).Format(time.Kitchen),
+	}
+
+	var weatherDataString string = "```\n" +
+		"City:\t\t" + weatherData.name + "\n" +
+		"Weather:\t" + weatherData.weather + "\n" +
+		"Condition:\t" + weatherData.condition + "\n" +
+		"Temperature: " + weatherData.temp + "\n" +
+		"Max Temp:\t" + weatherData.tempMax + "\n" +
+		"Min Temp:\t" + weatherData.tempMin + "\n" +
+		"Feel Temp:\t" + weatherData.tempFeel + "\n" +
+		"Pressure:\t" + weatherData.pressure + "\n" +
+		"Humidity:\t" + weatherData.humidity + "\n" +
+		"Wind Speed:\t" + weatherData.windSpeed + "\n" +
+		"Rainfall:\t" + weatherData.rainAmount + "\n" +
+		"Sunrise:\t" + weatherData.sunrise + "\n" +
+		"Sunset:\t" + weatherData.sunset + "\n" +
+		"```"
+
+	s.ChannelMessageSend(m.ChannelID, weatherDataString)
+
 }
