@@ -385,6 +385,7 @@ func GetWeather(s *discordgo.Session, cmd command.Command, m *discordgo.MessageC
 
 	w, err := owm.NewCurrent("C", "en", apiKey)
 	if err != nil {
+		fmt.Println("Error processing the request")
 		log.Fatalln(err)
 	}
 
@@ -396,7 +397,6 @@ func GetWeather(s *discordgo.Session, cmd command.Command, m *discordgo.MessageC
 		s.ChannelMessageSend(m.ChannelID, "**error: the city **"+commandString+"**does not exist.**")
 		return
 	}
-	fmt.Println(w.Weather[0].Main)
 
 	var weatherData = wData{
 		name:       w.Name,
@@ -418,7 +418,7 @@ func GetWeather(s *discordgo.Session, cmd command.Command, m *discordgo.MessageC
 		"City:\t\t" + weatherData.name + "\n" +
 		"Weather:\t" + weatherData.weather + "\n" +
 		"Condition:\t" + weatherData.condition + "\n" +
-		"Temperature: " + weatherData.temp + "\n" +
+		"Temperature:" + weatherData.temp + "\n" +
 		"Max Temp:\t" + weatherData.tempMax + "\n" +
 		"Min Temp:\t" + weatherData.tempMin + "\n" +
 		"Feel Temp:\t" + weatherData.tempFeel + "\n" +

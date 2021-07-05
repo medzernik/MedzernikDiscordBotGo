@@ -64,7 +64,7 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 		responder_functions.Trivia(s, cmd, m)
 	}
 	//aaaaaa
-	if command.IsCommand(&cmd, "fox") {
+	if command.IsCommand(&cmd, "fox") || command.IsCommand(&cmd, "shake") {
 		responder_functions.Fox(s, cmd, m)
 	}
 	//outputs a weather from openweathermap
