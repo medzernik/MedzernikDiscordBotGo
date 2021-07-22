@@ -85,30 +85,20 @@ func AgeJoined(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCr
 
 // Mute Muting function
 func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate, err error) {
-	var timeMute uint64
-	var timeMuteString string
-	var userMuteAge time.Time
+	//enable to enable trustedUser Muting feature
+	var trustedMutingEnabled bool = false
 
+	timeToCheckUsers := 24.0 * -1.0
 	var roleMuteID = "684159104901709825"
 
 	//Arguments checking
 	if len(cmd.Arguments) <= 1 {
-		_, err := s.ChannelMessageSend(m.ChannelID, "[SYNTAX] Insufficient arguments provided (help: **.mute @user time**)")
+		_, err := s.ChannelMessageSend(m.ChannelID, "[SYNTAX] Insufficient arguments provided (help: **.mute @user**)")
 		if err != nil {
 			s.ChannelMessageSend(m.ChannelID, "[ERR] Error processing request")
 			return
 		}
 		return
-	}
-
-	if len(cmd.Arguments) > 1 {
-		timeMute, err = strconv.ParseUint(cmd.Arguments[1], 10, 64)
-		if err != nil {
-			s.ChannelMessageSend(m.ChannelID, "**[ERR] Error parsing the time** (help: second argument should be number in minutes, max 64-bit sized.) \nExample: .mute user **30**"+"\nYou can also use the command without time specified"+"\n"+err.Error())
-			return
-		}
-		fmt.Println(timeMute)
-		timeMuteString = cmd.Arguments[1]
 	}
 
 	//Verify, if user has any rights at all
@@ -124,7 +114,7 @@ func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate,
 	if command.VerifyAdmin(s, m) == true {
 		for i := range membersCached {
 			if membersCached[i].User.ID == MuteUserString {
-				s.ChannelMessageSend(m.ChannelID, "[OK] Muted user "+MuteUserString+" for "+timeMuteString+" minutes")
+				s.ChannelMessageSend(m.ChannelID, "[OK] Muted user "+MuteUserString)
 				s.GuildMemberMute(GuildIDNumber, MuteUserString, true)
 				s.GuildMemberRoleAdd(GuildIDNumber, MuteUserString, roleMuteID)
 				return
@@ -132,16 +122,18 @@ func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate,
 		}
 	}
 
-	if command.VerifyTrusted(s, m) == true && command.VerifyAdmin(s, m) == false {
+	if command.VerifyTrusted(s, m) == true && command.VerifyAdmin(s, m) == false && trustedMutingEnabled == true {
 		for i := range membersCached {
-			userMuteAge, _ = membersCached[i].JoinedAt.Parse()
-			if membersCached[i].User.ID == MuteUserString && userMuteAge.Unix()-time.Now().Unix() < 86400 {
-				s.ChannelMessageSend(m.ChannelID, "[OK] Muted user younger than 24 hours "+MuteUserString+" for "+timeMuteString+" minutes")
+			userTimeJoin, _ := membersCached[i].JoinedAt.Parse()
+			timevar := userTimeJoin.Sub(time.Now()).Hours()
+			if membersCached[i].User.ID == MuteUserString && timevar > timeToCheckUsers {
+				s.ChannelMessageSend(m.ChannelID, "[OK] Muted user younger than 24 hours "+MuteUserString)
 				s.GuildMemberMute(GuildIDNumber, MuteUserString, true)
 				s.GuildMemberRoleAdd(GuildIDNumber, MuteUserString, roleMuteID)
 				return
-			} else {
+			} else if membersCached[i].User.ID == MuteUserString && timevar < timeToCheckUsers {
 				s.ChannelMessageSend(m.ChannelID, "[PERM] Trusted users cannot mute anyone who joined for 24+ hours")
+				return
 			}
 
 		}
@@ -163,7 +155,7 @@ func KickUser(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCre
 	}
 
 	if len(cmd.Arguments) > 1 {
-		reason = cmd.Arguments[1]
+		reason = command.JoinArguments(cmd)
 	}
 
 	if command.VerifyAdmin(s, m) == false {
@@ -175,17 +167,18 @@ func KickUser(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCre
 
 	var KickUserString string = command.ParseMentionToString(cmd.Arguments[0])
 
-	s.ChannelMessageSend(m.ChannelID, "[PERM] Permissions check complete. Do you want to kick the user?")
+	s.ChannelMessageSend(m.ChannelID, "[PERM] Permissions check complete.")
 
 	for i := range membersCached {
 		if membersCached[i].User.ID == KickUserString {
-			if len(reason) > 0 {
+			if len(reason) > 1 {
 				err := s.GuildMemberDeleteWithReason(GuildIDNumber, KickUserString, reason)
 				if err != nil {
 					s.ChannelMessageSend(m.ChannelID, "[ERR] Error kicking user")
 					return
 				}
 				s.ChannelMessageSend(m.ChannelID, "[OK] Kicking user: "+KickUserString+". \nReason: "+reason)
+				s.ChannelMessageSend(LogChannel, "User "+KickUserString+" "+cmd.Arguments[0]+" Kicked by "+m.Author.Username)
 			} else {
 				err := s.GuildMemberDelete(GuildIDNumber, KickUserString)
 				if err != nil {
@@ -193,6 +186,61 @@ func KickUser(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCre
 					return
 				}
 				s.ChannelMessageSend(m.ChannelID, "[OK] Kicking user: "+KickUserString+". \nReason: "+reason)
+				s.ChannelMessageSend(LogChannel, "User "+KickUserString+" "+cmd.Arguments[0]+" Kicked by "+m.Author.Username)
+			}
+		}
+
+	}
+	return
+}
+
+func BanUser(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
+	var reason string
+	var daysDelete int = 7
+
+	if len(cmd.Arguments) < 1 {
+		_, err := s.ChannelMessageSend(m.ChannelID, "[SYNTAX] Insufficient arguments provided (help: **.kick @user <optional_reason>**)")
+		if err != nil {
+			s.ChannelMessageSend(m.ChannelID, "[ERR] Error processing request")
+			return
+		}
+		return
+	}
+
+	if len(cmd.Arguments) > 2 {
+		reason = command.JoinArguments(cmd)
+		//daysDelete, _ = strconv.Atoi(cmd.Arguments[2])
+	}
+
+	if command.VerifyAdmin(s, m) == false {
+		s.ChannelMessageSend(m.ChannelID, "[PERM] Error Banning user - insufficient rights for operation.")
+		return
+	}
+
+	membersCached := GetMemberListFromGuild(s, GuildIDNumber)
+
+	var BanUserString string = command.ParseMentionToString(cmd.Arguments[0])
+
+	s.ChannelMessageSend(m.ChannelID, "[PERM] Permissions check complete.")
+
+	for i := range membersCached {
+		if membersCached[i].User.ID == BanUserString {
+			if len(reason) > 0 {
+				err := s.GuildBanCreateWithReason(GuildIDNumber, BanUserString, reason, daysDelete)
+				if err != nil {
+					s.ChannelMessageSend(m.ChannelID, "[ERR] Error banning user")
+					return
+				}
+				s.ChannelMessageSend(LogChannel, "User "+BanUserString+" "+cmd.Arguments[0]+" Banned by "+m.Author.Username)
+				s.ChannelMessageSend(m.ChannelID, "[OK] Banning user: "+BanUserString+". \nReason: "+reason)
+			} else {
+				err := s.GuildBanCreate(GuildIDNumber, BanUserString, daysDelete)
+				if err != nil {
+					s.ChannelMessageSend(m.ChannelID, "[ERR] Error banning user")
+					return
+				}
+				s.ChannelMessageSend(LogChannel, "User "+BanUserString+" "+cmd.Arguments[0]+" Banned by "+m.Author.Username)
+				s.ChannelMessageSend(m.ChannelID, "[OK] Banning user: "+BanUserString+". \nReason: "+reason)
 			}
 		}
 
@@ -348,7 +396,6 @@ func CheckRegularSpamAttack(s *discordgo.Session) {
 			timevar := userTimeJoin.Sub(time.Now()).Minutes()
 
 			if timevar > timeToCheckUsers {
-				println("Checking " + membersCached[itera].User.Username + " for possible raid attack")
 				tempMsg += "RAID PROTECTION ALERT!: User" + membersCached[itera].User.Username + "join age: " + strconv.FormatFloat(timeToCheckUsers, 'f', 0, 64) + "\n"
 				spamcounter += 1
 			}
@@ -363,14 +410,14 @@ func CheckRegularSpamAttack(s *discordgo.Session) {
 
 }
 
-func Trivia(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
+func Topic(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
 	err := command.VerifyArguments(&cmd)
 	if err != nil {
 		s.ChannelMessageSend(m.ChannelID, err.Error())
 		return
 	}
 
-	fileHandle, err := os.Open("trivia_questions.txt")
+	fileHandle, err := os.Open("topic_questions.txt")
 	if err != nil {
 		fmt.Println("error reading the file: ", err)
 		s.ChannelMessageSend(m.ChannelID, err.Error())
@@ -379,25 +426,25 @@ func Trivia(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreat
 	defer func(fileHandle *os.File) {
 		err := fileHandle.Close()
 		if err != nil {
-			fmt.Println("error closing the file with trivia")
+			fmt.Println("[ERR] error closing the file with topics")
 		}
 	}(fileHandle)
 
 	fileScanner := bufio.NewScanner(fileHandle)
 
-	var splitTrivia []string
+	var splitTopic []string
 
 	for fileScanner.Scan() {
-		splitTrivia = append(splitTrivia, fileScanner.Text())
+		splitTopic = append(splitTopic, fileScanner.Text())
 	}
 
 	a := 0
-	b := len(splitTrivia)
+	b := len(splitTopic)
 
 	rand.Seed(time.Now().UnixNano())
 	n := a + rand.Intn(b-a+1)
 
-	s.ChannelMessageSend(m.ChannelID, splitTrivia[n])
+	s.ChannelMessageSend(m.ChannelID, splitTopic[n])
 
 }
 

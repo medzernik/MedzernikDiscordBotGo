@@ -61,7 +61,7 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 	// outputs a random topic for a discussion
 	if command.IsCommand(&cmd, "topic") {
-		responder_functions.Trivia(s, cmd, m)
+		responder_functions.Topic(s, cmd, m)
 	}
 	//aaaaaa
 	if command.IsCommand(&cmd, "fox") || command.IsCommand(&cmd, "shake") {
@@ -78,6 +78,9 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	//kicks a user
 	if command.IsCommand(&cmd, "kick") {
 		go responder_functions.KickUser(s, cmd, m)
+	}
+	if command.IsCommand(&cmd, "ban") {
+		go responder_functions.BanUser(s, cmd, m)
 	}
 
 }

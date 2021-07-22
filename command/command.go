@@ -137,9 +137,6 @@ func VerifyAdmin(s *discordgo.Session, m *discordgo.MessageCreate) bool {
 		}
 	}
 
-	if authorised == false {
-		s.ChannelMessageSend(m.ChannelID, "[AUTH] Insufficient permissions to execute command.")
-	}
 	return authorised
 }
 
@@ -156,8 +153,5 @@ func VerifyTrusted(s *discordgo.Session, m *discordgo.MessageCreate) bool {
 		}
 	}
 
-	if authorised == false {
-		s.ChannelMessageSend(m.ChannelID, "[AUTH] Insufficient permissions to execute command.")
-	}
 	return authorised
 }

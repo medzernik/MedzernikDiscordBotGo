@@ -24,7 +24,7 @@ The bot automatically checks for any games planned every minute and reminds peop
 ## muting
 .mute @user
 
-mutes a user, except this bot and except the priviledged admin role ID user. admin power checking TBD.
+mutes a user. Checks if the user is either an Admin or, at least a Trusted user. For a trusted user, only muting of users that have joined less than 24 hours ago is allowed.
 
 ## age check
 .age @user
@@ -57,3 +57,9 @@ Check to see the weather information of a particular city. Supports cities with 
 Outputs a random topic for a discussion.
 
 More features pending, including a docker image and a custom SQLite database for internal event planning.
+
+## kick/ban
+.kick @user <reason>
+.ban @user <reason>
+
+Kicks and or bans a user. Posts a message to the log channel defined. In case of a ban also deletes previous 7 days of the user's messages.
