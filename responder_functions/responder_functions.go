@@ -85,72 +85,119 @@ func AgeJoined(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCr
 
 // Mute Muting function
 func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate, err error) {
-	var muteUser string
 	var timeMute uint64
-	var roleMuteID = "684159104901709825"
-	var priviledgedRole = "513275201375698954"
-	membersCached := GetMemberListFromGuild(s, GuildIDNumber)
+	var timeMuteString string
+	var userMuteAge time.Time
 
-	if len(cmd.Arguments) < 1 {
-		_, err := s.ChannelMessageSend(m.ChannelID, "Insufficient arguments provded (help: .mute **@user time**)")
+	var roleMuteID = "684159104901709825"
+
+	//Arguments checking
+	if len(cmd.Arguments) <= 1 {
+		_, err := s.ChannelMessageSend(m.ChannelID, "[SYNTAX] Insufficient arguments provided (help: **.mute @user time**)")
 		if err != nil {
+			s.ChannelMessageSend(m.ChannelID, "[ERR] Error processing request")
 			return
 		}
 		return
 	}
-	muteUserRaw := cmd.Arguments[0]
-	muteUser = command.ParseMentionToString(cmd.Arguments[0])
 
 	if len(cmd.Arguments) > 1 {
 		timeMute, err = strconv.ParseUint(cmd.Arguments[1], 10, 64)
 		if err != nil {
-			s.ChannelMessageSend(m.ChannelID, "**Error parsing the time** (help: second argument should be number in minutes, max 64-bit sized.) \nExample: .mute user **30**"+"\nYou can also use the command without time specified"+"\n"+err.Error())
+			s.ChannelMessageSend(m.ChannelID, "**[ERR] Error parsing the time** (help: second argument should be number in minutes, max 64-bit sized.) \nExample: .mute user **30**"+"\nYou can also use the command without time specified"+"\n"+err.Error())
 			return
 		}
+		fmt.Println(timeMute)
+		timeMuteString = cmd.Arguments[1]
 	}
 
-	for itera := range membersCached {
-		if membersCached[itera].User.ID == muteUser {
-			for i := range membersCached[itera].Roles {
-				if membersCached[itera].Roles[i] == roleMuteID {
-					s.ChannelMessageSend(m.ChannelID, "**Duplicate request:** User "+muteUser+" already has a role Muted "+roleMuteID+" added")
-					return
-				} else if muteUser == "837982234597916672" {
-					s.ChannelMessageSend(m.ChannelID, "***You fucking donkey. WHO DO YOU THINK YOU ARE MUTING YOU FUCK*** <:pocem:683715405407059968> <:pocem:683715405407059968> <:pocem:683715405407059968> <:pocem:683715405407059968>")
-					return
-				} else if membersCached[itera].Roles[i] == priviledgedRole && membersCached[itera].User.ID == muteUser {
-					s.ChannelMessageSend(m.ChannelID, "**Refusing to mute user** "+muteUserRaw+" **who has a privileged role** "+priviledgedRole+"\n The role is set as priviledged and can't be assigned role id: "+roleMuteID)
-					return
+	//Verify, if user has any rights at all
+	if command.VerifyAdmin(s, m) == false && command.VerifyTrusted(s, m) == false {
+		s.ChannelMessageSend(m.ChannelID, "[PERM] Error muting a user - insufficient rights for any operation.")
+		return
+	}
 
-				}
+	//Added only after the first check of rights, to prevent spamming of the requests
+	membersCached := GetMemberListFromGuild(s, GuildIDNumber)
+	var MuteUserString string = command.ParseMentionToString(cmd.Arguments[0])
 
+	if command.VerifyAdmin(s, m) == true {
+		for i := range membersCached {
+			if membersCached[i].User.ID == MuteUserString {
+				s.ChannelMessageSend(m.ChannelID, "[OK] Muted user "+MuteUserString+" for "+timeMuteString+" minutes")
+				s.GuildMemberMute(GuildIDNumber, MuteUserString, true)
+				s.GuildMemberRoleAdd(GuildIDNumber, MuteUserString, roleMuteID)
+				return
 			}
-
 		}
 	}
-	for itera := range membersCached {
-		for i := range membersCached[itera].Roles {
-			if membersCached[itera].User.ID == m.Author.ID && membersCached[itera].Roles[i] == priviledgedRole {
-				var err error
-				err = s.GuildMemberMute(GuildIDNumber, muteUser, true)
-				if err != nil {
-				}
-				err = s.GuildMemberRoleAdd(GuildIDNumber, muteUser, roleMuteID)
-				if err != nil {
-					s.ChannelMessageSend(m.ChannelID, "Error adding muted role to user "+muteUserRaw+"\n"+err.Error())
-					return
-				}
-				s.ChannelMessageSend(m.ChannelID, "User muted successfully.")
-				s.ChannelMessageSend(LogChannel, "User "+muteUserRaw+" muted successfully - assigned role "+roleMuteID)
+
+	if command.VerifyTrusted(s, m) == true && command.VerifyAdmin(s, m) == false {
+		for i := range membersCached {
+			userMuteAge, _ = membersCached[i].JoinedAt.Parse()
+			if membersCached[i].User.ID == MuteUserString && userMuteAge.Unix()-time.Now().Unix() < 86400 {
+				s.ChannelMessageSend(m.ChannelID, "[OK] Muted user younger than 24 hours "+MuteUserString+" for "+timeMuteString+" minutes")
+				s.GuildMemberMute(GuildIDNumber, MuteUserString, true)
+				s.GuildMemberRoleAdd(GuildIDNumber, MuteUserString, roleMuteID)
 				return
 			} else {
-				s.ChannelMessageSend(m.ChannelID, "Insufficient permissions")
-				fmt.Println(timeMute)
-				return
+				s.ChannelMessageSend(m.ChannelID, "[PERM] Trusted users cannot mute anyone who joined for 24+ hours")
 			}
 
 		}
+
 	}
+	return
+}
+
+func KickUser(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
+	var reason string
+
+	if len(cmd.Arguments) < 1 {
+		_, err := s.ChannelMessageSend(m.ChannelID, "[SYNTAX] Insufficient arguments provided (help: **.kick @user <optional_reason>**)")
+		if err != nil {
+			s.ChannelMessageSend(m.ChannelID, "[ERR] Error processing request")
+			return
+		}
+		return
+	}
+
+	if len(cmd.Arguments) > 1 {
+		reason = cmd.Arguments[1]
+	}
+
+	if command.VerifyAdmin(s, m) == false {
+		s.ChannelMessageSend(m.ChannelID, "[PERM] Error kicking a user - insufficient rights for operation.")
+		return
+	}
+
+	membersCached := GetMemberListFromGuild(s, GuildIDNumber)
+
+	var KickUserString string = command.ParseMentionToString(cmd.Arguments[0])
+
+	s.ChannelMessageSend(m.ChannelID, "[PERM] Permissions check complete. Do you want to kick the user?")
+
+	for i := range membersCached {
+		if membersCached[i].User.ID == KickUserString {
+			if len(reason) > 0 {
+				err := s.GuildMemberDeleteWithReason(GuildIDNumber, KickUserString, reason)
+				if err != nil {
+					s.ChannelMessageSend(m.ChannelID, "[ERR] Error kicking user")
+					return
+				}
+				s.ChannelMessageSend(m.ChannelID, "[OK] Kicking user: "+KickUserString+". \nReason: "+reason)
+			} else {
+				err := s.GuildMemberDelete(GuildIDNumber, KickUserString)
+				if err != nil {
+					s.ChannelMessageSend(m.ChannelID, "[ERR] Error kicking user")
+					return
+				}
+				s.ChannelMessageSend(m.ChannelID, "[OK] Kicking user: "+KickUserString+". \nReason: "+reason)
+			}
+		}
+
+	}
+	return
 }
 
 // CheckUsers Checks the age of users

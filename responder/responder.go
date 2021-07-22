@@ -75,6 +75,10 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if command.IsCommand(&cmd, "help") {
 		s.ChannelMessageSend(m.ChannelID, "``Help system not implemented yet. For basic help, check the README.MD at:\nhttps://github.com/medzernik/SlovakiaDiscordBotGo/blob/master/README.md``")
 	}
+	//kicks a user
+	if command.IsCommand(&cmd, "kick") {
+		go responder_functions.KickUser(s, cmd, m)
+	}
 
 }
 
