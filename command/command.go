@@ -11,10 +11,11 @@ import (
 )
 
 const prefix string = "."
-const authorisedIDAdmin string = "577128133975867398"
-const authorisedIDMod string = "513275201375698954"
-const authorisedIDTrusted1 string = "749642547001032816"
-const authorisedIDTrusted2 string = "749642583344414740"
+const AuthorisedIDAdmin string = "577128133975867398"
+const AuthorisedIDMod string = "513275201375698954"
+const AuthorisedIDTrusted1 string = "745218677489532969"
+const AuthorisedIDTrusted2 string = "749642547001032816"
+const AuthorisedIDTrusted3 string = "749642583344414740"
 
 type Command struct {
 	Command   string
@@ -131,7 +132,7 @@ func VerifyAdmin(s *discordgo.Session, m *discordgo.MessageCreate, authorised *b
 	var authorID = m.Member.Roles
 
 	for i := range authorID {
-		if authorID[i] == authorisedIDMod || authorID[i] == authorisedIDAdmin {
+		if authorID[i] == AuthorisedIDMod || authorID[i] == AuthorisedIDAdmin {
 			*authorised = true
 			fmt.Println("[OK] Command authorised (Admin)")
 		}
@@ -145,7 +146,7 @@ func VerifyTrusted(s *discordgo.Session, m *discordgo.MessageCreate, authorised 
 	var authorID = m.Member.Roles
 
 	for i := range authorID {
-		if authorID[i] == authorisedIDTrusted1 || authorID[i] == authorisedIDTrusted2 {
+		if authorID[i] == AuthorisedIDTrusted2 || authorID[i] == AuthorisedIDTrusted3 {
 			*authorised = true
 			fmt.Println("[OK] Command authorised (Trusted)")
 		}

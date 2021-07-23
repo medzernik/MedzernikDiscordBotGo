@@ -25,6 +25,8 @@ const LogChannel string = "868194202012508190"
 const TrustedChannel string = "751069355621744742"
 const roleMuteID string = "684159104901709825"
 
+const apiKey string = "65bb37a9ac2af9128d6ceaf670043b39"
+
 func Zasielkovna(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
 	err := command.VerifyArguments(&cmd)
 	if err != nil {
@@ -345,11 +347,11 @@ func PlannedGames(s *discordgo.Session, cmd command.Command, m *discordgo.Messag
 		}
 	}(sqliteDatabase)
 
-	var plannedgames string
-	database.DisplayAllGamesPlanned(sqliteDatabase, &plannedgames)
+	var plannedGames string
+	database.DisplayAllGamesPlanned(sqliteDatabase, &plannedGames)
 
 	//send info to channel
-	(*s).ChannelMessageSend((*m).ChannelID, plannedgames)
+	(*s).ChannelMessageSend((*m).ChannelID, plannedGames)
 	return
 }
 
@@ -430,27 +432,27 @@ func CheckRegularSpamAttack(s *discordgo.Session) {
 	//variable definitons
 	var membersCached = GetMemberListFromGuild(s, GuildIDNumber)
 	var tempMsg string
-	var spamcounter int64
-	var checkinterval time.Duration = 90
+	var spamCounter int64
+	var checkInterval time.Duration = 90
 	var timeToCheckUsers = 10 * -1.0
 
 	for {
 		//iterate over the members_cached array. Maximum limit is 1000.
-		for itera := range membersCached {
-			userTimeJoin, _ := membersCached[itera].JoinedAt.Parse()
+		for i := range membersCached {
+			userTimeJoin, _ := membersCached[i].JoinedAt.Parse()
 			timevar := userTimeJoin.Sub(time.Now()).Minutes()
 
 			if timevar > timeToCheckUsers {
-				tempMsg += "**[ALERT]** RAID PROTECTION ALERT!: User" + membersCached[itera].User.Username + "join age: " + strconv.FormatFloat(timeToCheckUsers, 'f', 0, 64) + "\n"
-				spamcounter += 1
+				tempMsg += "**[ALERT]** RAID PROTECTION ALERT!: User" + membersCached[i].User.Username + "join age: " + strconv.FormatFloat(timeToCheckUsers, 'f', 0, 64) + "\n"
+				spamCounter += 1
 			}
 
 		}
-		if spamcounter > 4 {
-			s.ChannelMessageSend(AdminChannel, "**[WARN]** Possible RAID ATTACK detected!!! (<@&513275201375698954>) ("+strconv.FormatInt(spamcounter, 10)+" users joined in the last "+strconv.FormatFloat(timeToCheckUsers, 'f', 0, 64)+" hours)")
+		if spamCounter > 4 {
+			s.ChannelMessageSend(AdminChannel, "**[WARN]** Possible RAID ATTACK detected!!! (<@&513275201375698954>) ("+strconv.FormatInt(spamCounter, 10)+" users joined in the last "+strconv.FormatFloat(timeToCheckUsers, 'f', 0, 64)+" hours)")
 		}
-		spamcounter = 0
-		time.Sleep(checkinterval * time.Second)
+		spamCounter = 0
+		time.Sleep(checkInterval * time.Second)
 	}
 
 }
@@ -483,11 +485,18 @@ func Topic(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate
 		splitTopic = append(splitTopic, fileScanner.Text())
 	}
 
+	//a, b is the length of the topic.
 	a := 0
 	b := len(splitTopic)
 
 	rand.Seed(time.Now().UnixNano())
 	n := a + rand.Intn(b-a+1)
+
+	//this checks the slice length and prevents a panic if for any chance it happened. Just in case.
+	if n > len(splitTopic)-1 {
+		fmt.Println("[ERR_PARSE] Slice is smaller than allowed\n This error should not have ever happened...")
+		return
+	}
 
 	s.ChannelMessageSend(m.ChannelID, splitTopic[n])
 	return
@@ -519,8 +528,6 @@ func GetWeather(s *discordgo.Session, cmd command.Command, m *discordgo.MessageC
 		sunrise    string
 		sunset     string
 	}
-
-	var apiKey = "65bb37a9ac2af9128d6ceaf670043b39"
 
 	w, err := owm.NewCurrent("C", "en", apiKey)
 	if err != nil {
@@ -575,9 +582,6 @@ func GetWeather(s *discordgo.Session, cmd command.Command, m *discordgo.MessageC
 }
 
 func TimedChannelUnlock(s *discordgo.Session) {
-	var authorisedIDTrusted1 = "745218677489532969"
-	var authorisedIDTrusted2 = "749642547001032816"
-	var authorisedIDTrusted3 = "749642583344414740"
 	var checkInterval time.Duration = 60
 
 	fmt.Println("[INIT OK] Channel unlock system module initialized")
@@ -586,33 +590,33 @@ func TimedChannelUnlock(s *discordgo.Session) {
 		if time.Now().Weekday() == time.Friday && time.Now().Hour() == 18 && time.Now().Minute() == 0 {
 			//Unlock the channel
 			//TargetType 0 = roleID, 1 = memberID
-			err1 := s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted1, 0, 2251673408, 0)
+			err1 := s.ChannelPermissionSet(TrustedChannel, command.AuthorisedIDTrusted1, 0, 2251673408, 0)
 			if err1 != nil {
-				s.ChannelMessageSend(LogChannel, "**[ERR]** Error changing the permissions for role "+"<@"+authorisedIDTrusted1+">")
+				s.ChannelMessageSend(LogChannel, "**[ERR]** Error changing the permissions for role "+"<@"+command.AuthorisedIDTrusted1+">")
 			}
-			err2 := s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted2, 0, 2251673408, 0)
+			err2 := s.ChannelPermissionSet(TrustedChannel, command.AuthorisedIDTrusted2, 0, 2251673408, 0)
 			if err2 != nil {
-				s.ChannelMessageSend(LogChannel, "**[ERR]** Error changing the permissions for role "+"<@"+authorisedIDTrusted2+">")
+				s.ChannelMessageSend(LogChannel, "**[ERR]** Error changing the permissions for role "+"<@"+command.AuthorisedIDTrusted2+">")
 			}
-			err3 := s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted3, 0, 2251673408, 0)
+			err3 := s.ChannelPermissionSet(TrustedChannel, command.AuthorisedIDTrusted3, 0, 2251673408, 0)
 			if err3 != nil {
-				s.ChannelMessageSend(LogChannel, "**[ERR]** Error changing the permissions for role "+"<@"+authorisedIDTrusted3+">")
+				s.ChannelMessageSend(LogChannel, "**[ERR]** Error changing the permissions for role "+"<@"+command.AuthorisedIDTrusted3+">")
 			}
 			fmt.Println("[OK] Opened the channel " + TrustedChannel)
 		} else if time.Now().Weekday() == time.Monday && time.Now().Hour() == 6 && time.Now().Minute() == 0 {
 			//Lock the channel
 			//TargetType 0 = roleID, 1 = memberID
-			err1 := s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted1, 0, 0, 2251673408)
+			err1 := s.ChannelPermissionSet(TrustedChannel, command.AuthorisedIDTrusted1, 0, 0, 2251673408)
 			if err1 != nil {
-				s.ChannelMessageSend(LogChannel, "**[ERR]** Error changing the permissions for role "+"<@"+authorisedIDTrusted1+">")
+				s.ChannelMessageSend(LogChannel, "**[ERR]** Error changing the permissions for role "+"<@"+command.AuthorisedIDTrusted1+">")
 			}
-			err2 := s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted2, 0, 0, 2251673408)
+			err2 := s.ChannelPermissionSet(TrustedChannel, command.AuthorisedIDTrusted2, 0, 0, 2251673408)
 			if err2 != nil {
-				s.ChannelMessageSend(LogChannel, "**[ERR]** Error changing the permissions for role "+"<@"+authorisedIDTrusted2+">")
+				s.ChannelMessageSend(LogChannel, "**[ERR]** Error changing the permissions for role "+"<@"+command.AuthorisedIDTrusted2+">")
 			}
-			err3 := s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted3, 0, 0, 2251673408)
+			err3 := s.ChannelPermissionSet(TrustedChannel, command.AuthorisedIDTrusted3, 0, 0, 2251673408)
 			if err3 != nil {
-				s.ChannelMessageSend(LogChannel, "**[ERR]** Error changing the permissions for role "+"<@"+authorisedIDTrusted3+">")
+				s.ChannelMessageSend(LogChannel, "**[ERR]** Error changing the permissions for role "+"<@"+command.AuthorisedIDTrusted3+">")
 			}
 			fmt.Println("[OK] Closed the channel " + TrustedChannel)
 		}
