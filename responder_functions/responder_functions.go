@@ -552,3 +552,7 @@ func GetWeather(s *discordgo.Session, cmd command.Command, m *discordgo.MessageC
 	return
 
 }
+
+func TimedChannelUnlock(s *discordgo.Session, m *discordgo.MessageCreate) {
+
+}

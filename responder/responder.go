@@ -85,7 +85,7 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 }
 
-func ready(s *discordgo.Session, _ *discordgo.Ready) {
+func ready(s *discordgo.Session, _ *discordgo.Ready, m *discordgo.MessageCreate) {
 	//set the status
 	err := s.UpdateGameStatus(0, "Nove features mame aaaaaa")
 	if err != nil {
@@ -96,5 +96,6 @@ func ready(s *discordgo.Session, _ *discordgo.Ready) {
 	go responder_functions.CheckRegularSpamAttack(s)
 	go database.Databaserun()
 	go database.CheckPlannedGames(&s)
+	go responder_functions.TimedChannelUnlock(s, m)
 
 }
