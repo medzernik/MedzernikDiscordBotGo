@@ -48,7 +48,7 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	//right now this command checks for any 1000 users on the guild that have a join time less than 24hours, then prints the names one by one.
-	if command.IsCommand(&cmd, "check-users") {
+	if command.IsCommand(&cmd, "checkusers") {
 		responder_functions.CheckUsers(s, cmd, m)
 	}
 	//lets you play a game with a mention
@@ -81,6 +81,9 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 	if command.IsCommand(&cmd, "ban") {
 		go responder_functions.BanUser(s, cmd, m)
+	}
+	if command.IsCommand(&cmd, "purge") {
+		responder_functions.PurgeMessages(s, cmd, m)
 	}
 
 }

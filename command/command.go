@@ -123,35 +123,33 @@ func JoinArguments(cmd Command) string {
 	return commandString
 }
 
-func VerifyAdmin(s *discordgo.Session, m *discordgo.MessageCreate) bool {
+func VerifyAdmin(s *discordgo.Session, m *discordgo.MessageCreate, authorised *bool) bool {
 	var authorisedIDAdmin = "513275201375698954"
 	var authorisedIDMod = "577128133975867398"
 
 	var authorID = m.Member.Roles
-	var authorised bool
 
 	for i := range authorID {
 		if authorID[i] == authorisedIDMod || authorID[i] == authorisedIDAdmin {
-			authorised = true
-			fmt.Println("[OK] Command authorised")
+			*authorised = true
+			fmt.Println("[OK] Command authorised (Admin)")
 		}
 	}
 
-	return authorised
+	return *authorised
 }
 
-func VerifyTrusted(s *discordgo.Session, m *discordgo.MessageCreate) bool {
+func VerifyTrusted(s *discordgo.Session, m *discordgo.MessageCreate, authorised *bool) bool {
 	var authorisedIDTrusted1 = "749642547001032816"
 	var authorisedIDTrusted2 = "749642583344414740"
 	var authorID = m.Member.Roles
-	var authorised bool
 
 	for i := range authorID {
 		if authorID[i] == authorisedIDTrusted1 || authorID[i] == authorisedIDTrusted2 {
-			authorised = true
-			fmt.Println("[OK] Command authorised")
+			*authorised = true
+			fmt.Println("[OK] Command authorised (Trusted)")
 		}
 	}
 
-	return authorised
+	return *authorised
 }

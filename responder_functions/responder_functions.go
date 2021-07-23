@@ -88,6 +88,10 @@ func AgeJoined(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCr
 func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate, err error) {
 	//enable to enable trustedUser Muting feature
 	var trustedMutingEnabled bool = false
+	var authorisedAdmin bool = false
+	var authorisedTrusted bool = false
+	authorisedAdmin = command.VerifyAdmin(s, m, &authorisedAdmin)
+	authorisedTrusted = command.VerifyAdmin(s, m, &authorisedTrusted)
 
 	timeToCheckUsers := 24.0 * -1.0
 	var roleMuteID = "684159104901709825"
@@ -103,7 +107,7 @@ func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate,
 	}
 
 	//Verify, if user has any rights at all
-	if command.VerifyAdmin(s, m) == false && command.VerifyTrusted(s, m) == false {
+	if authorisedAdmin == false && authorisedTrusted == false {
 		s.ChannelMessageSend(m.ChannelID, "[PERM] Error muting a user - insufficient rights for any operation.")
 		return
 	}
@@ -113,7 +117,7 @@ func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate,
 	var MuteUserString string = command.ParseMentionToString(cmd.Arguments[0])
 
 	//Verify for the admin role before muting.
-	if command.VerifyAdmin(s, m) == true {
+	if authorisedAdmin == true {
 		for i := range membersCached {
 			if membersCached[i].User.ID == MuteUserString {
 				s.ChannelMessageSend(m.ChannelID, "[OK] Muted user "+MuteUserString)
@@ -132,7 +136,7 @@ func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate,
 	}
 
 	//If not, verify for the role of Trusted to try to mute
-	if command.VerifyTrusted(s, m) == true && command.VerifyAdmin(s, m) == false && trustedMutingEnabled == true {
+	if authorisedTrusted == true && authorisedAdmin == false && trustedMutingEnabled == true {
 		for i := range membersCached {
 			userTimeJoin, _ := membersCached[i].JoinedAt.Parse()
 			timevar := userTimeJoin.Sub(time.Now()).Hours()
@@ -155,14 +159,18 @@ func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate,
 
 		}
 
-	} else {
+	} else if trustedMutingEnabled == false {
 		s.ChannelMessageSend(m.ChannelID, "[OFF] Muting by Trusted users is currently disabled.")
+	} else {
+		s.ChannelMessageSend(m.ChannelID, "[ERR] Undefined permission error.")
 	}
 	return
 }
 
 func KickUser(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
 	var reason string
+	var authorisedAdmin bool = false
+	authorisedAdmin = command.VerifyAdmin(s, m, &authorisedAdmin)
 
 	if len(cmd.Arguments) < 1 {
 		_, err := s.ChannelMessageSend(m.ChannelID, "[SYNTAX] Insufficient arguments provided (help: **.kick @user <optional_reason>**)")
@@ -177,7 +185,7 @@ func KickUser(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCre
 		reason = command.JoinArguments(cmd)
 	}
 
-	if command.VerifyAdmin(s, m) == false {
+	if authorisedAdmin == false {
 		s.ChannelMessageSend(m.ChannelID, "[PERM] Error kicking a user - insufficient rights for operation.")
 		return
 	}
@@ -188,7 +196,7 @@ func KickUser(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCre
 
 	s.ChannelMessageSend(m.ChannelID, "[PERM] Permissions check complete.")
 
-	if command.VerifyAdmin(s, m) == true {
+	if authorisedAdmin == true {
 		for i := range membersCached {
 			if membersCached[i].User.ID == KickUserString {
 				if len(reason) > 1 {
@@ -218,6 +226,8 @@ func KickUser(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCre
 func BanUser(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
 	var reason string
 	var daysDelete int = 7
+	var authorisedAdmin bool = false
+	authorisedAdmin = command.VerifyAdmin(s, m, &authorisedAdmin)
 
 	if len(cmd.Arguments) < 1 {
 		_, err := s.ChannelMessageSend(m.ChannelID, "[SYNTAX] Insufficient arguments provided (help: **.kick @user <optional_reason>**)")
@@ -230,10 +240,9 @@ func BanUser(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCrea
 
 	if len(cmd.Arguments) > 2 {
 		reason = command.JoinArguments(cmd)
-		//daysDelete, _ = strconv.Atoi(cmd.Arguments[2])
 	}
 
-	if command.VerifyAdmin(s, m) == false {
+	if authorisedAdmin == false {
 		s.ChannelMessageSend(m.ChannelID, "[PERM] Error Banning user - insufficient rights for operation.")
 		return
 	}
@@ -244,7 +253,7 @@ func BanUser(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCrea
 
 	s.ChannelMessageSend(m.ChannelID, "[PERM] Permissions check complete.")
 
-	if command.VerifyAdmin(s, m) == true {
+	if authorisedAdmin == true {
 		for i := range membersCached {
 			if membersCached[i].User.ID == BanUserString {
 				if len(reason) > 0 {
@@ -563,7 +572,6 @@ func TimedChannelUnlock(s *discordgo.Session) {
 	fmt.Println("Channel unlock subsystem engaged")
 
 	for {
-
 		if time.Now().Weekday() == time.Friday && time.Now().Hour() == 18 && time.Now().Minute() == 0 {
 			//Unlock the channel
 			//TargetType 0 = roleID, 1 = memberID
@@ -578,10 +586,13 @@ func TimedChannelUnlock(s *discordgo.Session) {
 			s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted2, 0, 0, discordgo.PermissionSendMessages)
 			s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted3, 0, 0, discordgo.PermissionSendMessages)
 			fmt.Println("[OK] Closed the channel " + TrustedChannel)
-		} else {
-			fmt.Println("nothing to run right now")
 		}
+
 		time.Sleep(checkInterval * time.Second)
 	}
+
+}
+
+func PurgeMessages(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
 
 }
