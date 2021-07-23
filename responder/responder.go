@@ -9,6 +9,8 @@ import (
 	"github.com/medzernik/SlovakiaDiscordBotGo/responder_functions"
 )
 
+const Version string = "0.2"
+
 func RegisterPlugin(s *discordgo.Session) {
 	s.AddHandler(messageCreated)
 	s.AddHandler(ready)
@@ -84,7 +86,8 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 			"**.weather city name** - outputs weather information for a given city.\n"+
 			"**.kick @user reason for the kick** - **[ADMIN]** kicks a user with a provided reason\n"+
 			"**.ban @user reason for the ban** - **[ADMIN]** bans a user with a provided reason and deletes 7 days of messages\n"+
-			"**.purge NUMBER (1-100)** - **[ADMIN] [WIP]** purges the amount of messages in the current channel.")
+			"**.purge NUMBER (1-100)** - **[ADMIN]** purges the amount of messages in the current channel.\n"+
+			"**.version** - displays the current bot version")
 	}
 	//kicks a user
 	if command.IsCommand(&cmd, "kick") {
@@ -94,7 +97,10 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 		go responder_functions.BanUser(s, cmd, m)
 	}
 	if command.IsCommand(&cmd, "purge") {
-		responder_functions.PurgeMessages(s, cmd, m)
+		go responder_functions.PurgeMessages(s, cmd, m)
+	}
+	if command.IsCommand(&cmd, "version") {
+		s.ChannelMessageSend(m.ChannelID, "**[VERSION]** "+Version)
 	}
 
 }

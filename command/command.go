@@ -11,6 +11,10 @@ import (
 )
 
 const prefix string = "."
+const authorisedIDAdmin string = "577128133975867398"
+const authorisedIDMod string = "513275201375698954"
+const authorisedIDTrusted1 string = "749642547001032816"
+const authorisedIDTrusted2 string = "749642583344414740"
 
 type Command struct {
 	Command   string
@@ -124,9 +128,6 @@ func JoinArguments(cmd Command) string {
 }
 
 func VerifyAdmin(s *discordgo.Session, m *discordgo.MessageCreate, authorised *bool) bool {
-	var authorisedIDAdmin = "577128133975867398"
-	var authorisedIDMod = "513275201375698954"
-
 	var authorID = m.Member.Roles
 
 	for i := range authorID {
@@ -140,8 +141,7 @@ func VerifyAdmin(s *discordgo.Session, m *discordgo.MessageCreate, authorised *b
 }
 
 func VerifyTrusted(s *discordgo.Session, m *discordgo.MessageCreate, authorised *bool) bool {
-	var authorisedIDTrusted1 = "749642547001032816"
-	var authorisedIDTrusted2 = "749642583344414740"
+
 	var authorID = m.Member.Roles
 
 	for i := range authorID {

@@ -16,14 +16,14 @@ The bot automatically checks for the time to lock and unlock sendMessage permiss
 
 **prefix:** .
 
-**command:** ni space after prefix
+**command:** (no space after prefix)
 
 **arguments:** spaces, spaced after command
 
 **example:** .mute @user
 
 # commands:
-## muting
+## muting [ADMIN] [TRUSTED]
 .mute @user
 
 mutes a user. Checks if the user is either an Admin or, at least a Trusted user. For a trusted user, only muting of users that have joined less than 24 hours ago is allowed.
@@ -33,12 +33,12 @@ mutes a user. Checks if the user is either an Admin or, at least a Trusted user.
 
 checks the age of the user (account age).
 
-## user join age check
-.check-users
+## user join age check [ADMIN]
+.checkusers
 
 checks all the users that connected in less than 24h.
 
-## plan <hours:minutes> gamename @mentions
+## plan <hours:minutes> game_name @mentions
 .plan 10:40 terraria @medzernik
 
 Plans and writes a UNIX timestamped time + ID and other data into an entry in SQLite database for later use. Confirms with outputting the entry into the Discord channel.
@@ -49,7 +49,7 @@ Plans and writes a UNIX timestamped time + ID and other data into an entry in SQ
 SELECT * from planned games table. Outputs into the same Discord channel.
 
 ## weather
-.weather CityName
+.weather City Name
 
 Check to see the weather information of a particular city. Supports cities with spaces in names. Runs concurrently.
 
@@ -60,8 +60,16 @@ Outputs a random topic for a discussion.
 
 More features pending, including a docker image and a custom SQLite database for internal event planning.
 
-## kick/ban
+## kick/ban [ADMIN]
 .kick @user <reason>
 .ban @user <reason>
 
 Kicks and or bans a user. Posts a message to the log channel defined. In case of a ban also deletes previous 7 days of the user's messages.
+
+## version
+.version
+Displays the version of the bot
+
+## purge [ADMIN]
+.purge numofmessages
+Deletes 1-100 messages in the channel that the command was typed in.
