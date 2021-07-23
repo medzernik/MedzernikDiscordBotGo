@@ -82,7 +82,6 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 			"**.plan HH:MM Game_Name @user** - plans a game for a given time with a user. Bot reminds with a ping when time is met.\n"+
 			"**.planned** - lists all the planned games\n"+
 			"**.topic** - outputs a random topic for discussion.\n"+
-			"**.fox, .shake** - <a:medzernikShake:814055147583438848>\n"+
 			"**.weather city name** - outputs weather information for a given city.\n"+
 			"**.kick @user reason for the kick** - **[ADMIN]** kicks a user with a provided reason\n"+
 			"**.ban @user reason for the ban** - **[ADMIN]** bans a user with a provided reason and deletes 7 days of messages\n"+

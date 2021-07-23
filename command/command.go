@@ -62,7 +62,7 @@ func IsCommand(c *Command, name string) bool {
 
 func VerifyArguments(c *Command, args ...interface{}) error {
 	if len(c.Arguments) != len(args) {
-		return errors.New(c.Command + ": Incorrect command arguments")
+		return errors.New(c.Command + "**[ERR]** Incorrect command arguments")
 	}
 
 	for i, arg := range args {

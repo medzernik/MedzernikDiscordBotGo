@@ -51,11 +51,11 @@ func AgeJoined(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCr
 
 	var userName string
 
-	for itera := range membersCached {
-		if membersCached[itera].User.ID == userId {
-			userName = membersCached[itera].User.Username
+	for i := range membersCached {
+		if membersCached[i].User.ID == userId {
+			userName = membersCached[i].User.Username
 			fmt.Println(userName)
-		} else if membersCached[itera].User.ID != userId && membersCached[itera].User.ID == "" {
+		} else if membersCached[i].User.ID != userId && membersCached[i].User.ID == "" {
 			s.ChannelMessageSend(m.ChannelID, "**[ERR] Bad user ID")
 
 		}
@@ -586,16 +586,34 @@ func TimedChannelUnlock(s *discordgo.Session) {
 		if time.Now().Weekday() == time.Friday && time.Now().Hour() == 18 && time.Now().Minute() == 0 {
 			//Unlock the channel
 			//TargetType 0 = roleID, 1 = memberID
-			s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted1, 0, 2251673408, 0)
-			s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted2, 0, 2251673408, 0)
-			s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted3, 0, 2251673408, 0)
+			err1 := s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted1, 0, 2251673408, 0)
+			if err1 != nil {
+				s.ChannelMessageSend(LogChannel, "**[ERR]** Error changing the permissions for role "+"<@"+authorisedIDTrusted1+">")
+			}
+			err2 := s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted2, 0, 2251673408, 0)
+			if err2 != nil {
+				s.ChannelMessageSend(LogChannel, "**[ERR]** Error changing the permissions for role "+"<@"+authorisedIDTrusted2+">")
+			}
+			err3 := s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted3, 0, 2251673408, 0)
+			if err3 != nil {
+				s.ChannelMessageSend(LogChannel, "**[ERR]** Error changing the permissions for role "+"<@"+authorisedIDTrusted3+">")
+			}
 			fmt.Println("[OK] Opened the channel " + TrustedChannel)
 		} else if time.Now().Weekday() == time.Monday && time.Now().Hour() == 6 && time.Now().Minute() == 0 {
 			//Lock the channel
 			//TargetType 0 = roleID, 1 = memberID
-			s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted1, 0, 0, 2251673408)
-			s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted2, 0, 0, 2251673408)
-			s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted3, 0, 0, 2251673408)
+			err1 := s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted1, 0, 0, 2251673408)
+			if err1 != nil {
+				s.ChannelMessageSend(LogChannel, "**[ERR]** Error changing the permissions for role "+"<@"+authorisedIDTrusted1+">")
+			}
+			err2 := s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted2, 0, 0, 2251673408)
+			if err2 != nil {
+				s.ChannelMessageSend(LogChannel, "**[ERR]** Error changing the permissions for role "+"<@"+authorisedIDTrusted2+">")
+			}
+			err3 := s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted3, 0, 0, 2251673408)
+			if err3 != nil {
+				s.ChannelMessageSend(LogChannel, "**[ERR]** Error changing the permissions for role "+"<@"+authorisedIDTrusted3+">")
+			}
 			fmt.Println("[OK] Closed the channel " + TrustedChannel)
 		}
 
@@ -617,8 +635,8 @@ func PurgeMessages(s *discordgo.Session, cmd command.Command, m *discordgo.Messa
 	if authorisedAdmin == true {
 		var messageArrayToDelete []string
 
-		numMessages, err := strconv.ParseInt(cmd.Arguments[0], 10, 64)
-		if err != nil {
+		numMessages, err1 := strconv.ParseInt(cmd.Arguments[0], 10, 64)
+		if err1 != nil {
 			s.ChannelMessageSend(m.ChannelID, "**[ERR]** Invalid number provided")
 			return
 		}
@@ -627,8 +645,8 @@ func PurgeMessages(s *discordgo.Session, cmd command.Command, m *discordgo.Messa
 			return
 		}
 
-		messageArrayComplete, err := s.ChannelMessages(m.ChannelID, int(numMessages), m.ID, "", "")
-		if err != nil {
+		messageArrayComplete, err1 := s.ChannelMessages(m.ChannelID, int(numMessages), m.ID, "", "")
+		if err1 != nil {
 			s.ChannelMessageSend(m.ChannelID, "**[ERR]** Error getting the ID of messages")
 			return
 		}
@@ -637,7 +655,11 @@ func PurgeMessages(s *discordgo.Session, cmd command.Command, m *discordgo.Messa
 			messageArrayToDelete = append(messageArrayToDelete, messageArrayComplete[i].ID)
 		}
 
-		s.ChannelMessagesBulkDelete(m.ChannelID, messageArrayToDelete)
+		err2 := s.ChannelMessagesBulkDelete(m.ChannelID, messageArrayToDelete)
+		if err2 != nil {
+			s.ChannelMessageSend(m.ChannelID, "**[ERR]** Error deleting the requested messages...")
+			return
+		}
 		s.ChannelMessageSend(m.ChannelID, "**[OK]** Deleted "+strconv.FormatInt(int64(len(messageArrayToDelete)), 10)+" messages")
 		s.ChannelMessageSend(LogChannel, "**[LOG]** User "+"<@!"+m.Author.ID+">"+" deleted "+strconv.FormatInt(int64(len(messageArrayToDelete)), 10)+" messages in channel "+"<#"+m.ChannelID+">")
 		return
