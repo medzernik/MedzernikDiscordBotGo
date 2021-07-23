@@ -9,8 +9,6 @@ import (
 	"github.com/medzernik/SlovakiaDiscordBotGo/responder_functions"
 )
 
-const Version string = "0.2"
-
 func RegisterPlugin(s *discordgo.Session) {
 	s.AddHandler(messageCreated)
 	s.AddHandler(ready)
@@ -21,7 +19,7 @@ func RegisterPlugin(s *discordgo.Session) {
 // message is created on any channel that the authenticated bot has access to.
 func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 
-	// Ignore all messages created by the bot itsel
+	// Ignore all messages created by the bot itself
 	// This isn't required in this specific example but it's a good practice.
 	if m.Author.ID == s.State.User.ID {
 		return
@@ -66,9 +64,9 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 	//aaaaaa
 	if command.IsCommand(&cmd, "fox") || command.IsCommand(&cmd, "shake") {
-		responder_functions.Fox(s, cmd, m)
+		responder_functions.Fox(s, m)
 	}
-	//outputs a weather from openweathermap
+	//outputs a weather from openWeatherMap
 	if command.IsCommand(&cmd, "weather") {
 		go responder_functions.GetWeather(s, cmd, m)
 	}
@@ -92,14 +90,17 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if command.IsCommand(&cmd, "kick") {
 		go responder_functions.KickUser(s, cmd, m)
 	}
+	//bans a user
 	if command.IsCommand(&cmd, "ban") {
 		go responder_functions.BanUser(s, cmd, m)
 	}
+	//purges messages from a channel
 	if command.IsCommand(&cmd, "purge") {
 		go responder_functions.PurgeMessages(s, cmd, m)
 	}
+	//version of the bot running
 	if command.IsCommand(&cmd, "version") {
-		s.ChannelMessageSend(m.ChannelID, "**[VERSION]** "+Version)
+		s.ChannelMessageSend(m.ChannelID, "**[VERSION]** "+responder_functions.Version)
 	}
 
 }

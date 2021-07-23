@@ -57,4 +57,5 @@ func main() {
 		fmt.Println("error closing the session", err)
 		return
 	}
+
 }

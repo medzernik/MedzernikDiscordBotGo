@@ -23,9 +23,11 @@ const GuildIDNumber string = "513274646406365184"
 const AdminChannel string = "837987736416813076"
 const LogChannel string = "868194202012508190"
 const TrustedChannel string = "751069355621744742"
-const roleMuteID string = "684159104901709825"
+const RoleMuteID string = "684159104901709825"
 
 const apiKey string = "65bb37a9ac2af9128d6ceaf670043b39"
+
+const Version string = "0.2"
 
 func Zasielkovna(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
 	err := command.VerifyArguments(&cmd)
@@ -130,7 +132,7 @@ func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate)
 				if err != nil {
 					s.ChannelMessageSend(m.ChannelID, "**[INFO]** User not in VC, cannot mute")
 				}
-				err2 := s.GuildMemberRoleAdd(GuildIDNumber, MuteUserString, roleMuteID)
+				err2 := s.GuildMemberRoleAdd(GuildIDNumber, MuteUserString, RoleMuteID)
 				if err2 != nil {
 					s.ChannelMessageSend(m.ChannelID, "**[ERR]** Error muting adding the muted role.")
 				}
@@ -153,7 +155,7 @@ func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate)
 				if err != nil {
 					s.ChannelMessageSend(m.ChannelID, "**[INFO]** User not in VC, cannot mute")
 				}
-				err2 := s.GuildMemberRoleAdd(GuildIDNumber, MuteUserString, roleMuteID)
+				err2 := s.GuildMemberRoleAdd(GuildIDNumber, MuteUserString, RoleMuteID)
 				if err2 != nil {
 					s.ChannelMessageSend(m.ChannelID, "**[ERR]** Error muting adding the muted role.")
 				}
@@ -295,9 +297,8 @@ func CheckUsers(s *discordgo.Session, cmd command.Command, m *discordgo.MessageC
 		s.ChannelMessageSend(m.ChannelID, err.Error())
 		return
 	}
-	//variable definitons
-	//members_cached, _ := s.GuildMembers("513274646406365184", "0", 1000)
-	var authorisedAdmin bool
+	//variable definitions
+	var authorisedAdmin bool = false
 	authorisedAdmin = command.VerifyAdmin(s, m, &authorisedAdmin)
 
 	if authorisedAdmin == true {
@@ -306,12 +307,12 @@ func CheckUsers(s *discordgo.Session, cmd command.Command, m *discordgo.MessageC
 		timeToCheckUsers := 24.0 * -1.0
 
 		//iterate over the members_cached array. Maximum limit is 1000.
-		for itera := range membersCached {
-			userTimeJoin, _ := membersCached[itera].JoinedAt.Parse()
-			timevar := userTimeJoin.Sub(time.Now()).Hours()
+		for i := range membersCached {
+			userTimeJoin, _ := membersCached[i].JoinedAt.Parse()
+			var timeVar float64 = userTimeJoin.Sub(time.Now()).Hours()
 
-			if timevar > timeToCheckUsers {
-				tempMsg += "This user is too young (less than 24h join age): " + membersCached[itera].User.Username + "\n"
+			if timeVar > timeToCheckUsers {
+				tempMsg += "This user is too young (less than 24h join age): " + membersCached[i].User.Username + "\n"
 			}
 		}
 		//print out the amount of members_cached (max is currently 1000)
@@ -440,9 +441,9 @@ func CheckRegularSpamAttack(s *discordgo.Session) {
 		//iterate over the members_cached array. Maximum limit is 1000.
 		for i := range membersCached {
 			userTimeJoin, _ := membersCached[i].JoinedAt.Parse()
-			timevar := userTimeJoin.Sub(time.Now()).Minutes()
+			timeVar := userTimeJoin.Sub(time.Now()).Minutes()
 
-			if timevar > timeToCheckUsers {
+			if timeVar > timeToCheckUsers {
 				tempMsg += "**[ALERT]** RAID PROTECTION ALERT!: User" + membersCached[i].User.Username + "join age: " + strconv.FormatFloat(timeToCheckUsers, 'f', 0, 64) + "\n"
 				spamCounter += 1
 			}
@@ -502,10 +503,11 @@ func Topic(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate
 	return
 }
 
-func Fox(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
+func Fox(s *discordgo.Session, m *discordgo.MessageCreate) {
 	s.ChannelMessageSend(m.ChannelID, "<a:medzernikShake:814055147583438848>")
 }
 
+// GetWeather outputs weather information from openWeatherMap
 func GetWeather(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
 
 	if len(cmd.Arguments) < 1 {
@@ -581,6 +583,7 @@ func GetWeather(s *discordgo.Session, cmd command.Command, m *discordgo.MessageC
 
 }
 
+// TimedChannelUnlock automatically locks and unlocks a trusted channel
 func TimedChannelUnlock(s *discordgo.Session) {
 	var checkInterval time.Duration = 60
 
