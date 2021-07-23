@@ -87,8 +87,10 @@ func AgeJoined(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCr
 
 // Mute Muting function
 func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
-	//enable to enable trustedUser Muting feature
+	//CHANGE THIS: Enable to enable trustedUser Muting feature
 	var trustedMutingEnabled bool = false
+
+	//Variable initiation
 	var authorisedAdmin bool = false
 	var authorisedTrusted bool = false
 	authorisedAdmin = command.VerifyAdmin(s, m, &authorisedAdmin)
@@ -120,7 +122,8 @@ func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate)
 	if authorisedAdmin == true {
 		for i := range membersCached {
 			if membersCached[i].User.ID == MuteUserString {
-				s.ChannelMessageSend(m.ChannelID, "[OK] Muted user "+MuteUserString)
+				//Try to mute
+
 				err := s.GuildMemberMute(GuildIDNumber, MuteUserString, true)
 				if err != nil {
 					s.ChannelMessageSend(m.ChannelID, "[INFO] User not in VC, cannot mute")
@@ -129,9 +132,11 @@ func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate)
 				if err2 != nil {
 					s.ChannelMessageSend(m.ChannelID, "[ERR] Error muting adding the muted role.")
 				}
+				s.ChannelMessageSend(m.ChannelID, "[OK] Muted user "+MuteUserString)
 				s.ChannelMessageSend(LogChannel, "[OK] Administrator user "+m.Author.Username+" Muted user: "+membersCached[i].User.Username)
 				return
 			}
+
 		}
 	}
 
@@ -141,7 +146,7 @@ func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate)
 			userTimeJoin, _ := membersCached[i].JoinedAt.Parse()
 			timevar := userTimeJoin.Sub(time.Now()).Hours()
 			if membersCached[i].User.ID == MuteUserString && timevar > timeToCheckUsers {
-				s.ChannelMessageSend(m.ChannelID, "[OK] Muted user younger than 24 hours "+MuteUserString)
+				//Error checking
 				err := s.GuildMemberMute(GuildIDNumber, MuteUserString, true)
 				if err != nil {
 					s.ChannelMessageSend(m.ChannelID, "[INFO] User not in VC, cannot mute")
@@ -150,6 +155,7 @@ func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate)
 				if err2 != nil {
 					s.ChannelMessageSend(m.ChannelID, "[ERR] Error muting adding the muted role.")
 				}
+				s.ChannelMessageSend(m.ChannelID, "[OK] Muted user younger than 24 hours "+MuteUserString)
 				s.ChannelMessageSend(LogChannel, "[OK] Trusted user "+m.Author.Username+" Muted user: "+membersCached[i].User.Username)
 				return
 			} else if membersCached[i].User.ID == MuteUserString && timevar < timeToCheckUsers {
