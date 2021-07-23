@@ -92,7 +92,7 @@ func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate,
 	var roleMuteID = "684159104901709825"
 
 	//Arguments checking
-	if len(cmd.Arguments) <= 1 {
+	if len(cmd.Arguments) < 1 {
 		_, err := s.ChannelMessageSend(m.ChannelID, "[SYNTAX] Insufficient arguments provided (help: **.mute @user**)")
 		if err != nil {
 			s.ChannelMessageSend(m.ChannelID, "[ERR] Error processing request")
@@ -111,25 +111,41 @@ func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate,
 	membersCached := GetMemberListFromGuild(s, GuildIDNumber)
 	var MuteUserString string = command.ParseMentionToString(cmd.Arguments[0])
 
+	//Verify for the admin role before muting.
 	if command.VerifyAdmin(s, m) == true {
 		for i := range membersCached {
 			if membersCached[i].User.ID == MuteUserString {
 				s.ChannelMessageSend(m.ChannelID, "[OK] Muted user "+MuteUserString)
-				s.GuildMemberMute(GuildIDNumber, MuteUserString, true)
-				s.GuildMemberRoleAdd(GuildIDNumber, MuteUserString, roleMuteID)
+				err := s.GuildMemberMute(GuildIDNumber, MuteUserString, true)
+				if err != nil {
+					s.ChannelMessageSend(m.ChannelID, "[ERR] Error muting the user in voice chat.")
+				}
+				err2 := s.GuildMemberRoleAdd(GuildIDNumber, MuteUserString, roleMuteID)
+				if err2 != nil {
+					s.ChannelMessageSend(m.ChannelID, "[ERR] Error muting adding the muted role.")
+				}
+				s.ChannelMessageSend(LogChannel, "[OK] Administrator user"+m.Author.Username+" Muted user: "+membersCached[i].Nick)
 				return
 			}
 		}
 	}
 
+	//If not, verify for the role of Trusted to try to mute
 	if command.VerifyTrusted(s, m) == true && command.VerifyAdmin(s, m) == false && trustedMutingEnabled == true {
 		for i := range membersCached {
 			userTimeJoin, _ := membersCached[i].JoinedAt.Parse()
 			timevar := userTimeJoin.Sub(time.Now()).Hours()
 			if membersCached[i].User.ID == MuteUserString && timevar > timeToCheckUsers {
 				s.ChannelMessageSend(m.ChannelID, "[OK] Muted user younger than 24 hours "+MuteUserString)
-				s.GuildMemberMute(GuildIDNumber, MuteUserString, true)
-				s.GuildMemberRoleAdd(GuildIDNumber, MuteUserString, roleMuteID)
+				err := s.GuildMemberMute(GuildIDNumber, MuteUserString, true)
+				if err != nil {
+					s.ChannelMessageSend(m.ChannelID, "[ERR] Error muting the user in voice chat.")
+				}
+				err2 := s.GuildMemberRoleAdd(GuildIDNumber, MuteUserString, roleMuteID)
+				if err2 != nil {
+					s.ChannelMessageSend(m.ChannelID, "[ERR] Error muting adding the muted role.")
+				}
+				s.ChannelMessageSend(LogChannel, "[OK] Trusted user"+m.Author.Username+" Muted user: "+membersCached[i].Nick)
 				return
 			} else if membersCached[i].User.ID == MuteUserString && timevar < timeToCheckUsers {
 				s.ChannelMessageSend(m.ChannelID, "[PERM] Trusted users cannot mute anyone who joined for 24+ hours")
@@ -138,6 +154,8 @@ func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate,
 
 		}
 
+	} else {
+		s.ChannelMessageSend(m.ChannelID, "[OFF] Muting by Trusted users is currently disabled.")
 	}
 	return
 }
@@ -169,27 +187,29 @@ func KickUser(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCre
 
 	s.ChannelMessageSend(m.ChannelID, "[PERM] Permissions check complete.")
 
-	for i := range membersCached {
-		if membersCached[i].User.ID == KickUserString {
-			if len(reason) > 1 {
-				err := s.GuildMemberDeleteWithReason(GuildIDNumber, KickUserString, reason)
-				if err != nil {
-					s.ChannelMessageSend(m.ChannelID, "[ERR] Error kicking user")
-					return
+	if command.VerifyAdmin(s, m) == true {
+		for i := range membersCached {
+			if membersCached[i].User.ID == KickUserString {
+				if len(reason) > 1 {
+					err := s.GuildMemberDeleteWithReason(GuildIDNumber, KickUserString, reason)
+					if err != nil {
+						s.ChannelMessageSend(m.ChannelID, "[ERR] Error kicking user")
+						return
+					}
+					s.ChannelMessageSend(m.ChannelID, "[OK] Kicking user: "+KickUserString+". \nReason: "+reason)
+					s.ChannelMessageSend(LogChannel, "User "+KickUserString+" "+cmd.Arguments[0]+" Kicked by "+m.Author.Username)
+				} else {
+					err := s.GuildMemberDelete(GuildIDNumber, KickUserString)
+					if err != nil {
+						s.ChannelMessageSend(m.ChannelID, "[ERR] Error kicking user")
+						return
+					}
+					s.ChannelMessageSend(m.ChannelID, "[OK] Kicking user: "+KickUserString+". \nReason: "+reason)
+					s.ChannelMessageSend(LogChannel, "User "+KickUserString+" "+cmd.Arguments[0]+" Kicked by "+m.Author.Username)
 				}
-				s.ChannelMessageSend(m.ChannelID, "[OK] Kicking user: "+KickUserString+". \nReason: "+reason)
-				s.ChannelMessageSend(LogChannel, "User "+KickUserString+" "+cmd.Arguments[0]+" Kicked by "+m.Author.Username)
-			} else {
-				err := s.GuildMemberDelete(GuildIDNumber, KickUserString)
-				if err != nil {
-					s.ChannelMessageSend(m.ChannelID, "[ERR] Error kicking user")
-					return
-				}
-				s.ChannelMessageSend(m.ChannelID, "[OK] Kicking user: "+KickUserString+". \nReason: "+reason)
-				s.ChannelMessageSend(LogChannel, "User "+KickUserString+" "+cmd.Arguments[0]+" Kicked by "+m.Author.Username)
 			}
-		}
 
+		}
 	}
 	return
 }
@@ -223,27 +243,29 @@ func BanUser(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCrea
 
 	s.ChannelMessageSend(m.ChannelID, "[PERM] Permissions check complete.")
 
-	for i := range membersCached {
-		if membersCached[i].User.ID == BanUserString {
-			if len(reason) > 0 {
-				err := s.GuildBanCreateWithReason(GuildIDNumber, BanUserString, reason, daysDelete)
-				if err != nil {
-					s.ChannelMessageSend(m.ChannelID, "[ERR] Error banning user")
-					return
+	if command.VerifyAdmin(s, m) == true {
+		for i := range membersCached {
+			if membersCached[i].User.ID == BanUserString {
+				if len(reason) > 0 {
+					err := s.GuildBanCreateWithReason(GuildIDNumber, BanUserString, reason, daysDelete)
+					if err != nil {
+						s.ChannelMessageSend(m.ChannelID, "[ERR] Error banning user")
+						return
+					}
+					s.ChannelMessageSend(LogChannel, "User "+BanUserString+" "+cmd.Arguments[0]+" Banned by "+m.Author.Username)
+					s.ChannelMessageSend(m.ChannelID, "[OK] Banning user: "+BanUserString+". \nReason: "+reason)
+				} else {
+					err := s.GuildBanCreate(GuildIDNumber, BanUserString, daysDelete)
+					if err != nil {
+						s.ChannelMessageSend(m.ChannelID, "[ERR] Error banning user")
+						return
+					}
+					s.ChannelMessageSend(LogChannel, "User "+BanUserString+" "+cmd.Arguments[0]+" Banned by "+m.Author.Username)
+					s.ChannelMessageSend(m.ChannelID, "[OK] Banning user: "+BanUserString+". \nReason: "+reason)
 				}
-				s.ChannelMessageSend(LogChannel, "User "+BanUserString+" "+cmd.Arguments[0]+" Banned by "+m.Author.Username)
-				s.ChannelMessageSend(m.ChannelID, "[OK] Banning user: "+BanUserString+". \nReason: "+reason)
-			} else {
-				err := s.GuildBanCreate(GuildIDNumber, BanUserString, daysDelete)
-				if err != nil {
-					s.ChannelMessageSend(m.ChannelID, "[ERR] Error banning user")
-					return
-				}
-				s.ChannelMessageSend(LogChannel, "User "+BanUserString+" "+cmd.Arguments[0]+" Banned by "+m.Author.Username)
-				s.ChannelMessageSend(m.ChannelID, "[OK] Banning user: "+BanUserString+". \nReason: "+reason)
 			}
-		}
 
+		}
 	}
 	return
 }
@@ -273,6 +295,7 @@ func CheckUsers(s *discordgo.Session, cmd command.Command, m *discordgo.MessageC
 	}
 	//print out the amount of members_cached (max is currently 1000)
 	s.ChannelMessageSend(m.ChannelID, tempMsg)
+	return
 
 }
 
@@ -283,6 +306,7 @@ func PlanGame(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCre
 		return
 	}
 	GamePlanInsert(&cmd, &s, &m)
+	return
 }
 
 func PlannedGames(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
@@ -445,7 +469,7 @@ func Topic(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate
 	n := a + rand.Intn(b-a+1)
 
 	s.ChannelMessageSend(m.ChannelID, splitTopic[n])
-
+	return
 }
 
 func Fox(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
@@ -525,5 +549,6 @@ func GetWeather(s *discordgo.Session, cmd command.Command, m *discordgo.MessageC
 		"```"
 
 	s.ChannelMessageSend(m.ChannelID, weatherDataString)
+	return
 
 }
