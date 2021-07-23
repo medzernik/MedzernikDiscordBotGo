@@ -9,6 +9,8 @@ This is a discord bot written entirely in golang using the discordgo library. Th
 The bot automatically checks for users connected in the last ~10 minutes and alerts admins if there is a possible raid attack. This is done concurrently.
 #### Planned games reminding
 The bot automatically checks for any games planned every minute and reminds people the time is due
+#### Trusted channel locking-unlocking
+The bot automatically checks for the time to lock and unlock sendMessage permissions for a given channel and for given roles.
 
 # Current syntax:
 

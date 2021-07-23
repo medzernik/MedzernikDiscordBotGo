@@ -22,6 +22,7 @@ import (
 const GuildIDNumber string = "513274646406365184"
 const AdminChannel string = "837987736416813076"
 const LogChannel string = "513280604507340804"
+const TrustedChannel string = "751069355621744742"
 
 func Zasielkovna(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
 	err := command.VerifyArguments(&cmd)
@@ -124,7 +125,7 @@ func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate,
 				if err2 != nil {
 					s.ChannelMessageSend(m.ChannelID, "[ERR] Error muting adding the muted role.")
 				}
-				s.ChannelMessageSend(LogChannel, "[OK] Administrator user"+m.Author.Username+" Muted user: "+membersCached[i].Nick)
+				s.ChannelMessageSend(LogChannel, "[OK] Administrator user "+m.Author.Username+" Muted user: "+membersCached[i].User.Username)
 				return
 			}
 		}
@@ -145,7 +146,7 @@ func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate,
 				if err2 != nil {
 					s.ChannelMessageSend(m.ChannelID, "[ERR] Error muting adding the muted role.")
 				}
-				s.ChannelMessageSend(LogChannel, "[OK] Trusted user"+m.Author.Username+" Muted user: "+membersCached[i].Nick)
+				s.ChannelMessageSend(LogChannel, "[OK] Trusted user "+m.Author.Username+" Muted user: "+membersCached[i].User.Username)
 				return
 			} else if membersCached[i].User.ID == MuteUserString && timevar < timeToCheckUsers {
 				s.ChannelMessageSend(m.ChannelID, "[PERM] Trusted users cannot mute anyone who joined for 24+ hours")
@@ -553,6 +554,34 @@ func GetWeather(s *discordgo.Session, cmd command.Command, m *discordgo.MessageC
 
 }
 
-func TimedChannelUnlock(s *discordgo.Session, m *discordgo.MessageCreate) {
+func TimedChannelUnlock(s *discordgo.Session) {
+	var authorisedIDTrusted1 = "745218677489532969"
+	var authorisedIDTrusted2 = "749642547001032816"
+	var authorisedIDTrusted3 = "749642583344414740"
+	var checkInterval time.Duration = 60
+
+	fmt.Println("Channel unlock subsystem engaged")
+
+	for {
+
+		if time.Now().Weekday() == time.Friday && time.Now().Hour() == 18 && time.Now().Minute() == 0 {
+			//Unlock the channel
+			//TargetType 0 = roleID, 1 = memberID
+			s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted1, 0, discordgo.PermissionSendMessages, 0)
+			s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted2, 0, discordgo.PermissionSendMessages, 0)
+			s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted3, 0, discordgo.PermissionSendMessages, 0)
+			fmt.Println("[OK] Opened the channel " + TrustedChannel)
+		} else if time.Now().Weekday() == time.Monday && time.Now().Hour() == 6 && time.Now().Minute() == 0 {
+			//Lock the channel
+			//TargetType 0 = roleID, 1 = memberID
+			s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted1, 0, 0, discordgo.PermissionSendMessages)
+			s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted2, 0, 0, discordgo.PermissionSendMessages)
+			s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted3, 0, 0, discordgo.PermissionSendMessages)
+			fmt.Println("[OK] Closed the channel " + TrustedChannel)
+		} else {
+			fmt.Println("nothing to run right now")
+		}
+		time.Sleep(checkInterval * time.Second)
+	}
 
 }
