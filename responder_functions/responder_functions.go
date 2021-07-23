@@ -583,19 +583,19 @@ func TimedChannelUnlock(s *discordgo.Session) {
 	fmt.Println("[INIT OK] Channel unlock system module initialized")
 
 	for {
-		if time.Now().Weekday() == time.Friday && time.Now().Hour() == 18 && time.Now().Minute() == 0 {
+		if time.Now().Weekday() == time.Friday && time.Now().Hour() == 18 && time.Now().Minute() == 27 {
 			//Unlock the channel
 			//TargetType 0 = roleID, 1 = memberID
-			s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted1, 0, discordgo.PermissionSendMessages+discordgo.PermissionViewChannel, 0)
-			s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted2, 0, discordgo.PermissionSendMessages+discordgo.PermissionViewChannel, 0)
-			s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted3, 0, discordgo.PermissionSendMessages+discordgo.PermissionViewChannel, 0)
+			s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted1, 0, 2251673408, 0)
+			s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted2, 0, 2251673408, 0)
+			s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted3, 0, 2251673408, 0)
 			fmt.Println("[OK] Opened the channel " + TrustedChannel)
 		} else if time.Now().Weekday() == time.Monday && time.Now().Hour() == 6 && time.Now().Minute() == 0 {
 			//Lock the channel
 			//TargetType 0 = roleID, 1 = memberID
-			s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted1, 0, 0, discordgo.PermissionSendMessages+discordgo.PermissionViewChannel)
-			s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted2, 0, 0, discordgo.PermissionSendMessages+discordgo.PermissionViewChannel)
-			s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted3, 0, 0, discordgo.PermissionSendMessages+discordgo.PermissionViewChannel)
+			s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted1, 0, 0, 2251673408)
+			s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted2, 0, 0, 2251673408)
+			s.ChannelPermissionSet(TrustedChannel, authorisedIDTrusted3, 0, 0, 2251673408)
 			fmt.Println("[OK] Closed the channel " + TrustedChannel)
 		}
 
