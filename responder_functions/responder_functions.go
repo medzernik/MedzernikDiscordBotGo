@@ -23,6 +23,7 @@ const GuildIDNumber string = "513274646406365184"
 const AdminChannel string = "837987736416813076"
 const LogChannel string = "513280604507340804"
 const TrustedChannel string = "751069355621744742"
+const roleMuteID string = "684159104901709825"
 
 func Zasielkovna(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
 	err := command.VerifyArguments(&cmd)
@@ -85,16 +86,15 @@ func AgeJoined(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCr
 }
 
 // Mute Muting function
-func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate, err error) {
+func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
 	//enable to enable trustedUser Muting feature
 	var trustedMutingEnabled bool = false
 	var authorisedAdmin bool = false
 	var authorisedTrusted bool = false
 	authorisedAdmin = command.VerifyAdmin(s, m, &authorisedAdmin)
-	authorisedTrusted = command.VerifyAdmin(s, m, &authorisedTrusted)
+	authorisedTrusted = command.VerifyTrusted(s, m, &authorisedTrusted)
 
 	timeToCheckUsers := 24.0 * -1.0
-	var roleMuteID = "684159104901709825"
 
 	//Arguments checking
 	if len(cmd.Arguments) < 1 {
@@ -123,7 +123,7 @@ func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate,
 				s.ChannelMessageSend(m.ChannelID, "[OK] Muted user "+MuteUserString)
 				err := s.GuildMemberMute(GuildIDNumber, MuteUserString, true)
 				if err != nil {
-					s.ChannelMessageSend(m.ChannelID, "[ERR] Error muting the user in voice chat.")
+					s.ChannelMessageSend(m.ChannelID, "[INFO] User not in VC, cannot mute")
 				}
 				err2 := s.GuildMemberRoleAdd(GuildIDNumber, MuteUserString, roleMuteID)
 				if err2 != nil {
@@ -144,7 +144,7 @@ func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate,
 				s.ChannelMessageSend(m.ChannelID, "[OK] Muted user younger than 24 hours "+MuteUserString)
 				err := s.GuildMemberMute(GuildIDNumber, MuteUserString, true)
 				if err != nil {
-					s.ChannelMessageSend(m.ChannelID, "[ERR] Error muting the user in voice chat.")
+					s.ChannelMessageSend(m.ChannelID, "[INFO] User not in VC, cannot mute")
 				}
 				err2 := s.GuildMemberRoleAdd(GuildIDNumber, MuteUserString, roleMuteID)
 				if err2 != nil {
@@ -289,22 +289,28 @@ func CheckUsers(s *discordgo.Session, cmd command.Command, m *discordgo.MessageC
 	}
 	//variable definitons
 	//members_cached, _ := s.GuildMembers("513274646406365184", "0", 1000)
-	membersCached := GetMemberListFromGuild(s, GuildIDNumber)
-	var tempMsg string
-	timeToCheckUsers := 24.0 * -1.0
+	var authorisedAdmin bool
+	authorisedAdmin = command.VerifyAdmin(s, m, &authorisedAdmin)
 
-	//iterate over the members_cached array. Maximum limit is 1000.
-	for itera := range membersCached {
-		userTimeJoin, _ := membersCached[itera].JoinedAt.Parse()
-		timevar := userTimeJoin.Sub(time.Now()).Hours()
+	if authorisedAdmin == true {
+		membersCached := GetMemberListFromGuild(s, GuildIDNumber)
+		var tempMsg string
+		timeToCheckUsers := 24.0 * -1.0
 
-		if timevar > timeToCheckUsers {
-			tempMsg += "This user is too young (less than 24h join age): " + membersCached[itera].User.Username + "\n"
+		//iterate over the members_cached array. Maximum limit is 1000.
+		for itera := range membersCached {
+			userTimeJoin, _ := membersCached[itera].JoinedAt.Parse()
+			timevar := userTimeJoin.Sub(time.Now()).Hours()
+
+			if timevar > timeToCheckUsers {
+				tempMsg += "This user is too young (less than 24h join age): " + membersCached[itera].User.Username + "\n"
+			}
 		}
-		fmt.Println("Found ", strings.Contains(tempMsg, "\n"), " very young users...")
+		//print out the amount of members_cached (max is currently 1000)
+		s.ChannelMessageSend(m.ChannelID, tempMsg)
+	} else if authorisedAdmin == false {
+		s.ChannelMessageSend(m.ChannelID, "[PERM] You do not have the permissions to use this command.")
 	}
-	//print out the amount of members_cached (max is currently 1000)
-	s.ChannelMessageSend(m.ChannelID, tempMsg)
 	return
 
 }
@@ -399,7 +405,6 @@ func SnowflakeTimestamp(ID string) (t time.Time, err error) {
 	}
 	timestamp := (i >> 22) + 1420070400000
 	t = time.Unix(0, timestamp*1000000)
-	fmt.Println(t)
 	return
 }
 
@@ -569,7 +574,7 @@ func TimedChannelUnlock(s *discordgo.Session) {
 	var authorisedIDTrusted3 = "749642583344414740"
 	var checkInterval time.Duration = 60
 
-	fmt.Println("Channel unlock subsystem engaged")
+	fmt.Println("[INIT OK] Channel unlock system module initialized")
 
 	for {
 		if time.Now().Weekday() == time.Friday && time.Now().Hour() == 18 && time.Now().Minute() == 0 {

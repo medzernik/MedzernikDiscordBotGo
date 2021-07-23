@@ -23,8 +23,8 @@ func Databaserun() {
 	err := os.Remove("sqlite-database.db")
 	if err != nil {
 		fmt.Println("error removing the file")
-		return
-	} // I delete the file to avoid duplicated records.
+	}
+	// I delete the file to avoid duplicated records.
 	// SQLite is a file based database.
 
 	log.Println("Creating sqlite-database.db...")

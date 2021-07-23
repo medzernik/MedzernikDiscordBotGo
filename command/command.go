@@ -124,8 +124,8 @@ func JoinArguments(cmd Command) string {
 }
 
 func VerifyAdmin(s *discordgo.Session, m *discordgo.MessageCreate, authorised *bool) bool {
-	var authorisedIDAdmin = "513275201375698954"
-	var authorisedIDMod = "577128133975867398"
+	var authorisedIDAdmin = "577128133975867398"
+	var authorisedIDMod = "513275201375698954"
 
 	var authorID = m.Member.Roles
 

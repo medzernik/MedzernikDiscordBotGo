@@ -11,7 +11,6 @@ import (
 
 func RegisterPlugin(s *discordgo.Session) {
 	s.AddHandler(messageCreated)
-	//s.AddHandler(reactionAdded)
 	s.AddHandler(ready)
 
 }
@@ -42,9 +41,9 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if command.IsCommand(&cmd, "age") {
 		responder_functions.AgeJoined(s, cmd, m)
 	}
-	//TODO: rewrite
+	//Function that mutes a user (assigns him a muted role).
 	if command.IsCommand(&cmd, "mute") {
-		responder_functions.Mute(s, cmd, m, err)
+		responder_functions.Mute(s, cmd, m)
 	}
 
 	//right now this command checks for any 1000 users on the guild that have a join time less than 24hours, then prints the names one by one.
@@ -73,7 +72,19 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 	//TODO: finish the help system
 	if command.IsCommand(&cmd, "help") {
-		s.ChannelMessageSend(m.ChannelID, "``Help system not implemented yet. For basic help, check the README.MD at:\nhttps://github.com/medzernik/SlovakiaDiscordBotGo/blob/master/README.md``")
+		s.ChannelMessageSend(m.ChannelID, "**The available commands are:**\n"+
+			"**.Zasielkovna** - AAAAAA\n"+
+			"**.age @user** - checks the age of a user's account\n"+
+			"**.mute @user** - **[ADMIN] [TRUSTED]** gives a user a muted role. Works on users that joined less than 24 hours ago for [TRUSTED]\n"+
+			"**.checkusers** - **[ADMIN]** lists users that joined less than 24h ago\n"+
+			"**.plan HH:MM Game_Name @user** - plans a game for a given time with a user. Bot reminds with a ping when time is met.\n"+
+			"**.planned** - lists all the planned games\n"+
+			"**.topic** - outputs a random topic for discussion.\n"+
+			"**.fox, .shake** - <a:medzernikShake:814055147583438848>\n"+
+			"**.weather city name** - outputs weather information for a given city.\n"+
+			"**.kick @user reason for the kick** - **[ADMIN]** kicks a user with a provided reason\n"+
+			"**.ban @user reason for the ban** - **[ADMIN]** bans a user with a provided reason and deletes 7 days of messages\n"+
+			"**.purge NUMBER (1-100)** - **[ADMIN] [WIP]** purges the amount of messages in the current channel.")
 	}
 	//kicks a user
 	if command.IsCommand(&cmd, "kick") {
