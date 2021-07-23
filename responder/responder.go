@@ -87,7 +87,7 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 func ready(s *discordgo.Session, _ *discordgo.Ready) {
 	//set the status
-	err := s.UpdateGameStatus(0, "Dying Mozog")
+	err := s.UpdateGameStatus(0, "Nove features mame aaaaaa")
 	if err != nil {
 		fmt.Println("error setting the bot status")
 		return

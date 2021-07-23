@@ -29,7 +29,7 @@ type RegexArg struct {
 
 func ParseCommand(s string) (Command, error) {
 	if !strings.HasPrefix(s, prefix) && len(s) < len(prefix)+1 {
-		return Command{}, errors.New("parseCommand: Not a command")
+		return Command{}, errors.New("")
 	}
 
 	// Remove double white spaces
