@@ -16,6 +16,7 @@ const AuthorisedIDMod string = "513275201375698954"
 const AuthorisedIDTrusted1 string = "745218677489532969"
 const AuthorisedIDTrusted2 string = "749642547001032816"
 const AuthorisedIDTrusted3 string = "749642583344414740"
+const AuthorisedIDTrustedMini string = "751071086225129472"
 
 type Command struct {
 	Command   string
@@ -53,6 +54,14 @@ func ParseMentionToString(s string) string {
 	s = strings.Replace(s, ">", "", 1)
 	s = strings.Replace(s, "!", "", 1)
 	s = strings.Replace(s, "@", "", 1)
+
+	return s
+}
+
+func ParseChannelToString(s string) string {
+	s = strings.Replace(s, "<", "", 1)
+	s = strings.Replace(s, ">", "", 1)
+	s = strings.Replace(s, "#", "", 1)
 
 	return s
 }

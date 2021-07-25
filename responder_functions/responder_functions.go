@@ -27,7 +27,7 @@ const RoleMuteID string = "684159104901709825"
 
 const apiKey string = "65bb37a9ac2af9128d6ceaf670043b39"
 
-const Version string = "0.2"
+const Version string = "0.3"
 
 func Zasielkovna(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
 	err := command.VerifyArguments(&cmd)
@@ -590,7 +590,7 @@ func TimedChannelUnlock(s *discordgo.Session) {
 	fmt.Println("[INIT OK] Channel unlock system module initialized")
 
 	for {
-		if time.Now().Weekday() == time.Friday && time.Now().Hour() == 18 && time.Now().Minute() == 0 {
+		if time.Now().Weekday() == time.Friday && time.Now().Hour() == 18 && time.Now().Minute() == 00 {
 			//Unlock the channel
 			//TargetType 0 = roleID, 1 = memberID
 			err1 := s.ChannelPermissionSet(TrustedChannel, command.AuthorisedIDTrusted1, 0, 2251673408, 0)
@@ -605,6 +605,11 @@ func TimedChannelUnlock(s *discordgo.Session) {
 			if err3 != nil {
 				s.ChannelMessageSend(LogChannel, "**[ERR]** Error changing the permissions for role "+"<@"+command.AuthorisedIDTrusted3+">")
 			}
+			err4 := s.ChannelPermissionSet(TrustedChannel, command.AuthorisedIDTrustedMini, 0, 2251673408, 0)
+			if err4 != nil {
+				s.ChannelMessageSend(LogChannel, "**[ERR]** Error changing the permissions for role "+"<@"+command.AuthorisedIDTrustedMini+">")
+			}
+
 			fmt.Println("[OK] Opened the channel " + TrustedChannel)
 		} else if time.Now().Weekday() == time.Monday && time.Now().Hour() == 6 && time.Now().Minute() == 0 {
 			//Lock the channel
@@ -620,6 +625,10 @@ func TimedChannelUnlock(s *discordgo.Session) {
 			err3 := s.ChannelPermissionSet(TrustedChannel, command.AuthorisedIDTrusted3, 0, 0, 2251673408)
 			if err3 != nil {
 				s.ChannelMessageSend(LogChannel, "**[ERR]** Error changing the permissions for role "+"<@"+command.AuthorisedIDTrusted3+">")
+			}
+			err4 := s.ChannelPermissionSet(TrustedChannel, command.AuthorisedIDTrustedMini, 0, 0, 2251673408)
+			if err4 != nil {
+				s.ChannelMessageSend(LogChannel, "**[ERR]** Error changing the permissions for role "+"<@"+command.AuthorisedIDTrustedMini+">")
 			}
 			fmt.Println("[OK] Closed the channel " + TrustedChannel)
 		}
@@ -675,4 +684,88 @@ func PurgeMessages(s *discordgo.Session, cmd command.Command, m *discordgo.Messa
 		return
 	}
 
+}
+
+// Members outputs the number of current members of the server
+func Members(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) uint64 {
+	if len(cmd.Arguments) > 1 {
+		s.ChannelMessageSend(m.ChannelID, "[SYNTAX] Usage: **.count**. Automatically discarding arguments")
+	}
+
+	memberList := GetMemberListFromGuild(s, GuildIDNumber)
+	memberListLength := uint64(len(memberList))
+
+	return memberListLength
+}
+
+// PruneCount outputs the number of users that could be pruned
+func PruneCount(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) uint32 {
+
+	if len(cmd.Arguments) < 1 {
+		s.ChannelMessageSend(m.ChannelID, "**[SYNTAX]** Usage: **.prunecount days**")
+		return 0
+	}
+
+	pruneDaysString := cmd.Arguments[0]
+	pruneDaysInt, err1 := strconv.ParseInt(pruneDaysString, 10, 64)
+	if err1 != nil {
+		s.ChannelMessageSend(m.ChannelID, "**[ERR]** Error parsing the days argument as a number (uint32)")
+		return 0
+	}
+
+	if pruneDaysInt < 7 {
+		pruneDaysInt = 0
+		s.ChannelMessageSend(m.ChannelID, "**[ERR]** Must be at least 7 days of inactivity.")
+		return 0
+	}
+
+	pruneDaysCount, err2 := s.GuildPruneCount(GuildIDNumber, uint32(pruneDaysInt))
+	if err2 != nil {
+		return 0
+	}
+	return pruneDaysCount
+
+}
+
+// PruneMembers prunes members
+func PruneMembers(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
+	if len(cmd.Arguments) < 100 {
+		s.ChannelMessageSend(m.ChannelID, "**[SYNTAX]** Usage: **.prunemembers days**")
+		return
+	}
+
+	var authorisedAdmin bool = false
+	authorisedAdmin = command.VerifyAdmin(s, m, &authorisedAdmin)
+
+	if authorisedAdmin == true {
+		//request prune number amount
+		pruneDaysCountInt, err0 := strconv.ParseInt(cmd.Arguments[0], 10, 32)
+
+		if err0 != nil {
+			s.ChannelMessageSend(m.ChannelID, "**[ERR]** Error parsing the number of days ")
+		}
+
+		var pruneDaysCountUInt = uint32(pruneDaysCountInt)
+
+		if pruneDaysCountInt == 0 {
+			s.ChannelMessageSend(m.ChannelID, "**[ERR]** Invalid days to prune (0)")
+			return
+		}
+
+		//prunes the members and assigns the result of the pruned members count to a variable
+		prunedMembersCount, err1 := s.GuildPrune(GuildIDNumber, pruneDaysCountUInt)
+		if err1 != nil {
+			s.ChannelMessageSend(m.ChannelID, "**[ERR]** Error pruning members")
+		}
+
+		//log output
+		s.ChannelMessageSend(LogChannel, "**[LOG]** User "+"<@!"+m.Author.ID+">"+" used a prune and kicked "+strconv.FormatInt(int64(prunedMembersCount), 10)+" members")
+		s.ChannelMessageSend(m.ChannelID, "**[OK]** pruned "+strconv.FormatInt(int64(prunedMembersCount), 10)+" members from the server")
+		return
+
+		//permission output
+	} else {
+		s.ChannelMessageSend(m.ChannelID, "**[PERM]** Insufficient permissions for operation")
+		return
+	}
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/medzernik/SlovakiaDiscordBotGo/command"
 	"github.com/medzernik/SlovakiaDiscordBotGo/database"
 	"github.com/medzernik/SlovakiaDiscordBotGo/responder_functions"
+	"strconv"
 )
 
 func RegisterPlugin(s *discordgo.Session) {
@@ -33,7 +34,7 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	//Zasielkovna EasterEgg
-	if command.IsCommand(&cmd, "Zasielkovna") {
+	if command.IsCommand(&cmd, "zasielkovna") {
 		responder_functions.Zasielkovna(s, cmd, m)
 	}
 
@@ -73,18 +74,21 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	//TODO: finish the help system
 	if command.IsCommand(&cmd, "help") {
 		s.ChannelMessageSend(m.ChannelID, "**The available commands are:**\n"+
-			"**.Zasielkovna** - AAAAAA\n"+
-			"**.age @user** - checks the age of a user's account\n"+
-			"**.mute @user** - **[ADMIN] [TRUSTED]** gives a user a muted role. Works on users that joined less than 24 hours ago for [TRUSTED]\n"+
-			"**.checkusers** - **[ADMIN]** lists users that joined less than 24h ago\n"+
+			"**.zasielkovna** - AAAAAA.\n"+
+			"**.age @user** - checks the age of a user's account.\n"+
+			"**.mute @user** - **[ADMIN] [TRUSTED]** gives a user a muted role. Works on users that joined less than 24 hours ago for [TRUSTED].\n"+
+			"**.checkusers** - **[ADMIN]** lists users that joined less than 24h ago.\n"+
 			"**.plan HH:MM Game_Name @user** - plans a game for a given time with a user. Bot reminds with a ping when time is met.\n"+
-			"**.planned** - lists all the planned games\n"+
+			"**.planned** - lists all the planned games.\n"+
 			"**.topic** - outputs a random topic for discussion.\n"+
 			"**.weather city name** - outputs weather information for a given city.\n"+
-			"**.kick @user reason for the kick** - **[ADMIN]** kicks a user with a provided reason\n"+
-			"**.ban @user reason for the ban** - **[ADMIN]** bans a user with a provided reason and deletes 7 days of messages\n"+
+			"**.kick @user reason for the kick** - **[ADMIN]** kicks a user with a provided reason.\n"+
+			"**.ban @user reason for the ban** - **[ADMIN]** bans a user with a provided reason and deletes 7 days of messages.\n"+
 			"**.purge NUMBER (1-100)** - **[ADMIN]** purges the amount of messages in the current channel.\n"+
-			"**.version** - displays the current bot version")
+			"**.version** - displays the current bot version.\n"+
+			"**.prunecount NUMBER (7-X)** - shows the number of pruneable (inactive) members. NUMBER = days (7 minimum).\n"+
+			"**.prunemember NUMBER (7-X) ** - **[ADMIN]** prunes members inactive for NUMBER days (7 minimum).\n"+
+			"**.members** - outputs the number of members on the server.")
 	}
 	//kicks a user
 	if command.IsCommand(&cmd, "kick") {
@@ -101,6 +105,26 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	//version of the bot running
 	if command.IsCommand(&cmd, "version") {
 		s.ChannelMessageSend(m.ChannelID, "**[VERSION]** "+responder_functions.Version)
+	}
+	//counts the users on the server
+	if command.IsCommand(&cmd, "members") {
+		membersCountInt := responder_functions.Members(s, cmd, m)
+		s.ChannelMessageSend(m.ChannelID, "**[OK]** There are "+strconv.FormatInt(int64(membersCountInt), 10)+" members")
+	}
+	//counts pruneable members on server
+	if command.IsCommand(&cmd, "prunecount") {
+		pruneDaysCount := responder_functions.PruneCount(s, cmd, m)
+
+		switch pruneDaysCount {
+		case 0:
+			s.ChannelMessageSend(m.ChannelID, "**[ERR]** No pruneable members exist.")
+		default:
+			s.ChannelMessageSend(m.ChannelID, "**[OK]** There are **"+strconv.FormatInt(int64(pruneDaysCount), 10)+"** members to prune")
+		}
+	}
+	//prunes members from server
+	if command.IsCommand(&cmd, "prunemembers") {
+		responder_functions.PruneMembers(s, cmd, m)
 	}
 
 }

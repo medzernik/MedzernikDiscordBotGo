@@ -68,8 +68,25 @@ Kicks and or bans a user. Posts a message to the log channel defined. In case of
 
 ## version
 .version
+
 Displays the version of the bot
 
 ## purge [ADMIN]
 .purge numofmessages
+
 Deletes 1-100 messages in the channel that the command was typed in.
+
+## prunecount
+.prunecount 7-X
+
+Checks how many users would be pruned (minimum is 7 days, maximum is undefined, however, for me only 30 worked as max).
+
+## prunemembers [ADMIN]
+.prunemembers 7-X
+
+Prunes members that have been inactive for a set amount of days (minimum 7, max undefined, however, for me only 30 worked as max).
+
+## members
+.members
+
+Counts the number of members on the server.
