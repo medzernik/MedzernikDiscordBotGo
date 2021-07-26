@@ -33,6 +33,7 @@ type RegexArg struct {
 	CaptureGroup int
 }
 
+// ParseCommand parses a command to remove any extra fields and spaces
 func ParseCommand(s string) (Command, error) {
 	if !strings.HasPrefix(s, prefix) && len(s) < len(prefix)+1 {
 		return Command{}, errors.New("")
@@ -49,6 +50,7 @@ func ParseCommand(s string) (Command, error) {
 	return cmd, nil
 }
 
+// ParseMentionToString Parses the <@!userId> into userId and returns the string
 func ParseMentionToString(s string) string {
 	s = strings.Replace(s, "<", "", 1)
 	s = strings.Replace(s, ">", "", 1)
@@ -58,6 +60,7 @@ func ParseMentionToString(s string) string {
 	return s
 }
 
+// ParseChannelToString Parses the <#channelId> into channelId and returns the string
 func ParseChannelToString(s string) string {
 	s = strings.Replace(s, "<", "", 1)
 	s = strings.Replace(s, ">", "", 1)
@@ -66,10 +69,12 @@ func ParseChannelToString(s string) string {
 	return s
 }
 
+// IsCommand Verifies if the command is of a command struct
 func IsCommand(c *Command, name string) bool {
 	return c.Command == name
 }
 
+// VerifyArguments Function verifies arguments if they are the correct format and then parses them into a struct of the command name in string and array of arguments in strings
 func VerifyArguments(c *Command, args ...interface{}) error {
 	if len(c.Arguments) != len(args) {
 		return errors.New(c.Command + "**[ERR]** Incorrect command arguments")
@@ -137,27 +142,33 @@ func JoinArguments(cmd Command) string {
 	return commandString
 }
 
-func VerifyAdmin(s *discordgo.Session, m *discordgo.MessageCreate, authorised *bool) bool {
+// VerifyAdmin Function takes a bool and returns true or false based on whether the user has the admin role ID or not. Logs to stdout.
+func VerifyAdmin(s *discordgo.Session, m *discordgo.MessageCreate, authorised *bool, cmd Command) bool {
 	var authorID = m.Member.Roles
 
+	//check if the user is admin, log the request if successful and then return true
 	for i := range authorID {
 		if authorID[i] == AuthorisedIDMod || authorID[i] == AuthorisedIDAdmin {
 			*authorised = true
-			fmt.Println("[OK] Command authorised (Admin)")
+			fmt.Println("[OK] Command: " + cmd.Command + " authorised (Admin) by: " + m.Author.Username + " (ID: " + m.Author.ID + ")")
+			break
 		}
 	}
 
 	return *authorised
 }
 
-func VerifyTrusted(s *discordgo.Session, m *discordgo.MessageCreate, authorised *bool) bool {
+// VerifyTrusted Function takes a bool and returns true or false based on whether the user has a priviledged role (defined by admins) or not. Logs to stdout.
+func VerifyTrusted(s *discordgo.Session, m *discordgo.MessageCreate, authorised *bool, cmd Command) bool {
 
 	var authorID = m.Member.Roles
 
+	//check if the user is trusted, log the request if successful and then return true
 	for i := range authorID {
 		if authorID[i] == AuthorisedIDTrusted2 || authorID[i] == AuthorisedIDTrusted3 {
 			*authorised = true
-			fmt.Println("[OK] Command authorised (Trusted)")
+			fmt.Println("[OK] Command: " + cmd.Command + " authorised (Trusted) by: " + m.Author.Username + " (ID: " + m.Author.ID + ")")
+			break
 		}
 	}
 

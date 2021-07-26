@@ -27,7 +27,7 @@ const RoleMuteID string = "684159104901709825"
 
 const apiKey string = "65bb37a9ac2af9128d6ceaf670043b39"
 
-const Version string = "0.3"
+const Version string = "0.3.1"
 
 func Zasielkovna(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
 	err := command.VerifyArguments(&cmd)
@@ -97,8 +97,8 @@ func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate)
 	//Variable initiation
 	var authorisedAdmin bool = false
 	var authorisedTrusted bool = false
-	authorisedAdmin = command.VerifyAdmin(s, m, &authorisedAdmin)
-	authorisedTrusted = command.VerifyTrusted(s, m, &authorisedTrusted)
+	authorisedAdmin = command.VerifyAdmin(s, m, &authorisedAdmin, cmd)
+	authorisedTrusted = command.VerifyTrusted(s, m, &authorisedTrusted, cmd)
 
 	timeToCheckUsers := 24.0 * -1.0
 
@@ -180,7 +180,7 @@ func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate)
 func KickUser(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
 	var reason string
 	var authorisedAdmin bool = false
-	authorisedAdmin = command.VerifyAdmin(s, m, &authorisedAdmin)
+	authorisedAdmin = command.VerifyAdmin(s, m, &authorisedAdmin, cmd)
 
 	if len(cmd.Arguments) < 1 {
 		_, err := s.ChannelMessageSend(m.ChannelID, "**[SYNTAX]** Insufficient arguments provided (help: **.kick @user <optional_reason>**)")
@@ -210,19 +210,39 @@ func KickUser(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCre
 		for i := range membersCached {
 			if membersCached[i].User.ID == KickUserString {
 				if len(reason) > 1 {
+					//DM the user of his kick + reason
+					userNotifChanID, err0 := s.UserChannelCreate(KickUserString)
+					if err0 != nil {
+						s.ChannelMessageSend(LogChannel, "**[ERR]** Error notifying the user of his kick")
+					}
+					s.ChannelMessageSend(userNotifChanID.ID, "You have been kicked from the server. Reason: "+reason)
+
+					//perform the kick itself
 					err := s.GuildMemberDeleteWithReason(GuildIDNumber, KickUserString, reason)
 					if err != nil {
 						s.ChannelMessageSend(m.ChannelID, "**[ERR]** Error kicking user")
 						return
 					}
+
+					//log the kick
 					s.ChannelMessageSend(m.ChannelID, "**[OK]** Kicking user: "+KickUserString+". \nReason: "+reason)
 					s.ChannelMessageSend(LogChannel, "User "+KickUserString+" "+cmd.Arguments[0]+" Kicked by "+m.Author.Username)
 				} else {
+					//DM the user of his kick
+					userNotifChanID, err0 := s.UserChannelCreate(KickUserString)
+					if err0 != nil {
+						s.ChannelMessageSend(LogChannel, "**[ERR]** Error notifying the user of his kick")
+					}
+					s.ChannelMessageSend(userNotifChanID.ID, "You have been kicked from the server.")
+
+					//perform the kick itself
 					err := s.GuildMemberDelete(GuildIDNumber, KickUserString)
 					if err != nil {
 						s.ChannelMessageSend(m.ChannelID, "**[ERR]** Error kicking user")
 						return
 					}
+
+					//log the kick
 					s.ChannelMessageSend(m.ChannelID, "**[OK]** Kicking user: "+KickUserString+". \nReason: "+reason)
 					s.ChannelMessageSend(LogChannel, "User "+KickUserString+" "+cmd.Arguments[0]+" Kicked by "+m.Author.Username)
 				}
@@ -237,10 +257,10 @@ func BanUser(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCrea
 	var reason string
 	var daysDelete int = 7
 	var authorisedAdmin bool = false
-	authorisedAdmin = command.VerifyAdmin(s, m, &authorisedAdmin)
+	authorisedAdmin = command.VerifyAdmin(s, m, &authorisedAdmin, cmd)
 
 	if len(cmd.Arguments) < 1 {
-		_, err := s.ChannelMessageSend(m.ChannelID, "**[SYNTAX]** Insufficient arguments provided (help: **.kick @user <optional_reason>**)")
+		_, err := s.ChannelMessageSend(m.ChannelID, "**[SYNTAX]** Insufficient arguments provided (help: **.ban @user <optional reason>**)")
 		if err != nil {
 			s.ChannelMessageSend(m.ChannelID, "**[ERR]** Error processing request")
 			return
@@ -267,6 +287,12 @@ func BanUser(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCrea
 		for i := range membersCached {
 			if membersCached[i].User.ID == BanUserString {
 				if len(reason) > 0 {
+					userNotifChanID, err0 := s.UserChannelCreate(BanUserString)
+					if err0 != nil {
+						s.ChannelMessageSend(LogChannel, "**[ERR]** Error notifying the user of his ban")
+					}
+					s.ChannelMessageSend(userNotifChanID.ID, "You have been banned from the server. Reason: "+reason)
+
 					err := s.GuildBanCreateWithReason(GuildIDNumber, BanUserString, reason, daysDelete)
 					if err != nil {
 						s.ChannelMessageSend(m.ChannelID, "**[ERR]** Error banning user")
@@ -275,8 +301,14 @@ func BanUser(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCrea
 					s.ChannelMessageSend(LogChannel, "User "+BanUserString+" "+cmd.Arguments[0]+" Banned by "+m.Author.Username)
 					s.ChannelMessageSend(m.ChannelID, "**[OK]** Banning user: "+BanUserString+". \nReason: "+reason)
 				} else {
-					err := s.GuildBanCreate(GuildIDNumber, BanUserString, daysDelete)
-					if err != nil {
+					userNotifChanID, err0 := s.UserChannelCreate(BanUserString)
+					if err0 != nil {
+						s.ChannelMessageSend(LogChannel, "**[ERR]** Error notifying the user of his ban")
+					}
+					s.ChannelMessageSend(userNotifChanID.ID, "You have been banned from the server.")
+
+					err1 := s.GuildBanCreate(GuildIDNumber, BanUserString, daysDelete)
+					if err1 != nil {
 						s.ChannelMessageSend(m.ChannelID, "**[ERR]** Error banning user")
 						return
 					}
@@ -299,7 +331,7 @@ func CheckUsers(s *discordgo.Session, cmd command.Command, m *discordgo.MessageC
 	}
 	//variable definitions
 	var authorisedAdmin bool = false
-	authorisedAdmin = command.VerifyAdmin(s, m, &authorisedAdmin)
+	authorisedAdmin = command.VerifyAdmin(s, m, &authorisedAdmin, cmd)
 
 	if authorisedAdmin == true {
 		membersCached := GetMemberListFromGuild(s, GuildIDNumber)
@@ -318,7 +350,7 @@ func CheckUsers(s *discordgo.Session, cmd command.Command, m *discordgo.MessageC
 		//print out the amount of members_cached (max is currently 1000)
 		s.ChannelMessageSend(m.ChannelID, tempMsg)
 	} else if authorisedAdmin == false {
-		s.ChannelMessageSend(m.ChannelID, "[PERM] You do not have the permissions to use this command.")
+		s.ChannelMessageSend(m.ChannelID, "**[PERM]** You do not have the permissions to use this command.")
 	}
 	return
 
@@ -646,7 +678,7 @@ func PurgeMessages(s *discordgo.Session, cmd command.Command, m *discordgo.Messa
 	}
 
 	var authorisedAdmin bool = false
-	authorisedAdmin = command.VerifyAdmin(s, m, &authorisedAdmin)
+	authorisedAdmin = command.VerifyAdmin(s, m, &authorisedAdmin, cmd)
 
 	if authorisedAdmin == true {
 		var messageArrayToDelete []string
@@ -735,7 +767,7 @@ func PruneMembers(s *discordgo.Session, cmd command.Command, m *discordgo.Messag
 	}
 
 	var authorisedAdmin bool = false
-	authorisedAdmin = command.VerifyAdmin(s, m, &authorisedAdmin)
+	authorisedAdmin = command.VerifyAdmin(s, m, &authorisedAdmin, cmd)
 
 	if authorisedAdmin == true {
 		//request prune number amount
@@ -768,4 +800,5 @@ func PruneMembers(s *discordgo.Session, cmd command.Command, m *discordgo.Messag
 		s.ChannelMessageSend(m.ChannelID, "**[PERM]** Insufficient permissions for operation")
 		return
 	}
+
 }

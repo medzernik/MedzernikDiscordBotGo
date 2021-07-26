@@ -65,6 +65,7 @@ More features pending, including a docker image and a custom SQLite database for
 .ban @user <reason>
 
 Kicks and or bans a user. Posts a message to the log channel defined. In case of a ban also deletes previous 7 days of the user's messages.
+DMs the user the reason and information about his kick/ban.
 
 ## version
 .version
