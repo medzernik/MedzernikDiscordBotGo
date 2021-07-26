@@ -4,7 +4,7 @@
 
 This is a discord bot written entirely in golang using the discordgo library. The bot itself has a custom command parser and many custom functions. It serves as an example of a bot that can do very basic commands.
 
-#Automatic functions:
+# Automatic functions:
 
 
 #### RAID checking 
