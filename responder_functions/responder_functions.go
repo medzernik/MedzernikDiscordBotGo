@@ -335,7 +335,8 @@ func CheckUsers(s *discordgo.Session, cmd command.Command, m *discordgo.MessageC
 
 	if authorisedAdmin == true {
 		membersCached := GetMemberListFromGuild(s, GuildIDNumber)
-		var tempMsg string
+		var mainOutputMsg string
+		var IDOutputMsg string
 		timeToCheckUsers := 24.0 * -1.0
 
 		//iterate over the members_cached array. Maximum limit is 1000.
@@ -344,11 +345,12 @@ func CheckUsers(s *discordgo.Session, cmd command.Command, m *discordgo.MessageC
 			var timeVar float64 = userTimeJoin.Sub(time.Now()).Hours()
 
 			if timeVar > timeToCheckUsers {
-				tempMsg += "This user is too young (less than 24h join age): " + membersCached[i].User.Username + " ,**ID:** " + membersCached[i].User.ID + "\n"
+				mainOutputMsg += "This user is too young (less than 24h join age): " + membersCached[i].User.Username + " ,**ID:** " + membersCached[i].User.ID + "\n"
+				IDOutputMsg += membersCached[i].User.ID + " "
 			}
 		}
 		//print out the amount of members_cached (max is currently 1000)
-		s.ChannelMessageSend(m.ChannelID, tempMsg)
+		s.ChannelMessageSend(m.ChannelID, mainOutputMsg+"\n**IDs of the users (copyfriendly):**\n"+IDOutputMsg)
 	} else if authorisedAdmin == false {
 		s.ChannelMessageSend(m.ChannelID, "**[PERM]** You do not have the permissions to use this command.")
 	}
@@ -803,10 +805,17 @@ func PruneMembers(s *discordgo.Session, cmd command.Command, m *discordgo.Messag
 
 }
 
+// MassKick mass kicks user IDs
 func MassKick(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
 
 }
 
+// MassBan mass bans user IDs
 func MassBan(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
+
+}
+
+// SetChannelPermission sets a channel permission using an int value
+func SetChannelPermission(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
 
 }
