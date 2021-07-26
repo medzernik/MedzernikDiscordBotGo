@@ -27,7 +27,7 @@ const RoleMuteID string = "684159104901709825"
 
 const apiKey string = "65bb37a9ac2af9128d6ceaf670043b39"
 
-const Version string = "0.3.1"
+const Version string = "0.3.2"
 
 func Zasielkovna(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
 	err := command.VerifyArguments(&cmd)
@@ -344,7 +344,7 @@ func CheckUsers(s *discordgo.Session, cmd command.Command, m *discordgo.MessageC
 			var timeVar float64 = userTimeJoin.Sub(time.Now()).Hours()
 
 			if timeVar > timeToCheckUsers {
-				tempMsg += "This user is too young (less than 24h join age): " + membersCached[i].User.Username + "\n"
+				tempMsg += "This user is too young (less than 24h join age): " + membersCached[i].User.Username + " ,**ID:** " + membersCached[i].User.ID + "\n"
 			}
 		}
 		//print out the amount of members_cached (max is currently 1000)
