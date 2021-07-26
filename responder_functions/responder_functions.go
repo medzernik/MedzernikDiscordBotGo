@@ -70,10 +70,12 @@ func AgeJoined(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCr
 
 	*/
 
+	//try to fix command, use only first value
 	if len(cmd.Arguments) > 1 {
 		command.SendTextEmbed(s, m, CommandStatusBot.AUTOFIX, "usage: **.age @mention** \n Using the first ID instead...", discordgo.EmbedTypeRich)
 	}
 
+	//cannot use command
 	if len(cmd.Arguments) < 1 {
 		command.SendTextEmbed(s, m, CommandStatusBot.SYNTAX, "usage: **.age @mention**", discordgo.EmbedTypeRich)
 		return
@@ -90,14 +92,11 @@ func AgeJoined(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCr
 	for i := range membersCached {
 		if membersCached[i].User.ID == userId {
 			userName = membersCached[i].User.Username
-			fmt.Println(userName)
 		} else if membersCached[i].User.ID != userId && membersCached[i].User.ID == "" {
 			command.SendTextEmbed(s, m, CommandStatusBot.ERR, cmd.Arguments[0]+" : not a number or a mention", discordgo.EmbedTypeRich)
 			return
 		}
 	}
-
-	fmt.Println(userId)
 
 	userTimeRaw, err := SnowflakeTimestamp(userId)
 	if err != nil {
@@ -139,75 +138,84 @@ func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate)
 
 	//Arguments checking
 	if len(cmd.Arguments) < 1 {
-		_, err := s.ChannelMessageSend(m.ChannelID, "**[SYNTAX]** Insufficient arguments provided (help: **.mute @user**)")
-		if err != nil {
-			s.ChannelMessageSend(m.ChannelID, "**[ERR]** Error processing request")
-			return
-		}
+		command.SendTextEmbed(s, m, CommandStatusBot.SYNTAX, "usage: **.mute @mention**", discordgo.EmbedTypeRich)
 		return
 	}
 
 	//Verify, if user has any rights at all
 	if authorisedAdmin == false && authorisedTrusted == false {
-		s.ChannelMessageSend(m.ChannelID, "**[PERM]** Error muting a user - insufficient rights for any operation.")
+		command.SendTextEmbed(s, m, CommandStatusBot.AUTH, "Error muting a user - insufficient rights.", discordgo.EmbedTypeRich)
 		return
 	}
 
 	//Added only after the first check of rights, to prevent spamming of the requests
 	membersCached := GetMemberListFromGuild(s, GuildIDNumber)
-	var MuteUserString string = command.ParseMentionToString(cmd.Arguments[0])
+	var MuteUserString []string
+
+	for i := range cmd.Arguments {
+		MuteUserString = append(MuteUserString, command.ParseMentionToString(cmd.Arguments[i]))
+	}
 
 	//Verify for the admin role before muting.
 	if authorisedAdmin == true {
 		for i := range membersCached {
-			if membersCached[i].User.ID == MuteUserString {
-				//Try to mute
+			for j := range MuteUserString {
+				if membersCached[i].User.ID == MuteUserString[j] {
+					//Try to mute
+					s.GuildMemberMute(GuildIDNumber, MuteUserString[j], true)
+					err2 := s.GuildMemberRoleAdd(GuildIDNumber, MuteUserString[j], RoleMuteID)
+					if err2 != nil {
+						command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Error muting a user - cannot assign the MuteRole."+
+							" "+RoleMuteID, discordgo.EmbedTypeRich)
+					}
+					command.SendTextEmbed(s, m, CommandStatusBot.OK+"MUTED", "Muted user "+command.ParseStringToMentionID(membersCached[i].User.ID)+" (ID: "+
+						""+membersCached[i].User.ID+")", discordgo.EmbedTypeRich)
+					s.ChannelMessageSend(LogChannel, "**[LOG]** Administrator user "+m.Author.Username+" Muted user: "+
+						""+command.ParseStringToMentionID(membersCached[i].User.ID))
+				}
 
-				err := s.GuildMemberMute(GuildIDNumber, MuteUserString, true)
-				if err != nil {
-					s.ChannelMessageSend(m.ChannelID, "**[INFO]** User not in VC, cannot mute")
-				}
-				err2 := s.GuildMemberRoleAdd(GuildIDNumber, MuteUserString, RoleMuteID)
-				if err2 != nil {
-					s.ChannelMessageSend(m.ChannelID, "**[ERR]** Error muting adding the muted role.")
-				}
-				s.ChannelMessageSend(m.ChannelID, "**[OK]** Muted user "+MuteUserString)
-				s.ChannelMessageSend(LogChannel, "**[LOG]** Administrator user "+"<@!"+m.Author.ID+">"+" Muted user: "+"<@!"+membersCached[i].User.ID+">")
-				return
 			}
-
 		}
 	}
 
 	//If not, verify for the role of Trusted to try to mute
 	if authorisedTrusted == true && authorisedAdmin == false && trustedMutingEnabled == true {
 		for i := range membersCached {
-			userTimeJoin, _ := membersCached[i].JoinedAt.Parse()
-			timevar := userTimeJoin.Sub(time.Now()).Hours()
-			if membersCached[i].User.ID == MuteUserString && timevar > timeToCheckUsers {
-				//Error checking
-				err := s.GuildMemberMute(GuildIDNumber, MuteUserString, true)
-				if err != nil {
-					s.ChannelMessageSend(m.ChannelID, "**[INFO]** User not in VC, cannot mute")
-				}
-				err2 := s.GuildMemberRoleAdd(GuildIDNumber, MuteUserString, RoleMuteID)
-				if err2 != nil {
-					s.ChannelMessageSend(m.ChannelID, "**[ERR]** Error muting adding the muted role.")
-				}
-				s.ChannelMessageSend(m.ChannelID, "**[OK]** Muted user younger than 24 hours "+MuteUserString)
-				s.ChannelMessageSend(LogChannel, "**[LOG]** Trusted user "+"<@!"+m.Author.ID+">"+" Muted user: "+"<@!"+membersCached[i].User.ID+">")
-				return
-			} else if membersCached[i].User.ID == MuteUserString && timevar < timeToCheckUsers {
-				s.ChannelMessageSend(m.ChannelID, "**[PERM]** Trusted users cannot mute anyone who joined for 24+ hours")
-				return
-			}
+			for j := range MuteUserString {
+				userTimeJoin, _ := membersCached[i].JoinedAt.Parse()
+				timevar := userTimeJoin.Sub(time.Now()).Hours()
+				if membersCached[i].User.ID == MuteUserString[j] && timevar > timeToCheckUsers {
+					//Error checking
+					s.GuildMemberMute(GuildIDNumber, MuteUserString[j], true)
 
+					err2 := s.GuildMemberRoleAdd(GuildIDNumber, MuteUserString[j], RoleMuteID)
+					if err2 != nil {
+						command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Error muting a user - cannot assign the MuteRole."+
+							" "+RoleMuteID, discordgo.EmbedTypeRich)
+					}
+					command.SendTextEmbed(s, m, CommandStatusBot.OK+"MUTED", "Muted user younger than "+
+						""+strconv.FormatInt(int64(timeToCheckUsers*-1.0), 10)+MuteUserString[j], discordgo.EmbedTypeRich)
+
+					s.ChannelMessageSend(LogChannel, "**[LOG]** Trusted user "+command.ParseStringToMentionID(m.Author.ID)+" Muted user: "+
+						""+command.ParseStringToMentionID(membersCached[i].User.ID))
+
+					//muting cannot be done if the time limit has been passed
+				} else if membersCached[i].User.ID == MuteUserString[j] && timevar < timeToCheckUsers {
+					command.SendTextEmbed(s, m, CommandStatusBot.AUTH, "Trusted users cannot mute anyone who has joined more than "+
+						""+strconv.FormatInt(int64(timeToCheckUsers*-1.0), 10)+" hours ago.", discordgo.EmbedTypeRich)
+
+				}
+			}
 		}
 
-	} else if trustedMutingEnabled == false {
-		s.ChannelMessageSend(m.ChannelID, "**[OFF]** Muting by Trusted users is currently disabled.")
+	} else if trustedMutingEnabled == false && authorisedTrusted == true && authorisedAdmin == false {
+		command.SendTextEmbed(s, m, CommandStatusBot.WARN, "Muting by Trusted users is currently disabled"+
+			" "+RoleMuteID, discordgo.EmbedTypeRich)
+		return
 	} else {
-		s.ChannelMessageSend(m.ChannelID, "**[ERR]** Undefined permission error.")
+		command.SendTextEmbed(s, m, CommandStatusBot.AUTH, "Undefined permissions error"+
+			" "+RoleMuteID, discordgo.EmbedTypeRich)
+		return
 	}
 	return
 }
@@ -218,11 +226,7 @@ func KickUser(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCre
 	authorisedAdmin = command.VerifyAdmin(s, m, &authorisedAdmin, cmd)
 
 	if len(cmd.Arguments) < 1 {
-		_, err := s.ChannelMessageSend(m.ChannelID, "**[SYNTAX]** Insufficient arguments provided (help: **.kick @user <optional_reason>**)")
-		if err != nil {
-			s.ChannelMessageSend(m.ChannelID, "**[ERR]** Error processing request")
-			return
-		}
+		command.SendTextEmbed(s, m, CommandStatusBot.SYNTAX, "usage: **.kick @mention reason for kick**", discordgo.EmbedTypeRich)
 		return
 	}
 
@@ -231,7 +235,7 @@ func KickUser(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCre
 	}
 
 	if authorisedAdmin == false {
-		s.ChannelMessageSend(m.ChannelID, "**[PERM]** Error kicking a user - insufficient rights for operation.")
+		command.SendTextEmbed(s, m, CommandStatusBot.AUTH, "Error kicking a user - insufficient rights.", discordgo.EmbedTypeRich)
 		return
 	}
 
@@ -249,36 +253,39 @@ func KickUser(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCre
 					userNotifChanID, err0 := s.UserChannelCreate(KickUserString)
 					if err0 != nil {
 						s.ChannelMessageSend(LogChannel, "**[ERR]** Error notifying the user of his kick")
+					} else {
+						s.ChannelMessageSend(userNotifChanID.ID, "You have been kicked from the server. Reason: "+reason)
 					}
-					s.ChannelMessageSend(userNotifChanID.ID, "You have been kicked from the server. Reason: "+reason)
 
 					//perform the kick itself
 					err := s.GuildMemberDeleteWithReason(GuildIDNumber, KickUserString, reason)
 					if err != nil {
-						s.ChannelMessageSend(m.ChannelID, "**[ERR]** Error kicking user")
+						command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Error kicking user ID "+membersCached[i].User.ID, discordgo.EmbedTypeRich)
 						return
 					}
 
 					//log the kick
-					s.ChannelMessageSend(m.ChannelID, "**[OK]** Kicking user: "+KickUserString+". \nReason: "+reason)
-					s.ChannelMessageSend(LogChannel, "User "+KickUserString+" "+cmd.Arguments[0]+" Kicked by "+m.Author.Username)
+					command.SendTextEmbed(s, m, CommandStatusBot.OK+"KICKED", "Kicked user "+membersCached[i].User.Username+"for "+
+						""+reason, discordgo.EmbedTypeRich)
+					s.ChannelMessageSend(LogChannel, "User "+KickUserString+" ,was kicked for: "+cmd.Arguments[0]+" .Kicked by "+m.Author.Username)
 				} else {
 					//DM the user of his kick
 					userNotifChanID, err0 := s.UserChannelCreate(KickUserString)
 					if err0 != nil {
 						s.ChannelMessageSend(LogChannel, "**[ERR]** Error notifying the user of his kick")
+					} else {
+						s.ChannelMessageSend(userNotifChanID.ID, "You have been kicked from the server.")
 					}
-					s.ChannelMessageSend(userNotifChanID.ID, "You have been kicked from the server.")
 
 					//perform the kick itself
 					err := s.GuildMemberDelete(GuildIDNumber, KickUserString)
 					if err != nil {
-						s.ChannelMessageSend(m.ChannelID, "**[ERR]** Error kicking user")
+						command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Error kicking user ID "+membersCached[i].User.ID, discordgo.EmbedTypeRich)
 						return
 					}
 
 					//log the kick
-					s.ChannelMessageSend(m.ChannelID, "**[OK]** Kicking user: "+KickUserString+". \nReason: "+reason)
+					command.SendTextEmbed(s, m, CommandStatusBot.OK+"KICKED", "Kicked user "+membersCached[i].User.Username, discordgo.EmbedTypeRich)
 					s.ChannelMessageSend(LogChannel, "User "+KickUserString+" "+cmd.Arguments[0]+" Kicked by "+m.Author.Username)
 				}
 			}
@@ -295,20 +302,16 @@ func BanUser(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCrea
 	authorisedAdmin = command.VerifyAdmin(s, m, &authorisedAdmin, cmd)
 
 	if len(cmd.Arguments) < 1 {
-		_, err := s.ChannelMessageSend(m.ChannelID, "**[SYNTAX]** Insufficient arguments provided (help: **.ban @user <optional reason>**)")
-		if err != nil {
-			s.ChannelMessageSend(m.ChannelID, "**[ERR]** Error processing request")
-			return
-		}
+		command.SendTextEmbed(s, m, CommandStatusBot.SYNTAX, "usage: **.ban @mention reason for ban**", discordgo.EmbedTypeRich)
 		return
 	}
 
-	if len(cmd.Arguments) > 2 {
+	if len(cmd.Arguments) > 1 {
 		reason = command.JoinArguments(cmd)
 	}
 
 	if authorisedAdmin == false {
-		s.ChannelMessageSend(m.ChannelID, "**[PERM]** Error Banning user - insufficient rights for operation.")
+		command.SendTextEmbed(s, m, CommandStatusBot.AUTH, "Error banning a user - insufficient rights.", discordgo.EmbedTypeRich)
 		return
 	}
 
@@ -325,30 +328,32 @@ func BanUser(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCrea
 					userNotifChanID, err0 := s.UserChannelCreate(BanUserString)
 					if err0 != nil {
 						s.ChannelMessageSend(LogChannel, "**[ERR]** Error notifying the user of his ban")
+					} else {
+						s.ChannelMessageSend(userNotifChanID.ID, "You have been banned from the server. Reason: "+reason)
 					}
-					s.ChannelMessageSend(userNotifChanID.ID, "You have been banned from the server. Reason: "+reason)
 
 					err := s.GuildBanCreateWithReason(GuildIDNumber, BanUserString, reason, daysDelete)
 					if err != nil {
-						s.ChannelMessageSend(m.ChannelID, "**[ERR]** Error banning user")
+						command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Error banning user ID "+membersCached[i].User.ID, discordgo.EmbedTypeRich)
 						return
 					}
-					s.ChannelMessageSend(LogChannel, "User "+BanUserString+" "+cmd.Arguments[0]+" Banned by "+m.Author.Username)
-					s.ChannelMessageSend(m.ChannelID, "**[OK]** Banning user: "+BanUserString+". \nReason: "+reason)
+					command.SendTextEmbed(s, m, CommandStatusBot.OK+"BANNED", "Banned user "+membersCached[i].User.Username+"for "+
+						""+reason, discordgo.EmbedTypeRich)
 				} else {
 					userNotifChanID, err0 := s.UserChannelCreate(BanUserString)
 					if err0 != nil {
 						s.ChannelMessageSend(LogChannel, "**[ERR]** Error notifying the user of his ban")
+					} else {
+						s.ChannelMessageSend(userNotifChanID.ID, "You have been banned from the server.")
 					}
-					s.ChannelMessageSend(userNotifChanID.ID, "You have been banned from the server.")
 
 					err1 := s.GuildBanCreate(GuildIDNumber, BanUserString, daysDelete)
 					if err1 != nil {
-						s.ChannelMessageSend(m.ChannelID, "**[ERR]** Error banning user")
+						command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Error banning user ID "+membersCached[i].User.ID, discordgo.EmbedTypeRich)
 						return
 					}
+					command.SendTextEmbed(s, m, CommandStatusBot.OK+"BANNED", "Banning user "+membersCached[i].User.Username, discordgo.EmbedTypeRich)
 					s.ChannelMessageSend(LogChannel, "User "+BanUserString+" "+cmd.Arguments[0]+" Banned by "+m.Author.Username)
-					s.ChannelMessageSend(m.ChannelID, "**[OK]** Banning user: "+BanUserString+". \nReason: "+reason)
 				}
 			}
 
@@ -359,11 +364,19 @@ func BanUser(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCrea
 
 // CheckUsers Checks the age of users
 func CheckUsers(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
-	err := command.VerifyArguments(&cmd)
-	if err != nil {
-		s.ChannelMessageSend(m.ChannelID, err.Error())
-		return
+	var timeToCheckUsers float64
+	var err error
+	if len(cmd.Arguments) > 0 {
+		timeToCheckUsers, err = strconv.ParseFloat(cmd.Arguments[0], 64)
+		if err != nil {
+			command.SendTextEmbed(s, m, CommandStatusBot.AUTOFIX, "usage **.checkusers <numberofhours>**\nUsing default 24 hours...", discordgo.EmbedTypeRich)
+			timeToCheckUsers = 24.0 * -1.0
+		}
+		timeToCheckUsers *= -1.0
+	} else {
+		timeToCheckUsers = 24.0 * -1.0
 	}
+
 	//variable definitions
 	var authorisedAdmin bool = false
 	authorisedAdmin = command.VerifyAdmin(s, m, &authorisedAdmin, cmd)
@@ -372,7 +385,6 @@ func CheckUsers(s *discordgo.Session, cmd command.Command, m *discordgo.MessageC
 		membersCached := GetMemberListFromGuild(s, GuildIDNumber)
 		var mainOutputMsg string
 		var IDOutputMsg string
-		timeToCheckUsers := 24.0 * -1.0
 
 		//iterate over the members_cached array. Maximum limit is 1000.
 		for i := range membersCached {
@@ -380,14 +392,15 @@ func CheckUsers(s *discordgo.Session, cmd command.Command, m *discordgo.MessageC
 			var timeVar float64 = userTimeJoin.Sub(time.Now()).Hours()
 
 			if timeVar > timeToCheckUsers {
-				mainOutputMsg += "This user is too young (less than 24h join age): " + membersCached[i].User.Username + " ,**ID:** " + membersCached[i].User.ID + "\n"
+				mainOutputMsg += "This user is too young (less than " + strconv.FormatFloat(timeToCheckUsers*-1.0, 'f', -1, 64) + "h join age): " + membersCached[i].User.Username + " ,**ID:** " + membersCached[i].User.ID + "\n"
 				IDOutputMsg += membersCached[i].User.ID + " "
 			}
 		}
 		//print out the amount of members_cached (max is currently 1000)
-		s.ChannelMessageSend(m.ChannelID, mainOutputMsg+"\n**IDs of the users (copyfriendly):**\n"+IDOutputMsg)
+		command.SendTextEmbed(s, m, CommandStatusBot.OK+"RECENT USERS", mainOutputMsg+"\n**IDs of the users (copyfriendly):**\n"+IDOutputMsg, discordgo.EmbedTypeRich)
 	} else if authorisedAdmin == false {
-		s.ChannelMessageSend(m.ChannelID, "**[PERM]** You do not have the permissions to use this command.")
+		command.SendTextEmbed(s, m, CommandStatusBot.AUTH, "You do not have the permission to use this command", discordgo.EmbedTypeRich)
+		return
 	}
 	return
 
@@ -396,7 +409,7 @@ func CheckUsers(s *discordgo.Session, cmd command.Command, m *discordgo.MessageC
 // PlanGame Plans a game for a person with a timed reminder
 func PlanGame(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
 	if len(cmd.Arguments) < 3 {
-		s.ChannelMessageSend(m.ChannelID, "**[SYNTAX]** Insufficient arguments. Provided "+strconv.FormatInt(int64(len(cmd.Arguments)), 10)+" , Expected at least 3")
+		command.SendTextEmbed(s, m, CommandStatusBot.SYNTAX, "Usage **.plan hh:mm game_name @mention**", discordgo.EmbedTypeRich)
 		return
 	}
 	GamePlanInsert(&cmd, &s, &m)
@@ -404,10 +417,6 @@ func PlanGame(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCre
 }
 
 func PlannedGames(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
-	if len(cmd.Arguments) > 0 {
-		s.ChannelMessageSend(m.ChannelID, "**[SYNTAX]** Insufficient arguments. Provided "+strconv.FormatInt(int64(len(cmd.Arguments)), 10)+" , Expected no arguments")
-		return
-	}
 	//open database and then close it (defer)
 	sqliteDatabase, _ := sql.Open("sqlite3", "./sqlite-database.db")
 	defer func(sqliteDatabase *sql.DB) {
@@ -421,7 +430,7 @@ func PlannedGames(s *discordgo.Session, cmd command.Command, m *discordgo.Messag
 	database.DisplayAllGamesPlanned(sqliteDatabase, &plannedGames)
 
 	//send info to channel
-	(*s).ChannelMessageSend((*m).ChannelID, plannedGames)
+	command.SendTextEmbed(s, m, CommandStatusBot.OK+"PLANNED GAMES", plannedGames, discordgo.EmbedTypeRich)
 	return
 }
 
@@ -441,22 +450,26 @@ func GamePlanInsert(c *command.Command, s **discordgo.Session, m **discordgo.Mes
 
 	//TODO: Check the capacity if it's sufficient, otherwise the program is panicking every time...
 	if cap(splitTimeArgument) < 1 {
-		(*s).ChannelMessageSend((*m).ChannelID, "**[ERR]** Error parsing time")
+		command.SendTextEmbed(*s, *m, CommandStatusBot.ERR, "Error parsing time", discordgo.EmbedTypeRich)
+
+		//(*s).ChannelMessageSend((*m).ChannelID, "**[ERR]** Error parsing time")
 		return
 	}
 
 	//Put hours into timeHours
 	timeHour, err := strconv.Atoi(splitTimeArgument[0])
 	if err != nil {
-		(*s).ChannelMessageSend((*m).ChannelID, "**[ERR]** Error converting hours")
-		fmt.Printf("%s", err)
+		command.SendTextEmbed(*s, *m, CommandStatusBot.ERR, "Error converting hours", discordgo.EmbedTypeRich)
+		//(*s).ChannelMessageSend((*m).ChannelID, "**[ERR]** Error converting hours")
+		//fmt.Printf("%s", err)
 		return
 	}
 	//put minutes into timeMinute
 	timeMinute, err := strconv.Atoi(splitTimeArgument[1])
 	if err != nil {
-		(*s).ChannelMessageSend((*m).ChannelID, "**[ERR]** Error converting minutes")
-		fmt.Printf("%s", err)
+		command.SendTextEmbed(*s, *m, CommandStatusBot.ERR, "Error converting minutes", discordgo.EmbedTypeRich)
+		//(*s).ChannelMessageSend((*m).ChannelID, "**[ERR]** Error converting minutes")
+		//fmt.Printf("%s", err)
 		return
 	}
 	//get current date and replace hours and minutes with user variables
@@ -471,7 +484,7 @@ func GamePlanInsert(c *command.Command, s **discordgo.Session, m **discordgo.Mes
 	var plannedgames string
 	database.DisplayGamePlanned(sqliteDatabase, &plannedgames)
 
-	(*s).ChannelMessageSend((*m).ChannelID, plannedgames)
+	command.SendTextEmbed(*s, *m, CommandStatusBot.OK+"PLANNED A GAME", plannedgames, discordgo.EmbedTypeRich)
 	return
 }
 
@@ -490,11 +503,10 @@ func SnowflakeTimestamp(ID string) (t time.Time, err error) {
 func GetMemberListFromGuild(s *discordgo.Session, guildID string) []*discordgo.Member {
 	membersList, err := s.GuildMembers(guildID, "0", 1000)
 	if err != nil {
-		fmt.Println("**[CONF_ERR]** Error getting the memberlist (probably invalid guildID): " + guildID)
+		s.ChannelMessageSend(LogChannel, "**[ERR]** Error getting information about users with the guildID, probably invalid ID?")
 	}
 
 	return membersList
-
 }
 
 // CheckRegularSpamAttack Checks the server for spam attacks
@@ -519,7 +531,7 @@ func CheckRegularSpamAttack(s *discordgo.Session) {
 
 		}
 		if spamCounter > 4 {
-			s.ChannelMessageSend(AdminChannel, "**[WARN]** Possible RAID ATTACK detected!!! (<@&513275201375698954>) ("+strconv.FormatInt(spamCounter, 10)+" users joined in the last "+strconv.FormatFloat(timeToCheckUsers, 'f', 0, 64)+" hours)")
+			s.ChannelMessageSend(AdminChannel, "**[WARN]** Possible RAID ATTACK detected!!! (<@&513275201375698954>) ("+command.ParseStringToMentionID(command.AuthorisedIDAdmin+strconv.FormatInt(spamCounter, 10)+" users joined in the last "+strconv.FormatFloat(timeToCheckUsers, 'f', 0, 64)+" hours)"))
 		}
 		spamCounter = 0
 		time.Sleep(checkInterval * time.Second)
@@ -528,16 +540,10 @@ func CheckRegularSpamAttack(s *discordgo.Session) {
 }
 
 func Topic(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
-	err := command.VerifyArguments(&cmd)
-	if err != nil {
-		s.ChannelMessageSend(m.ChannelID, err.Error())
-		return
-	}
-
 	fileHandle, err := os.Open("topic_questions.txt")
 	if err != nil {
 		fmt.Println("error reading the file: ", err)
-		s.ChannelMessageSend(m.ChannelID, err.Error())
+		command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Error reading the file topic_questions.txt", discordgo.EmbedTypeRich)
 		return
 	}
 	defer func(fileHandle *os.File) {
@@ -568,7 +574,7 @@ func Topic(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate
 		return
 	}
 
-	s.ChannelMessageSend(m.ChannelID, splitTopic[n])
+	command.SendTextEmbed(s, m, CommandStatusBot.OK+"TOPIC", splitTopic[n], discordgo.EmbedTypeRich)
 	return
 }
 
@@ -580,7 +586,7 @@ func Fox(s *discordgo.Session, m *discordgo.MessageCreate) {
 func GetWeather(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
 
 	if len(cmd.Arguments) < 1 {
-		s.ChannelMessageSend(m.ChannelID, "Usage:\n``.weather CityName``")
+		command.SendTextEmbed(s, m, CommandStatusBot.SYNTAX, "Usage: **.weather City Name**", discordgo.EmbedTypeRich)
 		return
 	}
 
@@ -603,7 +609,7 @@ func GetWeather(s *discordgo.Session, cmd command.Command, m *discordgo.MessageC
 	w, err := owm.NewCurrent("C", "en", apiKey)
 	if err != nil {
 		fmt.Println("Error processing the request")
-		log.Fatalln(err)
+		command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Error processing the request", discordgo.EmbedTypeRich)
 	}
 
 	var commandString string = command.JoinArguments(cmd)
@@ -611,7 +617,7 @@ func GetWeather(s *discordgo.Session, cmd command.Command, m *discordgo.MessageC
 	err2 := w.CurrentByName(commandString)
 	if err2 != nil {
 		log.Println(err2)
-		s.ChannelMessageSend(m.ChannelID, "**error: the city **"+commandString+"**does not exist.**")
+		command.SendTextEmbed(s, m, CommandStatusBot.ERR, "The city "+commandString+" does not exist", discordgo.EmbedTypeRich)
 		return
 	}
 
@@ -647,7 +653,7 @@ func GetWeather(s *discordgo.Session, cmd command.Command, m *discordgo.MessageC
 		"Sunset:\t" + weatherData.sunset + "\n" +
 		"```"
 
-	s.ChannelMessageSend(m.ChannelID, weatherDataString)
+	command.SendTextEmbed(s, m, CommandStatusBot.OK+"WEATHER IN "+strings.ToUpper(w.Name), weatherDataString, discordgo.EmbedTypeRich)
 	return
 
 }
@@ -710,7 +716,7 @@ func TimedChannelUnlock(s *discordgo.Session) {
 func PurgeMessages(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
 
 	if len(cmd.Arguments) < 1 {
-		s.ChannelMessageSend(m.ChannelID, "Usage: **.purge number**")
+		command.SendTextEmbed(s, m, CommandStatusBot.SYNTAX, "Usage **.purge numberofmessages**", discordgo.EmbedTypeRich)
 		return
 	}
 
@@ -722,17 +728,17 @@ func PurgeMessages(s *discordgo.Session, cmd command.Command, m *discordgo.Messa
 
 		numMessages, err1 := strconv.ParseInt(cmd.Arguments[0], 10, 64)
 		if err1 != nil {
-			s.ChannelMessageSend(m.ChannelID, "**[ERR]** Invalid number provided")
+			command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Invalid number provided", discordgo.EmbedTypeRich)
 			return
 		}
 		if numMessages > 99 || numMessages < 1 {
-			s.ChannelMessageSend(m.ChannelID, "**[SYNTAX]** The number of messages must be 1-100")
+			command.SendTextEmbed(s, m, CommandStatusBot.SYNTAX, "The min-max of the number is 1-100", discordgo.EmbedTypeRich)
 			return
 		}
 
 		messageArrayComplete, err1 := s.ChannelMessages(m.ChannelID, int(numMessages), m.ID, "", "")
 		if err1 != nil {
-			s.ChannelMessageSend(m.ChannelID, "**[ERR]** Error getting the ID of messages")
+			command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Cannot get the ID of messages", discordgo.EmbedTypeRich)
 			return
 		}
 
@@ -742,18 +748,17 @@ func PurgeMessages(s *discordgo.Session, cmd command.Command, m *discordgo.Messa
 
 		err2 := s.ChannelMessagesBulkDelete(m.ChannelID, messageArrayToDelete)
 		if err2 != nil {
-			s.ChannelMessageSend(m.ChannelID, "**[ERR]** Error deleting the requested messages...")
+			command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Error deleting the requested messages...", discordgo.EmbedTypeRich)
 			return
 		}
-		s.ChannelMessageSend(m.ChannelID, "**[OK]** Deleted "+strconv.FormatInt(int64(len(messageArrayToDelete)), 10)+" messages")
+		command.SendTextEmbed(s, m, CommandStatusBot.OK+"PURGED", "Purged"+strconv.FormatInt(int64(len(messageArrayToDelete)), 10)+" "+
+			"messages", discordgo.EmbedTypeRich)
 
-		s.ChannelMessageSend(LogChannel, "**[LOG]** User "+"<@!"+m.Author.ID+">"+" deleted "+strconv.FormatInt(int64(len(messageArrayToDelete)), 10)+" messages in channel "+"<#"+m.ChannelID+">")
-
-		//command.SendTextEmbed(s, m, "[OK]")
+		s.ChannelMessageSend(LogChannel, "**[LOG]** User "+m.Author.Username+" deleted "+strconv.FormatInt(int64(len(messageArrayToDelete)), 10)+" messages in channel "+"<#"+m.ChannelID+">")
 
 		return
 	} else {
-		s.ChannelMessageSend(m.ChannelID, "**[PERM]** Insufficient permissions.")
+		command.SendTextEmbed(s, m, CommandStatusBot.AUTH, "Insufficient permissions.", discordgo.EmbedTypeRich)
 		return
 	}
 
@@ -775,20 +780,20 @@ func Members(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCrea
 func PruneCount(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) uint32 {
 
 	if len(cmd.Arguments) < 1 {
-		s.ChannelMessageSend(m.ChannelID, "**[SYNTAX]** Usage: **.prunecount days**")
+		command.SendTextEmbed(s, m, CommandStatusBot.SYNTAX, "Usage **.prunecount days**", discordgo.EmbedTypeRich)
 		return 0
 	}
 
 	pruneDaysString := cmd.Arguments[0]
 	pruneDaysInt, err1 := strconv.ParseInt(pruneDaysString, 10, 64)
 	if err1 != nil {
-		s.ChannelMessageSend(m.ChannelID, "**[ERR]** Error parsing the days argument as a number (uint32)")
+		command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Error parsing the argument as uint32 days number", discordgo.EmbedTypeRich)
 		return 0
 	}
 
 	if pruneDaysInt < 7 {
 		pruneDaysInt = 0
-		s.ChannelMessageSend(m.ChannelID, "**[ERR]** Must be at least 7 days of inactivity.")
+		command.SendTextEmbed(s, m, CommandStatusBot.WARN, "Command is limited to range 7-30 for safety reasons", discordgo.EmbedTypeRich)
 		return 0
 	}
 
@@ -803,7 +808,7 @@ func PruneCount(s *discordgo.Session, cmd command.Command, m *discordgo.MessageC
 // PruneMembers prunes members
 func PruneMembers(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
 	if len(cmd.Arguments) < 100 {
-		s.ChannelMessageSend(m.ChannelID, "**[SYNTAX]** Usage: **.prunemembers days**")
+		command.SendTextEmbed(s, m, CommandStatusBot.SYNTAX, "Usage **.prunemembers days**", discordgo.EmbedTypeRich)
 		return
 	}
 
@@ -815,12 +820,13 @@ func PruneMembers(s *discordgo.Session, cmd command.Command, m *discordgo.Messag
 		pruneDaysCountInt, err0 := strconv.ParseInt(cmd.Arguments[0], 10, 32)
 
 		if err0 != nil {
-			s.ChannelMessageSend(m.ChannelID, "**[ERR]** Error parsing the number of days ")
+			command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Error parsing the argument as uint32 days number", discordgo.EmbedTypeRich)
 		}
 
 		var pruneDaysCountUInt = uint32(pruneDaysCountInt)
 
 		if pruneDaysCountInt == 0 {
+			command.SendTextEmbed(s, m, CommandStatusBot.SYNTAX, "Cannot prune time of 0 days. Allowed frame is 7-30", discordgo.EmbedTypeRich)
 			s.ChannelMessageSend(m.ChannelID, "**[ERR]** Invalid days to prune (0)")
 			return
 		}
@@ -828,19 +834,20 @@ func PruneMembers(s *discordgo.Session, cmd command.Command, m *discordgo.Messag
 		//prunes the members and assigns the result of the pruned members count to a variable
 		prunedMembersCount, err1 := s.GuildPrune(GuildIDNumber, pruneDaysCountUInt)
 		if err1 != nil {
-			s.ChannelMessageSend(m.ChannelID, "**[ERR]** Error pruning members")
+			command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Error pruning members", discordgo.EmbedTypeRich)
 		}
 
 		//log output
-		s.ChannelMessageSend(LogChannel, "**[LOG]** User "+"<@!"+m.Author.ID+">"+
+
+		command.SendTextEmbed(s, m, CommandStatusBot.OK+"PRUNED", strconv.FormatInt(int64(prunedMembersCount), 10)+
+			" members from the server", discordgo.EmbedTypeRich)
+		s.ChannelMessageSend(LogChannel, "**[LOG]** User "+m.Author.Username+
 			" used a prune and kicked "+strconv.FormatInt(int64(prunedMembersCount), 10)+" members")
-		s.ChannelMessageSend(m.ChannelID, "**[OK]** pruned "+strconv.FormatInt(int64(prunedMembersCount), 10)+
-			" members from the server")
 		return
 
 		//permission output
 	} else {
-		s.ChannelMessageSend(m.ChannelID, "**[PERM]** Insufficient permissions for operation")
+		command.SendTextEmbed(s, m, CommandStatusBot.AUTH, "Insufficient permissions", discordgo.EmbedTypeRich)
 		return
 	}
 
