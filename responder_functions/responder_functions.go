@@ -27,7 +27,24 @@ const RoleMuteID string = "684159104901709825"
 
 const apiKey string = "65bb37a9ac2af9128d6ceaf670043b39"
 
-const Version string = "0.3.2"
+const Version string = "0.4.0"
+
+type CommandStatus struct {
+	OK     string
+	ERR    string
+	SYNTAX string
+	WARN   string
+	AUTH   string
+}
+
+// CommandStatusBot is a variable to pass to the messageEmbed to make an emoji
+var CommandStatusBot CommandStatus = CommandStatus{
+	OK:     ":white_check_mark: ",
+	ERR:    ":bangbang: ERR",
+	SYNTAX: ":question: SYNTAX",
+	WARN:   ":warning: WARN",
+	AUTH:   ":no_entry: AUTH",
+}
 
 func Zasielkovna(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
 	err := command.VerifyArguments(&cmd)
@@ -711,7 +728,11 @@ func PurgeMessages(s *discordgo.Session, cmd command.Command, m *discordgo.Messa
 			return
 		}
 		s.ChannelMessageSend(m.ChannelID, "**[OK]** Deleted "+strconv.FormatInt(int64(len(messageArrayToDelete)), 10)+" messages")
+
 		s.ChannelMessageSend(LogChannel, "**[LOG]** User "+"<@!"+m.Author.ID+">"+" deleted "+strconv.FormatInt(int64(len(messageArrayToDelete)), 10)+" messages in channel "+"<#"+m.ChannelID+">")
+
+		//command.SendTextEmbed(s, m, "[OK]")
+
 		return
 	} else {
 		s.ChannelMessageSend(m.ChannelID, "**[PERM]** Insufficient permissions.")
@@ -722,8 +743,8 @@ func PurgeMessages(s *discordgo.Session, cmd command.Command, m *discordgo.Messa
 
 // Members outputs the number of current members of the server
 func Members(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) uint64 {
-	if len(cmd.Arguments) > 1 {
-		s.ChannelMessageSend(m.ChannelID, "[SYNTAX] Usage: **.count**. Automatically discarding arguments")
+	if len(cmd.Arguments) > 0 {
+		command.SendTextEmbed(s, m, CommandStatusBot.SYNTAX, "Usage: **.count**\n Automatically discarding arguments...", discordgo.EmbedTypeRich)
 	}
 
 	memberList := GetMemberListFromGuild(s, GuildIDNumber)
@@ -793,8 +814,10 @@ func PruneMembers(s *discordgo.Session, cmd command.Command, m *discordgo.Messag
 		}
 
 		//log output
-		s.ChannelMessageSend(LogChannel, "**[LOG]** User "+"<@!"+m.Author.ID+">"+" used a prune and kicked "+strconv.FormatInt(int64(prunedMembersCount), 10)+" members")
-		s.ChannelMessageSend(m.ChannelID, "**[OK]** pruned "+strconv.FormatInt(int64(prunedMembersCount), 10)+" members from the server")
+		s.ChannelMessageSend(LogChannel, "**[LOG]** User "+"<@!"+m.Author.ID+">"+
+			" used a prune and kicked "+strconv.FormatInt(int64(prunedMembersCount), 10)+" members")
+		s.ChannelMessageSend(m.ChannelID, "**[OK]** pruned "+strconv.FormatInt(int64(prunedMembersCount), 10)+
+			" members from the server")
 		return
 
 		//permission output

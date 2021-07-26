@@ -69,6 +69,24 @@ func ParseChannelToString(s string) string {
 	return s
 }
 
+// ParseStringToMentionID Parses string to output a mentionID string that Discord formats
+func ParseStringToMentionID(s string) string {
+	var mentionID string
+
+	mentionID = "<@" + s + ">"
+
+	return mentionID
+}
+
+// ParseStringToChannelID Parses string to output a channelID string that Discord formats
+func ParseStringToChannelID(s string) string {
+	var channelID string
+
+	channelID = "<#" + s + ">"
+
+	return channelID
+}
+
 // IsCommand Verifies if the command is of a command struct
 func IsCommand(c *Command, name string) bool {
 	return c.Command == name
@@ -173,4 +191,58 @@ func VerifyTrusted(s *discordgo.Session, m *discordgo.MessageCreate, authorised 
 	}
 
 	return *authorised
+}
+
+// SendTextEmbed Function will take text string of sorts and output an embed
+func SendTextEmbed(s *discordgo.Session, m *discordgo.MessageCreate, status string, messageContent string, mode discordgo.EmbedType) {
+
+	//Fixed author message.
+	author := discordgo.MessageEmbedAuthor{
+		URL:          "",
+		Name:         "SlovakiaBot",
+		IconURL:      "https://cdn.discordapp.com/avatars/837982234597916672/51236a8235b1778f5d90bce35fbcf4d6.webp?size=256",
+		ProxyIconURL: "",
+	}
+
+	var color int
+
+	fmt.Println(color)
+
+	//set the embed color according to the type of Status passed (OK, ERR, WARN, SYNTAX)
+	switch status {
+	case ":bangbang: ERR":
+		color = 15158332
+	case ":warning: WARN":
+		color = 15105570
+	case ":question: SYNTAX":
+		color = 16776960
+	case ":no_entry: AUTH":
+		color = 15105570
+	default:
+		color = 3066993
+	}
+
+	//MessageEmbed info
+	embed := discordgo.MessageEmbed{
+		URL:         "",
+		Type:        mode,
+		Title:       status,
+		Description: messageContent,
+		Timestamp:   "",
+		Color:       color,
+		Footer:      nil,
+		Image:       nil,
+		Thumbnail:   nil,
+		Video:       nil,
+		Provider:    nil,
+		Author:      &author,
+		Fields:      nil,
+	}
+
+	//Send a message as an embed.
+	_, err := s.ChannelMessageSendEmbed(m.ChannelID, &embed)
+	if err != nil {
+		s.ChannelMessageSend(m.ChannelID, "**[TESTERR]** Error: "+err.Error())
+		return
+	}
 }

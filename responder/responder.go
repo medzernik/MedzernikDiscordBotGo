@@ -109,7 +109,10 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	//counts the users on the server
 	if command.IsCommand(&cmd, "members") {
 		membersCountInt := responder_functions.Members(s, cmd, m)
-		s.ChannelMessageSend(m.ChannelID, "**[OK]** There are "+strconv.FormatInt(int64(membersCountInt), 10)+" members")
+
+		membersCountString := strconv.FormatInt(int64(membersCountInt), 10)
+
+		command.SendTextEmbed(s, m, responder_functions.CommandStatusBot.OK+membersCountString, "There are "+membersCountString+" members", discordgo.EmbedTypeRich)
 	}
 	//counts pruneable members on server
 	if command.IsCommand(&cmd, "prunecount") {
@@ -127,11 +130,17 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 		responder_functions.PruneMembers(s, cmd, m)
 	}
 
+	//testing command
+	if command.IsCommand(&cmd, "test") {
+		command.SendTextEmbed(s, m, ":bangbang: TEST", "<@206720832695828480>", discordgo.EmbedTypeRich)
+	}
+
 }
 
+//Ready runs when the bot starts. Starts the automatic functions and sets the status of the bot
 func ready(s *discordgo.Session, _ *discordgo.Ready) {
 	//set the status
-	err := s.UpdateGameStatus(0, "Nove features mame aaaaaa")
+	err := s.UpdateGameStatus(0, "[DEV] Beta verzia: "+responder_functions.Version)
 	if err != nil {
 		fmt.Println("error setting the bot status")
 		return
