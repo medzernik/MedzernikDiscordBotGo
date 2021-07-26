@@ -802,3 +802,11 @@ func PruneMembers(s *discordgo.Session, cmd command.Command, m *discordgo.Messag
 	}
 
 }
+
+func MassKick(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
+
+}
+
+func MassBan(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
+
+}
