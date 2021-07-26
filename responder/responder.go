@@ -68,7 +68,7 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 		go responder_functions.Fox(s, m)
 	}
 	//outputs a weather from openWeatherMap
-	if command.IsCommand(&cmd, "weather") {
+	if command.IsCommand(&cmd, "weather") || command.IsCommand(&cmd, "pocasie") {
 		go responder_functions.GetWeather(s, cmd, m)
 	}
 	//TODO: finish the help system
