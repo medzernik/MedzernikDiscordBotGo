@@ -30,20 +30,22 @@ const apiKey string = "65bb37a9ac2af9128d6ceaf670043b39"
 const Version string = "0.4.0"
 
 type CommandStatus struct {
-	OK     string
-	ERR    string
-	SYNTAX string
-	WARN   string
-	AUTH   string
+	OK      string
+	ERR     string
+	SYNTAX  string
+	WARN    string
+	AUTH    string
+	AUTOFIX string
 }
 
 // CommandStatusBot is a variable to pass to the messageEmbed to make an emoji
 var CommandStatusBot CommandStatus = CommandStatus{
-	OK:     ":white_check_mark: ",
-	ERR:    ":bangbang: ERR",
-	SYNTAX: ":question: SYNTAX",
-	WARN:   ":warning: WARN",
-	AUTH:   ":no_entry: AUTH",
+	OK:      "",
+	ERR:     ":bangbang: ERROR",
+	SYNTAX:  ":question: SYNTAX",
+	WARN:    ":warning: WARNING",
+	AUTH:    ":no_entry: AUTHENTICATION",
+	AUTOFIX: ":wrench: AUTOCORRECTING",
 }
 
 func Zasielkovna(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
@@ -59,13 +61,26 @@ func Zasielkovna(s *discordgo.Session, cmd command.Command, m *discordgo.Message
 
 // AgeJoined Checks the age of the user on join
 func AgeJoined(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
-	err := command.VerifyArguments(&cmd, command.RegexArg{Expression: `^<@!(\d+)>$`, CaptureGroup: 1})
-	if err != nil {
-		s.ChannelMessageSend(m.ChannelID, err.Error())
+	/*
+		err := command.VerifyArguments(&cmd, command.RegexArg{Expression: `^<@!(\d+)>$`, CaptureGroup: 1})
+		if err != nil {
+			s.ChannelMessageSend(m.ChannelID, err.Error())
+			return
+		}
+
+	*/
+
+	if len(cmd.Arguments) > 1 {
+		command.SendTextEmbed(s, m, CommandStatusBot.AUTOFIX, "usage: **.age @mention** \n Using the first ID instead...", discordgo.EmbedTypeRich)
+	}
+
+	if len(cmd.Arguments) < 1 {
+		command.SendTextEmbed(s, m, CommandStatusBot.SYNTAX, "usage: **.age @mention**", discordgo.EmbedTypeRich)
 		return
 	}
 
-	userId := cmd.Arguments[0]
+	userId := command.ParseMentionToString(cmd.Arguments[0])
+
 	//Every time a command is run, get a list of all users. This serves the purpose to then print the name of the corresponding user.
 	//TODO: cache it in redis
 	membersCached := GetMemberListFromGuild(s, GuildIDNumber)
@@ -77,8 +92,8 @@ func AgeJoined(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCr
 			userName = membersCached[i].User.Username
 			fmt.Println(userName)
 		} else if membersCached[i].User.ID != userId && membersCached[i].User.ID == "" {
-			s.ChannelMessageSend(m.ChannelID, "**[ERR] Bad user ID")
-
+			command.SendTextEmbed(s, m, CommandStatusBot.ERR, cmd.Arguments[0]+" : not a number or a mention", discordgo.EmbedTypeRich)
+			return
 		}
 	}
 
@@ -86,7 +101,7 @@ func AgeJoined(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCr
 
 	userTimeRaw, err := SnowflakeTimestamp(userId)
 	if err != nil {
-		s.ChannelMessageSend(m.ChannelID, "**[ERR] Bad user ID")
+		command.SendTextEmbed(s, m, CommandStatusBot.ERR, cmd.Arguments[0]+" : not a number or a mention", discordgo.EmbedTypeRich)
 		return
 	}
 
@@ -102,8 +117,11 @@ func AgeJoined(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCr
 	minutyString := strconv.FormatInt(minuty, 10)
 	sekundyString := strconv.FormatInt(sekundy, 10)
 
-	s.ChannelMessageSend(m.ChannelID, "**[OK]**"+"**"+userName+"**"+" je tu s nami už:\n"+dnyString+" dni\n"+hodinyString+" hodin\n"+minutyString+" minut\n"+sekundyString+" sekund"+"<:peepoLove:687313976043765810>")
-
+	//send the embed
+	command.SendTextEmbed(s, m, CommandStatusBot.OK+userName, command.ParseStringToMentionID(userId)+" je tu s nami už:\n"+
+		""+dnyString+" dni\n"+hodinyString+" hodin\n"+
+		""+minutyString+" minut\n"+sekundyString+" sekund"+"<:peepoLove:687313976043765810>"+
+		"", discordgo.EmbedTypeRich)
 }
 
 // Mute Muting function

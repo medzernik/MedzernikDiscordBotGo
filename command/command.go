@@ -206,23 +206,25 @@ func SendTextEmbed(s *discordgo.Session, m *discordgo.MessageCreate, status stri
 
 	var color int
 
-	fmt.Println(color)
-
 	//set the embed color according to the type of Status passed (OK, ERR, WARN, SYNTAX)
 	switch status {
-	case ":bangbang: ERR":
+	case ":bangbang: ERROR":
 		color = 15158332
-	case ":warning: WARN":
+	case ":warning: WARNING":
 		color = 15105570
 	case ":question: SYNTAX":
-		color = 16776960
-	case ":no_entry: AUTH":
+		color = 3447003
+	case ":no_entry: AUTHENTICATION":
 		color = 15105570
+	case ":wrench: AUTOCORRECTING":
+		color = 16776960
+
 	default:
 		color = 3066993
 	}
 
 	//MessageEmbed info
+	//Thinking of adding timestamp time.Now().Format(time.RFC3339)
 	embed := discordgo.MessageEmbed{
 		URL:         "",
 		Type:        mode,

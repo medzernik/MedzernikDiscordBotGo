@@ -35,37 +35,37 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	//Zasielkovna EasterEgg
 	if command.IsCommand(&cmd, "zasielkovna") {
-		responder_functions.Zasielkovna(s, cmd, m)
+		go responder_functions.Zasielkovna(s, cmd, m)
 	}
 
 	//Time since joined command
 	if command.IsCommand(&cmd, "age") {
-		responder_functions.AgeJoined(s, cmd, m)
+		go responder_functions.AgeJoined(s, cmd, m)
 	}
 	//Function that mutes a user (assigns him a muted role).
 	if command.IsCommand(&cmd, "mute") {
-		responder_functions.Mute(s, cmd, m)
+		go responder_functions.Mute(s, cmd, m)
 	}
 
 	//right now this command checks for any 1000 users on the guild that have a join time less than 24hours, then prints the names one by one.
 	if command.IsCommand(&cmd, "checkusers") {
-		responder_functions.CheckUsers(s, cmd, m)
+		go responder_functions.CheckUsers(s, cmd, m)
 	}
 	//lets you play a game with a mention
 	if command.IsCommand(&cmd, "plan") {
-		responder_functions.PlanGame(s, cmd, m)
+		go responder_functions.PlanGame(s, cmd, m)
 	}
 	//shows the currently planned games in the database
 	if command.IsCommand(&cmd, "planned") {
-		responder_functions.PlannedGames(s, cmd, m)
+		go responder_functions.PlannedGames(s, cmd, m)
 	}
 	// outputs a random topic for a discussion
 	if command.IsCommand(&cmd, "topic") {
-		responder_functions.Topic(s, cmd, m)
+		go responder_functions.Topic(s, cmd, m)
 	}
 	//aaaaaa
 	if command.IsCommand(&cmd, "fox") || command.IsCommand(&cmd, "shake") {
-		responder_functions.Fox(s, m)
+		go responder_functions.Fox(s, m)
 	}
 	//outputs a weather from openWeatherMap
 	if command.IsCommand(&cmd, "weather") {
@@ -73,8 +73,7 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 	//TODO: finish the help system
 	if command.IsCommand(&cmd, "help") {
-		s.ChannelMessageSend(m.ChannelID, "**The available commands are:**\n"+
-			"**.zasielkovna** - AAAAAA.\n"+
+		command.SendTextEmbed(s, m, responder_functions.CommandStatusBot.OK+"**The available commands are:**", "**.zasielkovna** - AAAAAA.\n"+
 			"**.age @user** - checks the age of a user's account.\n"+
 			"**.mute @user** - **[ADMIN] [TRUSTED]** gives a user a muted role. Works on users that joined less than 24 hours ago for [TRUSTED].\n"+
 			"**.checkusers** - **[ADMIN]** lists users that joined less than 24h ago.\n"+
@@ -88,7 +87,7 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 			"**.version** - displays the current bot version.\n"+
 			"**.prunecount NUMBER (7-X)** - shows the number of pruneable (inactive) members. NUMBER = days (7 minimum).\n"+
 			"**.prunemember NUMBER (7-X) ** - **[ADMIN]** prunes members inactive for NUMBER days (7 minimum).\n"+
-			"**.members** - outputs the number of members on the server.")
+			"**.members** - outputs the number of members on the server.", discordgo.EmbedTypeRich)
 	}
 	//kicks a user
 	if command.IsCommand(&cmd, "kick") {
@@ -104,7 +103,8 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 	//version of the bot running
 	if command.IsCommand(&cmd, "version") {
-		s.ChannelMessageSend(m.ChannelID, "**[VERSION]** "+responder_functions.Version)
+		command.SendTextEmbed(s, m, responder_functions.CommandStatusBot.OK+responder_functions.Version, "Version number is: "+
+			""+responder_functions.Version, discordgo.EmbedTypeRich)
 	}
 	//counts the users on the server
 	if command.IsCommand(&cmd, "members") {
@@ -112,7 +112,7 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		membersCountString := strconv.FormatInt(int64(membersCountInt), 10)
 
-		command.SendTextEmbed(s, m, responder_functions.CommandStatusBot.OK+membersCountString, "There are "+membersCountString+" members", discordgo.EmbedTypeRich)
+		go command.SendTextEmbed(s, m, responder_functions.CommandStatusBot.OK+membersCountString, "There are "+membersCountString+" members", discordgo.EmbedTypeRich)
 	}
 	//counts pruneable members on server
 	if command.IsCommand(&cmd, "prunecount") {
@@ -127,12 +127,12 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 	//prunes members from server
 	if command.IsCommand(&cmd, "prunemembers") {
-		responder_functions.PruneMembers(s, cmd, m)
+		go responder_functions.PruneMembers(s, cmd, m)
 	}
 
 	//testing command
 	if command.IsCommand(&cmd, "test") {
-		command.SendTextEmbed(s, m, ":bangbang: TEST", "<@206720832695828480>", discordgo.EmbedTypeRich)
+		go command.SendTextEmbed(s, m, ":bangbang: TEST", "<@206720832695828480>", discordgo.EmbedTypeRich)
 	}
 
 }
