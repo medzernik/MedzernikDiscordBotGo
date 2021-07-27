@@ -10,6 +10,7 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/medzernik/SlovakiaDiscordBotGo/responder"
+	//"github.com/medzernik/SlovakiaDiscordBotGo/config"
 )
 
 // Token Variables used for command line parameters
