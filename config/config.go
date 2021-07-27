@@ -1,3 +1,4 @@
+// Package config Configuration module that holds the configuration logic
 package config
 
 import (
@@ -7,12 +8,14 @@ import (
 	"time"
 )
 
+// Config Configuration type structure to use in memory.
 type Config struct {
 	ServerInfo struct {
 		Prefix        string `yaml:"prefix"`
 		GuildIDNumber string `yaml:"guildIDNumber"`
 		WeatherAPIKey string `yaml:"weatherAPIKey"`
 		ServerToken   string `yaml:"serverToken"`
+		BotStatus     string `yaml:"botStatus"`
 	} `yaml:"serverInfo"`
 	RoleAdmin struct {
 		RoleAdminID string `yaml:"roleAdminID"`
@@ -29,7 +32,7 @@ type Config struct {
 		ChannelLogID string `yaml:"channelLogID"`
 	} `yaml:"channelLog"`
 	MuteFunction struct {
-		MuteRoleID           string `yaml:"MuteRoleID"`
+		MuteRoleID           string `yaml:"muteRoleID"`
 		TrustedMutingEnabled bool   `yaml:"trustedMutingEnabled"`
 	} `yaml:"muteFunction"`
 	AutoLocker struct {
@@ -45,6 +48,7 @@ type Config struct {
 
 var Cfg Config
 
+// LoadConfig Loads the config file. It must be in the root of the directory, next to the main executable.
 func LoadConfig() {
 	f, err := os.Open("config.yml")
 	if err != nil {
@@ -66,4 +70,32 @@ func LoadConfig() {
 	}
 
 	fmt.Println(Cfg)
+
+}
+
+// SaveConfig This function allows you to save the current config to the file
+func SaveConfig() {
+	f, err := os.Open("config.yml")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer func(f *os.File) {
+		err := f.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}(f)
+
+	encoder := yaml.NewEncoder(f)
+	err = encoder.Encode(&Cfg)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+}
+
+// Configure This function allows you to set values in the config straight from discord.
+func Configure() {
+
 }

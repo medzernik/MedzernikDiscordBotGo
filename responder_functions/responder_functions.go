@@ -18,7 +18,8 @@ import (
 	"time"
 )
 
-const Version string = "0.4.0"
+const Version string = "0.5.0"
+const VersionFeatureName string = "The Config Update"
 
 type CommandStatus struct {
 	OK      string
@@ -52,15 +53,6 @@ func Zasielkovna(s *discordgo.Session, cmd command.Command, m *discordgo.Message
 
 // AgeJoined Checks the age of the user on join
 func AgeJoined(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
-	/*
-		err := command.VerifyArguments(&cmd, command.RegexArg{Expression: `^<@!(\d+)>$`, CaptureGroup: 1})
-		if err != nil {
-			s.ChannelMessageSend(m.ChannelID, err.Error())
-			return
-		}
-
-	*/
-
 	//try to fix command, use only first value
 	if len(cmd.Arguments) > 1 {
 		command.SendTextEmbed(s, m, CommandStatusBot.AUTOFIX, "usage: **.age @mention** \n Using the first ID instead...", discordgo.EmbedTypeRich)
@@ -127,7 +119,7 @@ func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate)
 
 	//Arguments checking
 	if len(cmd.Arguments) < 1 {
-		command.SendTextEmbed(s, m, CommandStatusBot.SYNTAX, "usage: **.mute @mention**", discordgo.EmbedTypeRich)
+		command.SendTextEmbed(s, m, CommandStatusBot.SYNTAX, "usage: **.mute @mention**\nyou can also use multiple mentions **.unmute @mention @mention ...", discordgo.EmbedTypeRich)
 		return
 	}
 
@@ -156,11 +148,13 @@ func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate)
 					if err2 != nil {
 						command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Error muting a user - cannot assign the MuteRole."+
 							" "+config.Cfg.MuteFunction.MuteRoleID, discordgo.EmbedTypeRich)
+						return
 					}
 					command.SendTextEmbed(s, m, CommandStatusBot.OK+"MUTED", "Muted user "+command.ParseStringToMentionID(membersCached[i].User.ID)+" (ID: "+
 						""+membersCached[i].User.ID+")", discordgo.EmbedTypeRich)
 					s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[LOG]** Administrator user "+m.Author.Username+" Muted user: "+
 						""+command.ParseStringToMentionID(membersCached[i].User.ID))
+					return
 				}
 
 			}
@@ -181,24 +175,125 @@ func Mute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate)
 					if err2 != nil {
 						command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Error muting a user - cannot assign the MuteRole."+
 							" "+config.Cfg.MuteFunction.MuteRoleID, discordgo.EmbedTypeRich)
+						return
 					}
 					command.SendTextEmbed(s, m, CommandStatusBot.OK+"MUTED", "Muted user younger than "+
 						""+strconv.FormatInt(int64(timeToCheckUsers*-1.0), 10)+MuteUserString[j], discordgo.EmbedTypeRich)
 
 					s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[LOG]** Trusted user "+command.ParseStringToMentionID(m.Author.ID)+" Muted user: "+
 						""+command.ParseStringToMentionID(membersCached[i].User.ID))
+					return
 
 					//muting cannot be done if the time limit has been passed
 				} else if membersCached[i].User.ID == MuteUserString[j] && timevar < timeToCheckUsers {
 					command.SendTextEmbed(s, m, CommandStatusBot.AUTH, "Trusted users cannot mute anyone who has joined more than "+
 						""+strconv.FormatInt(int64(timeToCheckUsers*-1.0), 10)+" hours ago.", discordgo.EmbedTypeRich)
-
+					return
 				}
 			}
 		}
 
 	} else if config.Cfg.MuteFunction.TrustedMutingEnabled == false && authorisedTrusted == true && authorisedAdmin == false {
 		command.SendTextEmbed(s, m, CommandStatusBot.WARN, "Muting by Trusted users is currently disabled"+
+			" "+config.Cfg.MuteFunction.MuteRoleID, discordgo.EmbedTypeRich)
+		return
+	} else {
+		command.SendTextEmbed(s, m, CommandStatusBot.AUTH, "Undefined permissions error"+
+			" "+config.Cfg.MuteFunction.MuteRoleID, discordgo.EmbedTypeRich)
+		return
+	}
+	return
+}
+
+// Unmute Unmuting function
+func Unmute(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
+
+	//Variable initiation
+	var authorisedAdmin bool = false
+	var authorisedTrusted bool = false
+	authorisedAdmin = command.VerifyAdmin(s, m, &authorisedAdmin, cmd)
+	authorisedTrusted = command.VerifyTrusted(s, m, &authorisedTrusted, cmd)
+
+	timeToCheckUsers := 24.0 * -1.0
+
+	//Arguments checking
+	if len(cmd.Arguments) < 1 {
+		command.SendTextEmbed(s, m, CommandStatusBot.SYNTAX, "usage: **.unmute @mention**\nyou can also use multiple mentions **.unmute @mention @mention ...**", discordgo.EmbedTypeRich)
+		return
+	}
+
+	//Verify, if user has any rights at all
+	if authorisedAdmin == false && authorisedTrusted == false {
+		command.SendTextEmbed(s, m, CommandStatusBot.AUTH, "Error unmuting a user - insufficient rights.", discordgo.EmbedTypeRich)
+		return
+	}
+
+	//Added only after the first check of rights, to prevent spamming of the requests
+	membersCached := GetMemberListFromGuild(s, config.Cfg.ServerInfo.GuildIDNumber)
+	var UnmuteUserString []string
+
+	for i := range cmd.Arguments {
+		UnmuteUserString = append(UnmuteUserString, command.ParseMentionToString(cmd.Arguments[i]))
+	}
+
+	//Verify for the admin role before muting.
+	if authorisedAdmin == true {
+		for i := range membersCached {
+			for j := range UnmuteUserString {
+				if membersCached[i].User.ID == UnmuteUserString[j] {
+					//Try to mute
+					s.GuildMemberMute(config.Cfg.ServerInfo.GuildIDNumber, UnmuteUserString[j], false)
+					err2 := s.GuildMemberRoleRemove(config.Cfg.ServerInfo.GuildIDNumber, UnmuteUserString[j], config.Cfg.MuteFunction.MuteRoleID)
+					if err2 != nil {
+						command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Error Unmuting a user - cannot remove the MuteRole."+
+							" "+config.Cfg.MuteFunction.MuteRoleID, discordgo.EmbedTypeRich)
+						return
+					}
+					command.SendTextEmbed(s, m, CommandStatusBot.OK+"UNMUTED", "Unmuted user "+command.ParseStringToMentionID(membersCached[i].User.ID)+" (ID: "+
+						""+membersCached[i].User.ID+")", discordgo.EmbedTypeRich)
+					s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[LOG]** Administrator user "+m.Author.Username+" Unmuted user: "+
+						""+command.ParseStringToMentionID(membersCached[i].User.ID))
+					return
+				}
+
+			}
+		}
+	}
+
+	//If not, verify for the role of Trusted to try to mute
+	if authorisedTrusted == true && authorisedAdmin == false && config.Cfg.MuteFunction.TrustedMutingEnabled == true {
+		for i := range membersCached {
+			for j := range UnmuteUserString {
+				userTimeJoin, _ := membersCached[i].JoinedAt.Parse()
+				timevar := userTimeJoin.Sub(time.Now()).Hours()
+				if membersCached[i].User.ID == UnmuteUserString[j] && timevar > timeToCheckUsers {
+					//Error checking
+					s.GuildMemberMute(config.Cfg.ServerInfo.GuildIDNumber, UnmuteUserString[j], false)
+
+					err2 := s.GuildMemberRoleRemove(config.Cfg.ServerInfo.GuildIDNumber, UnmuteUserString[j], config.Cfg.MuteFunction.MuteRoleID)
+					if err2 != nil {
+						command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Error Unmuting a user - cannot remove the MuteRole."+
+							" "+config.Cfg.MuteFunction.MuteRoleID, discordgo.EmbedTypeRich)
+						return
+					}
+					command.SendTextEmbed(s, m, CommandStatusBot.OK+"UNMUTED", "Unmuted user younger than "+
+						""+strconv.FormatInt(int64(timeToCheckUsers*-1.0), 10)+UnmuteUserString[j], discordgo.EmbedTypeRich)
+
+					s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[LOG]** Trusted user "+command.ParseStringToMentionID(m.Author.ID)+" Unmuted user: "+
+						""+command.ParseStringToMentionID(membersCached[i].User.ID))
+					return
+
+					//muting cannot be done if the time limit has been passed
+				} else if membersCached[i].User.ID == UnmuteUserString[j] && timevar < timeToCheckUsers {
+					command.SendTextEmbed(s, m, CommandStatusBot.AUTH, "Trusted users cannot unmuted anyone who has joined more than "+
+						""+strconv.FormatInt(int64(timeToCheckUsers*-1.0), 10)+" hours ago.", discordgo.EmbedTypeRich)
+					return
+				}
+			}
+		}
+
+	} else if config.Cfg.MuteFunction.TrustedMutingEnabled == false && authorisedTrusted == true && authorisedAdmin == false {
+		command.SendTextEmbed(s, m, CommandStatusBot.WARN, "Unmuting by Trusted users is currently disabled"+
 			" "+config.Cfg.MuteFunction.MuteRoleID, discordgo.EmbedTypeRich)
 		return
 	} else {
@@ -470,10 +565,10 @@ func GamePlanInsert(c *command.Command, s **discordgo.Session, m **discordgo.Mes
 	//export to database
 	database.InsertGame(sqliteDatabase, gameTimestampInt, c.Arguments[1], c.Arguments[2])
 
-	var plannedgames string
-	database.DisplayGamePlanned(sqliteDatabase, &plannedgames)
+	var plannedGames string
+	database.DisplayGamePlanned(sqliteDatabase, &plannedGames)
 
-	command.SendTextEmbed(*s, *m, CommandStatusBot.OK+"PLANNED A GAME", plannedgames, discordgo.EmbedTypeRich)
+	command.SendTextEmbed(*s, *m, CommandStatusBot.OK+"PLANNED A GAME", plannedGames, discordgo.EmbedTypeRich)
 	return
 }
 
@@ -490,10 +585,23 @@ func SnowflakeTimestamp(ID string) (t time.Time, err error) {
 
 // GetMemberListFromGuild Gets the member info
 func GetMemberListFromGuild(s *discordgo.Session, guildID string) []*discordgo.Member {
+
 	membersList, err := s.GuildMembers(guildID, "0", 1000)
 	if err != nil {
 		s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[ERR]** Error getting information about users with the guildID, probably invalid ID?")
+		return membersList
 	}
+
+	//TODO: Fix this? How? Bug in the library?
+	/*
+		//membersListAdditional, _ := s.GuildMembers(guildID, "1000", 1000)
+
+
+		for j := range membersListAdditional {
+			membersList = append(membersList, membersListAdditional[j])
+		}
+
+	*/
 
 	return membersList
 }

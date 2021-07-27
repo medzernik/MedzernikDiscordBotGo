@@ -106,7 +106,8 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	//version of the bot running
 	if command.IsCommand(&cmd, "version") {
 		command.SendTextEmbed(s, m, responder_functions.CommandStatusBot.OK+responder_functions.Version, "Version number is: "+
-			""+responder_functions.Version, discordgo.EmbedTypeRich)
+			""+responder_functions.Version+"\n"+
+			"Feature name: "+responder_functions.VersionFeatureName, discordgo.EmbedTypeRich)
 	}
 	//counts the users on the server
 	if command.IsCommand(&cmd, "members") {
@@ -147,13 +148,17 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 
 	}
+	//Function that unmutes a user (removes the muted role).
+	if command.IsCommand(&cmd, "unmute") {
+		go responder_functions.Unmute(s, cmd, m)
+	}
 
 }
 
 //Ready runs when the bot starts. Starts the automatic functions and sets the status of the bot
 func ready(s *discordgo.Session, _ *discordgo.Ready) {
-	//set the status
-	err := s.UpdateGameStatus(0, "[DEV] Beta verzia: "+responder_functions.Version)
+	//Set the status
+	err := s.UpdateGameStatus(0, config.Cfg.ServerInfo.BotStatus)
 	if err != nil {
 		fmt.Println("error setting the bot status")
 		return

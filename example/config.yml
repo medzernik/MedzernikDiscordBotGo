@@ -1,7 +1,7 @@
-
+# YOU MUST COPY THIS CONFIG TO THE ROOT OF THE FILESYSTEM WHERE THE (MAIN) EXECUTABLE IS. KEEP THIS HERE FOR EXPERIMENTATION, VERSIONING, ETC.
 # Server configurations
 serverInfo:
-  # Choose your own prefix symbol. This is what the bot reacts to when a message begins with the symbol.
+  # Choose your own prefix symbol. This is what the bot reacts to when a message begins with the symbol. By default it is preset to a dot (.) here.
   prefix: "."
   # Your server ID
   guildIDNumber: ""
@@ -44,11 +44,12 @@ muteFunction:
 autoLocker:
   #Enabled
   enabled: false
-  # Unlock time. Use 0-23 and 0-59 format respectively.
-  timeDayUnlock: Friday
-  timeHourUnlock: 18
+  # Unlock time. Use 0-23 and 0-59 format respectively. Day is a number 0-Sunday, 6 - Saturday
+  timeDayUnlock: 0
+  timeHourUnlock: 0
   timeMinuteUnlock: 0
-  # Lock time. Use 0-23 and 0-59 format respectively.
-  timeDayLock: Monday
-  timeHourLock: 6
+  # Lock time. Use 0-23 and 0-59 format respectively. Day is a number 0-Sunday, 6 - Saturday
+  timeDayLock: 0
+  timeHourLock: 0
   timeMinuteLock: 0
+
