@@ -5,18 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
+	"github.com/medzernik/SlovakiaDiscordBotGo/config"
 	"regexp"
 	"strconv"
 	"strings"
 )
-
-const prefix string = "."
-const AuthorisedIDAdmin string = "577128133975867398"
-const AuthorisedIDMod string = "513275201375698954"
-const AuthorisedIDTrusted1 string = "745218677489532969"
-const AuthorisedIDTrusted2 string = "749642547001032816"
-const AuthorisedIDTrusted3 string = "749642583344414740"
-const AuthorisedIDTrustedMini string = "751071086225129472"
 
 type Command struct {
 	Command   string
@@ -35,7 +28,7 @@ type RegexArg struct {
 
 // ParseCommand parses a command to remove any extra fields and spaces
 func ParseCommand(s string) (Command, error) {
-	if !strings.HasPrefix(s, prefix) && len(s) < len(prefix)+1 {
+	if !strings.HasPrefix(s, config.Cfg.ServerInfo.Prefix) && len(s) < len(config.Cfg.ServerInfo.Prefix)+1 {
 		return Command{}, errors.New("")
 	}
 
@@ -45,7 +38,7 @@ func ParseCommand(s string) (Command, error) {
 
 	fields := strings.Fields(s)
 
-	cmd := Command{fields[0][len(prefix):], fields[1:]}
+	cmd := Command{fields[0][len(config.Cfg.ServerInfo.Prefix):], fields[1:]}
 
 	return cmd, nil
 }
@@ -166,7 +159,7 @@ func VerifyAdmin(s *discordgo.Session, m *discordgo.MessageCreate, authorised *b
 
 	//check if the user is admin, log the request if successful and then return true
 	for i := range authorID {
-		if authorID[i] == AuthorisedIDMod || authorID[i] == AuthorisedIDAdmin {
+		if authorID[i] == config.Cfg.RoleAdmin.RoleModID || authorID[i] == config.Cfg.RoleAdmin.RoleAdminID {
 			*authorised = true
 			fmt.Println("[OK] Command: " + cmd.Command + " authorised (Admin) by: " + m.Author.Username + " (ID: " + m.Author.ID + ")")
 			break
@@ -183,7 +176,7 @@ func VerifyTrusted(s *discordgo.Session, m *discordgo.MessageCreate, authorised 
 
 	//check if the user is trusted, log the request if successful and then return true
 	for i := range authorID {
-		if authorID[i] == AuthorisedIDTrusted2 || authorID[i] == AuthorisedIDTrusted3 {
+		if authorID[i] == config.Cfg.RoleTrusted.RoleTrustedID2 || authorID[i] == config.Cfg.RoleTrusted.RoleTrustedID3 {
 			*authorised = true
 			fmt.Println("[OK] Command: " + cmd.Command + " authorised (Trusted) by: " + m.Author.Username + " (ID: " + m.Author.ID + ")")
 			break

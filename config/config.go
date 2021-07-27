@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"os"
+	"time"
 )
 
 type Config struct {
@@ -29,9 +30,20 @@ type Config struct {
 	} `yaml:"channelLog"`
 	MuteFunction struct {
 		MuteRoleID           string `yaml:"MuteRoleID"`
-		TrustedMutingEnabled string `yaml:"trustedMutingEnabled"`
+		TrustedMutingEnabled bool   `yaml:"trustedMutingEnabled"`
 	} `yaml:"muteFunction"`
+	AutoLocker struct {
+		Enabled          bool         `yaml:"enabled"`
+		TimeDayUnlock    time.Weekday `yaml:"timeDayUnlock"`
+		TimeHourUnlock   int          `yaml:"timeHourUnlock"`
+		TimeMinuteUnlock int          `yaml:"timeMinuteUnlock"`
+		TimeDayLock      time.Weekday `yaml:"timeDayLock"`
+		TimeHourLock     int          `yaml:"timeHourLock"`
+		TimeMinuteLock   int          `yaml:"timeMinuteLock"`
+	} `yaml:"autoLocker"`
 }
+
+var Cfg Config
 
 func LoadConfig() {
 	f, err := os.Open("config.yml")
@@ -46,7 +58,6 @@ func LoadConfig() {
 		}
 	}(f)
 
-	var Cfg Config
 	decoder := yaml.NewDecoder(f)
 	err = decoder.Decode(&Cfg)
 	if err != nil {

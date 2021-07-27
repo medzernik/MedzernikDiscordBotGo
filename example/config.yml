@@ -1,0 +1,54 @@
+
+# Server configurations
+serverInfo:
+  # Choose your own prefix symbol. This is what the bot reacts to when a message begins with the symbol.
+  prefix: "."
+  # Your server ID
+  guildIDNumber: ""
+  # WeatherAPI of openWeatherMap for your bot. Get yours at the webpage (its free)
+  weatherAPIKey: ""
+  # The token of the bot to run it. You get yours on the discord developer page when you add it to the server.
+  serverToken: ""
+
+# Admin roleID and mod roleID
+roleAdmin:
+  # AdminID of the administrator role (highest privilege)
+  roleAdminID: ""
+  # ModID of the Moderator role (lower privilege)
+  roleModID: ""
+
+# Trusted roleID and Channel
+roleTrusted:
+  # Trusted users are users who earn XP and have a reward role. If your server has none, leave blank. You can have a tiered list.
+  # Lowest privilege role 1
+  roleTrustedID1: ""
+  # Mid privilege role 2
+  roleTrustedID2: ""
+  # Highest privilege role 3
+  roleTrustedID3: ""
+  # Special, manually assigned low privilege role 4
+  roleTrustedID4: ""
+  # Channel for your friends
+  channelTrustedID: ""
+
+# Service channels
+channelLog:
+  channelLogID: ""
+
+# Mute functions
+muteFunction:
+  muteRoleID: ""
+  trustedMutingEnabled: false
+
+# ChannelAutoUnlock/Lock. Autolocks and unlocks the TrustedChannel
+autoLocker:
+  #Enabled
+  enabled: false
+  # Unlock time. Use 0-23 and 0-59 format respectively.
+  timeDayUnlock: Friday
+  timeHourUnlock: 18
+  timeMinuteUnlock: 0
+  # Lock time. Use 0-23 and 0-59 format respectively.
+  timeDayLock: Monday
+  timeHourLock: 6
+  timeMinuteLock: 0

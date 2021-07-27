@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/medzernik/SlovakiaDiscordBotGo/command"
+	"github.com/medzernik/SlovakiaDiscordBotGo/config"
 	"github.com/medzernik/SlovakiaDiscordBotGo/database"
 	"github.com/medzernik/SlovakiaDiscordBotGo/responder_functions"
 	"strconv"
@@ -87,7 +88,8 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 			"**.version** - displays the current bot version.\n"+
 			"**.prunecount NUMBER (7-X)** - shows the number of pruneable (inactive) members. NUMBER = days (7 minimum).\n"+
 			"**.prunemember NUMBER (7-X) ** - **[ADMIN]** prunes members inactive for NUMBER days (7 minimum).\n"+
-			"**.members** - outputs the number of members on the server.", discordgo.EmbedTypeRich)
+			"**.members** - outputs the number of members on the server.\n"+
+			"**.configreload** - **[ADMIN]** reloads the config file from disk.\n", discordgo.EmbedTypeRich)
 	}
 	//kicks a user
 	if command.IsCommand(&cmd, "kick") {
@@ -133,6 +135,17 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	//testing command
 	if command.IsCommand(&cmd, "test") {
 		go command.SendTextEmbed(s, m, ":bangbang: TEST", "<@206720832695828480>", discordgo.EmbedTypeRich)
+	}
+	if command.IsCommand(&cmd, "configreload") {
+		var authorisedAdmin bool = false
+		authorisedAdmin = command.VerifyAdmin(s, m, &authorisedAdmin, cmd)
+		if authorisedAdmin == true {
+			config.LoadConfig()
+			command.SendTextEmbed(s, m, responder_functions.CommandStatusBot.OK+"CONFIG LOADED", "Loaded the new config", discordgo.EmbedTypeRich)
+		} else {
+			command.SendTextEmbed(s, m, responder_functions.CommandStatusBot.AUTH, "Insufficient permissions", discordgo.EmbedTypeRich)
+		}
+
 	}
 
 }
