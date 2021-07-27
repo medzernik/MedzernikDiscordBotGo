@@ -3,7 +3,11 @@ This is a discord bot written entirely in golang using the discordgo library.
 
 The bot itself has a custom command parser and many custom functions. It is a featured bot you can use on your server.
 
-# Installation
+# Instructions for Self-Hosting
+Follow the instructions (first few steps to setup an application) at https://www.freecodecamp.org/news/create-a-discord-bot-with-python/
+
+Get the token and your guildID. Then invite the bot into the guild and give it permissions.
+
 COPY THE `config.yml` FILE FROM THE EXAMPLES DIRECTORY -> ROOT NEXT TO WHERE THE MAIN EXECUTABLE IS TO USE, **THEN EDIT IT** AND RUN THE BOT
 
 **Currently only LINUX ARM64 BUILDS ARE PRECOMPILED**
