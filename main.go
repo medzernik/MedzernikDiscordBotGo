@@ -4,13 +4,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/bwmarrin/discordgo"
+	"github.com/medzernik/SlovakiaDiscordBotGo/config"
+	"github.com/medzernik/SlovakiaDiscordBotGo/responder"
 	"os"
 	"os/signal"
 	"syscall"
-
-	"github.com/bwmarrin/discordgo"
-	"github.com/medzernik/SlovakiaDiscordBotGo/responder"
-	//"github.com/medzernik/SlovakiaDiscordBotGo/config"
 )
 
 // Token Variables used for command line parameters
@@ -26,6 +25,8 @@ func init() {
 }
 
 func main() {
+
+	config.LoadConfig()
 
 	// Create a new Discord session using the provided bot token.
 	dg, err := discordgo.New("Bot " + Token)
