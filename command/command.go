@@ -53,6 +53,24 @@ func ParseMentionToString(s string) string {
 	return s
 }
 
+func ParseRoleMentionToString(s string) string {
+	s = strings.Replace(s, "<", "", 1)
+	s = strings.Replace(s, ">", "", 1)
+	s = strings.Replace(s, "!", "", 1)
+	s = strings.Replace(s, "@", "", 1)
+	s = strings.Replace(s, "&", "", 1)
+
+	return s
+}
+
+func ParseStringToRoleMention(s string) string {
+	var mentionID string
+
+	mentionID = "<@&" + s + ">"
+
+	return mentionID
+}
+
 // ParseChannelToString Parses the <#channelId> into channelId and returns the string
 func ParseChannelToString(s string) string {
 	s = strings.Replace(s, "<", "", 1)

@@ -18,8 +18,8 @@ import (
 	"time"
 )
 
-const Version string = "0.5.0"
-const VersionFeatureName string = "The Config Update"
+const Version string = "0.5.1"
+const VersionFeatureName string = "The Slowmode Update"
 
 type CommandStatus struct {
 	OK      string
@@ -908,7 +908,7 @@ func PruneCount(s *discordgo.Session, cmd command.Command, m *discordgo.MessageC
 
 // PruneMembers prunes members
 func PruneMembers(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
-	if len(cmd.Arguments) < 100 {
+	if len(cmd.Arguments) < 1 {
 		command.SendTextEmbed(s, m, CommandStatusBot.SYNTAX, "Usage **.prunemembers days**", discordgo.EmbedTypeRich)
 		return
 	}
@@ -964,7 +964,233 @@ func MassBan(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCrea
 
 }
 
-// SetChannelPermission sets a channel permission using an int value
-func SetChannelPermission(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
+// SetRoleChannelPerm sets a channel permission using an int value
+func SetRoleChannelPerm(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
+	if len(cmd.Arguments) < 3 {
+		command.SendTextEmbed(s, m, CommandStatusBot.SYNTAX, "Usage **.setchannelperm <allow, deny> <@role, @mention> PERMID**\n"+
+			"Calculate the permissions here: https://discordapi.com/permissions.html", discordgo.EmbedTypeRich)
+		return
+	}
+	var verifyAdmin bool = false
+	verifyAdmin = command.VerifyAdmin(s, m, &verifyAdmin, cmd)
 
+	//check if user is admin before using the command
+	if verifyAdmin == false {
+		command.SendTextEmbed(s, m, CommandStatusBot.AUTH, "You do not have the permission to change the channel slowmode.", discordgo.EmbedTypeRich)
+		return
+	}
+
+	//get the role to set
+	permissionRole := command.ParseRoleMentionToString(cmd.Arguments[1])
+
+	permissionID, err := strconv.ParseInt(cmd.Arguments[2], 10, 64)
+	if err != nil {
+		command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Error converting the argument to an integer.", discordgo.EmbedTypeRich)
+		return
+	}
+
+	//get whether to allow or deny the permissions
+	permissionAllow := cmd.Arguments[0]
+
+	// GET WHETHER TO SET PERMS FOR A ROLE OR A MEMBER
+	if strings.ContainsAny(permissionRole, "&") {
+		if strings.Contains(permissionAllow, "allow") {
+			err := s.ChannelPermissionSet(m.ChannelID, permissionRole, 0, permissionID, 0)
+			if err != nil {
+				command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Error setting the permissions on the channel."+err.Error(), discordgo.EmbedTypeRich)
+				return
+			}
+			command.SendTextEmbed(s, m, CommandStatusBot.OK+"PERMISSIONS ALLOWED", "Permissions "+cmd.Arguments[2]+" successfully allowed"+
+				"", discordgo.EmbedTypeRich)
+			s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[OK]** Admin "+m.Author.Username+" denied permissions "+cmd.Arguments[2]+""+
+				" for channel "+command.ParseStringToChannelID(m.ChannelID)+" to a role "+command.ParseStringToRoleMention(permissionRole))
+			return
+
+			//if not allowed then not allow
+		} else if strings.Contains(permissionAllow, "deny") {
+			err := s.ChannelPermissionSet(m.ChannelID, permissionRole, 0, 0, permissionID)
+			if err != nil {
+				command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Error setting the permissions on the channel."+err.Error(), discordgo.EmbedTypeRich)
+				return
+			}
+			command.SendTextEmbed(s, m, CommandStatusBot.OK+"PERMISSIONS DENIED", "Permissions "+cmd.Arguments[2]+" successfully denied"+
+				"", discordgo.EmbedTypeRich)
+			s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[OK]** Admin "+m.Author.Username+" denied permissions "+cmd.Arguments[2]+""+
+				" for channel "+command.ParseStringToChannelID(m.ChannelID)+" to a role "+command.ParseStringToRoleMention(permissionRole))
+			return
+
+			//if there is an invalid syntax with the allow/deny argument then
+		} else {
+			command.SendTextEmbed(s, m, CommandStatusBot.SYNTAX, "Invalid syntax, .setpermission **<allow,deny>** "+
+				"@roletoset INTPERMIDS", discordgo.EmbedTypeRich)
+			return
+		}
+
+		// GET WHETHER TO SET PERMS FOR A ROLE OR A MEMBER
+	} else if strings.ContainsAny(permissionRole, "&") != true {
+		if strings.Contains(permissionAllow, "allow") {
+			err := s.ChannelPermissionSet(m.ChannelID, permissionRole, 1, permissionID, 0)
+			if err != nil {
+				command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Error setting the permissions on the channel."+err.Error(), discordgo.EmbedTypeRich)
+				return
+			}
+			command.SendTextEmbed(s, m, CommandStatusBot.OK+"PERMISSIONS ALLOWED", "Permissions "+cmd.Arguments[2]+" successfully allowed"+
+				"", discordgo.EmbedTypeRich)
+			s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[OK]** Admin "+m.Author.Username+" denied permissions "+cmd.Arguments[2]+""+
+				" for channel "+command.ParseStringToChannelID(m.ChannelID)+" to a user "+command.ParseStringToMentionID(permissionRole))
+			return
+
+			//if not allowed then not allow
+		} else if strings.Contains(permissionAllow, "deny") {
+			err := s.ChannelPermissionSet(m.ChannelID, permissionRole, 1, 0, permissionID)
+			if err != nil {
+				command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Error setting the permissions on the channel."+err.Error(), discordgo.EmbedTypeRich)
+				return
+			}
+			command.SendTextEmbed(s, m, CommandStatusBot.OK+"PERMISSIONS DENIED", "Permissions "+cmd.Arguments[2]+" successfully denied"+
+				"", discordgo.EmbedTypeRich)
+			s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[OK]** Admin "+m.Author.Username+" denied permissions "+cmd.Arguments[2]+""+
+				" for channel "+command.ParseStringToChannelID(m.ChannelID)+" to a user "+command.ParseStringToMentionID(permissionRole))
+			return
+
+			//if there is an invalid syntax with the allow/deny argument then
+		} else {
+			command.SendTextEmbed(s, m, CommandStatusBot.SYNTAX, "Invalid syntax: use only 'allow' or 'deny'\n.setpermission **<allow,deny>** "+
+				"<@role, @mention> INTPERMIDS", discordgo.EmbedTypeRich)
+			return
+		}
+	} else {
+		command.SendTextEmbed(s, m, CommandStatusBot.SYNTAX, "Invalid syntax: use only '@mention' or '@role'\n.setpermission <allow,deny> "+
+			"**<@role, @mention>** INTPERMIDS", discordgo.EmbedTypeRich)
+	}
+
+}
+
+//RedirectDiscussion sets a channel to a big slowmode for 10 minutes and then redirects the conversation elsewhere. When threads become available, sets the thread and more...
+func RedirectDiscussion(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
+	if len(cmd.Arguments) < 1 {
+		command.SendTextEmbed(s, m, CommandStatusBot.SYNTAX, "Usage **.redirect #channel**", discordgo.EmbedTypeRich)
+		return
+	}
+	var verifyAdmin bool = false
+	verifyAdmin = command.VerifyAdmin(s, m, &verifyAdmin, cmd)
+
+	//check if user is admin before using the command
+	if verifyAdmin == false {
+		command.SendTextEmbed(s, m, CommandStatusBot.AUTH, "You do not have the permission to change the channel slowmode.", discordgo.EmbedTypeRich)
+		return
+	}
+
+	originalChannelInfo, err := s.Channel(m.ChannelID)
+	if err != nil {
+		command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Cannot get info of the channel to modify, aborting.", discordgo.EmbedTypeRich)
+		return
+	}
+
+	var channelIDString string
+	var slowmodeChannelSet discordgo.ChannelEdit = discordgo.ChannelEdit{
+		Name:                 originalChannelInfo.Name,
+		Topic:                originalChannelInfo.Topic,
+		NSFW:                 originalChannelInfo.NSFW,
+		Position:             originalChannelInfo.Position,
+		Bitrate:              originalChannelInfo.Bitrate,
+		UserLimit:            originalChannelInfo.UserLimit,
+		PermissionOverwrites: originalChannelInfo.PermissionOverwrites,
+		ParentID:             originalChannelInfo.ParentID,
+		RateLimitPerUser:     360,
+	}
+
+	channelIDString = command.ParseChannelToString(cmd.Arguments[0])
+
+	_, err1 := s.ChannelEditComplex(m.ChannelID, &slowmodeChannelSet)
+	if err1 != nil {
+		command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Error setting the slowmode.", discordgo.EmbedTypeRich)
+		return
+	}
+	command.SendTextEmbed(s, m, CommandStatusBot.OK+"SLOWMODE SET FOR "+strconv.FormatInt(int64(slowmodeChannelSet.RateLimitPerUser), 10)+" SECONDS", "Continue discussion in "+
+		""+command.ParseStringToChannelID(channelIDString), discordgo.EmbedTypeRich)
+
+	return
+}
+
+// SlowModeChannel sets a channel to a desired slowmode. 0 is a bugged value, so at least sets to 1 second.
+func SlowModeChannel(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
+	//syntax required argument
+	if len(cmd.Arguments) < 1 {
+		command.SendTextEmbed(s, m, CommandStatusBot.SYNTAX, "Usage **.slow seconds**\nSets the slowmode for X seconds (0-21600)", discordgo.EmbedTypeRich)
+		return
+	}
+
+	var verifyAdmin bool = false
+	verifyAdmin = command.VerifyAdmin(s, m, &verifyAdmin, cmd)
+
+	//check if user is admin before using the command
+	if verifyAdmin == false {
+		command.SendTextEmbed(s, m, CommandStatusBot.AUTH, "You do not have the permission to change the channel slowmode.", discordgo.EmbedTypeRich)
+		return
+	}
+
+	//parse the argument to input
+	numOfSeconds, err := strconv.ParseInt(cmd.Arguments[0], 10, 64)
+	if err != nil {
+		command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Error parsing the second argument as a number", discordgo.EmbedTypeRich)
+		return
+	}
+
+	//verify inputs
+	if numOfSeconds < 0 || numOfSeconds > 21600 {
+		command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Seconds must be in the valid range (0-21600)", discordgo.EmbedTypeRich)
+		return
+	} else if numOfSeconds == 0 {
+		command.SendTextEmbed(s, m, CommandStatusBot.AUTOFIX, "Due to the bug in discord, setting the number to 1 (smallest possible wait time)", discordgo.EmbedTypeRich)
+		numOfSeconds = 1
+	}
+
+	//get the original channel info
+	originalChannelInfo, err := s.Channel(m.ChannelID)
+	if err != nil {
+		command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Cannot get info of the channel to modify, aborting.", discordgo.EmbedTypeRich)
+		return
+	}
+
+	//get the current channel info and only modify the slowmode var
+	var slowmodeChannelSet discordgo.ChannelEdit = discordgo.ChannelEdit{
+		Name:                 originalChannelInfo.Name,
+		Topic:                originalChannelInfo.Topic,
+		NSFW:                 originalChannelInfo.NSFW,
+		Position:             originalChannelInfo.Position,
+		Bitrate:              originalChannelInfo.Bitrate,
+		UserLimit:            originalChannelInfo.UserLimit,
+		PermissionOverwrites: originalChannelInfo.PermissionOverwrites,
+		ParentID:             originalChannelInfo.ParentID,
+		RateLimitPerUser:     int(numOfSeconds),
+	}
+
+	//set the slowmode
+	channelEdited, err1 := s.ChannelEditComplex(m.ChannelID, &slowmodeChannelSet)
+	if err1 != nil {
+		command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Error setting the slowmode.", discordgo.EmbedTypeRich)
+		return
+	}
+
+	//send the confirmation message
+	command.SendTextEmbed(s, m, CommandStatusBot.OK+"SLOWMODE "+strconv.FormatInt(numOfSeconds, 10)+""+
+		" SECONDS", "Set the channel slowmode to "+strconv.FormatInt(numOfSeconds, 10)+""+
+		" seconds per message", discordgo.EmbedTypeRich)
+
+	s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[OK]** Admin "+m.Author.Username+" set a "+strconv.FormatInt(int64(channelEdited.RateLimitPerUser), 10)+""+
+		" seconds slowmode in channel "+command.ParseStringToChannelID(channelEdited.ID))
+	return
+}
+
+// ConfigurationReload reloads the config file
+func ConfigurationReload(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
+	var authorisedAdmin bool = false
+	authorisedAdmin = command.VerifyAdmin(s, m, &authorisedAdmin, cmd)
+	if authorisedAdmin == true {
+		config.LoadConfig()
+		command.SendTextEmbed(s, m, CommandStatusBot.OK+"CONFIG LOADED", "Loaded the new config", discordgo.EmbedTypeRich)
+	} else {
+		command.SendTextEmbed(s, m, CommandStatusBot.AUTH, "Insufficient permissions", discordgo.EmbedTypeRich)
+	}
 }

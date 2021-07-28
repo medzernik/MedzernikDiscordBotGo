@@ -89,7 +89,9 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 			"**.prunecount NUMBER (7-X)** - shows the number of pruneable (inactive) members. NUMBER = days (7 minimum).\n"+
 			"**.prunemember NUMBER (7-X) ** - **[ADMIN]** prunes members inactive for NUMBER days (7 minimum).\n"+
 			"**.members** - outputs the number of members on the server.\n"+
-			"**.configreload** - **[ADMIN]** reloads the config file from disk.\n", discordgo.EmbedTypeRich)
+			"**.configreload** - **[ADMIN]** reloads the config file from disk.\n"+
+			"**.slow NUMBER (0-21600)** - **[ADMIN]** sets a channel slowmode.\n"+
+			"**.redirect #CHANNEL** - **[ADMIN]** redirects discussion in #CHANNELNAME. When Threads become available, redirect to a thread instead (TBD).\n", discordgo.EmbedTypeRich)
 	}
 	//kicks a user
 	if command.IsCommand(&cmd, "kick") {
@@ -123,9 +125,9 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		switch pruneDaysCount {
 		case 0:
-			s.ChannelMessageSend(m.ChannelID, "**[ERR]** No pruneable members exist.")
+			command.SendTextEmbed(s, m, responder_functions.CommandStatusBot.ERR, "No pruneable members exist", discordgo.EmbedTypeRich)
 		default:
-			s.ChannelMessageSend(m.ChannelID, "**[OK]** There are **"+strconv.FormatInt(int64(pruneDaysCount), 10)+"** members to prune")
+			command.SendTextEmbed(s, m, responder_functions.CommandStatusBot.OK+strconv.FormatInt(int64(pruneDaysCount), 10), "There are **"+strconv.FormatInt(int64(pruneDaysCount), 10)+"** members to prune", discordgo.EmbedTypeRich)
 		}
 	}
 	//prunes members from server
@@ -138,19 +140,21 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 		go command.SendTextEmbed(s, m, ":bangbang: TEST", "<@206720832695828480>", discordgo.EmbedTypeRich)
 	}
 	if command.IsCommand(&cmd, "configreload") {
-		var authorisedAdmin bool = false
-		authorisedAdmin = command.VerifyAdmin(s, m, &authorisedAdmin, cmd)
-		if authorisedAdmin == true {
-			config.LoadConfig()
-			command.SendTextEmbed(s, m, responder_functions.CommandStatusBot.OK+"CONFIG LOADED", "Loaded the new config", discordgo.EmbedTypeRich)
-		} else {
-			command.SendTextEmbed(s, m, responder_functions.CommandStatusBot.AUTH, "Insufficient permissions", discordgo.EmbedTypeRich)
-		}
+		responder_functions.ConfigurationReload(s, cmd, m)
 
+	}
+	if command.IsCommand(&cmd, "slow") {
+		go responder_functions.SlowModeChannel(s, cmd, m)
 	}
 	//Function that unmutes a user (removes the muted role).
 	if command.IsCommand(&cmd, "unmute") {
 		go responder_functions.Unmute(s, cmd, m)
+	}
+	if command.IsCommand(&cmd, "redirect") {
+		go responder_functions.RedirectDiscussion(s, cmd, m)
+	}
+	if command.IsCommand(&cmd, "setchannelperm") {
+		go responder_functions.SetRoleChannelPerm(s, cmd, m)
 	}
 
 }

@@ -112,3 +112,18 @@ Counts the number of members on the server.
 `.configreload`
 
 This command reloads the config data into memory without restarting the bot.
+
+## setchannelperm [ADMIN]
+`.setchannelperm <allow, deny> <@role, @mention> PERMID`
+
+Sets the channels permissions. Calculate the permissions here: https://discordapi.com/permissions.html
+
+## redirect [ADMIN]
+`.redirect #channel`
+
+Sets the current channel for a 360 second slowmode, and embeds a new channel for people to write to.
+
+## slow [ADMIN]
+`.slow NUMOFSECS (0-21600)`
+
+Sets a slowmode in the current channel. 0 seconds don't do anything (bug of Discord) therefore I have set it to autocorrect to 1. 
