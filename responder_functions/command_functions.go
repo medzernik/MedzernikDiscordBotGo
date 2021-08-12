@@ -309,6 +309,7 @@ func KickUserCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []int
 					}
 
 					//log the kick
+					//TODO: Fix the KickUserString -> stringf(m[0])
 					command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"KICKED", "Kicked user "+membersCached[i].User.Username, discordgo.EmbedTypeRich)
 					s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "User "+KickUserString+" "+fmt.Sprintf("%s", m[0])+" Kicked by "+cmd.Member.Nick)
 				}
@@ -374,6 +375,7 @@ func BanUserCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []inte
 						return
 					}
 					command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"BANNED", "Banning user "+membersCached[i].User.Username, discordgo.EmbedTypeRich)
+					//TODO: Fix the BanUserString -> stringf(m[0])
 					s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "User "+BanUserString+" "+fmt.Sprintf("%s", m[0])+" Banned by "+cmd.Member.Nick)
 				}
 			}
