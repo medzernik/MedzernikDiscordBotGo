@@ -156,9 +156,6 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if command.IsCommand(&cmd, "setchannelperm") {
 		go responder_functions.SetRoleChannelPerm(s, cmd, m)
 	}
-	if command.IsCommand(&cmd, "commands") {
-		go responder_functions.CommandLoop(s)
-	}
 
 }
 
@@ -175,5 +172,6 @@ func ready(s *discordgo.Session, _ *discordgo.Ready) {
 	go database.Databaserun()
 	go database.CheckPlannedGames(&s)
 	go responder_functions.TimedChannelUnlock(s)
+	go responder_functions.CommandLoop(s)
 
 }

@@ -677,6 +677,7 @@ func Topic(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate
 
 func Fox(s *discordgo.Session, m *discordgo.MessageCreate) {
 	s.ChannelMessageSend(m.ChannelID, "<a:medzernikShake:814055147583438848>")
+	return
 }
 
 // GetWeather outputs weather information from openWeatherMap
@@ -1193,4 +1194,9 @@ func ConfigurationReload(s *discordgo.Session, cmd command.Command, m *discordgo
 	} else {
 		command.SendTextEmbed(s, m, CommandStatusBot.AUTH, "Insufficient permissions", discordgo.EmbedTypeRich)
 	}
+}
+
+func FoxTest(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	s.ChannelMessageSend(i.ChannelID, "<a:medzernikShake:814055147583438848>")
+	return
 }
