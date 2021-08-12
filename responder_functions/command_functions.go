@@ -40,19 +40,24 @@ func AgeJoinedCMD(s *discordgo.Session, m *discordgo.InteractionCreate, cmd []in
 
 	userTime := time.Now().Sub(userTimeRaw)
 
-	dny := int64(userTime.Hours() / 24)
-	hodiny := int64(userTime.Hours()) - dny*24
+	roky := int64(userTime.Hours() / 24 / 365)
+	dny := roky * 365 / 24
+	hodiny := int64(userTime.Hours()) - dny/24
 	minuty := int64(userTime.Minutes()) - int64(userTime.Hours())*60
 	sekundy := int64(userTime.Seconds()) - int64(userTime.Minutes())*60
 
+	rokyString := strconv.FormatInt(roky, 10)
 	dnyString := strconv.FormatInt(dny, 10)
 	hodinyString := strconv.FormatInt(hodiny, 10)
 	minutyString := strconv.FormatInt(minuty, 10)
 	sekundyString := strconv.FormatInt(sekundy, 10)
 
 	//send the embed
-	command.SendTextEmbedCommand(s, m.ChannelID, CommandStatusBot.OK+userName, command.ParseStringToMentionID(userId)+" je tu s nami už:\n"+
-		""+dnyString+" dni\n"+hodinyString+" hodin\n"+
+	command.SendTextEmbedCommand(s, m.ChannelID, CommandStatusBot.OK+userName, command.ParseStringToMentionID(userId)+" "+
+		" has an account age of:\n"+
+		""+rokyString+" rokov\n"+
+		""+dnyString+" dni\n"+
+		""+hodinyString+" hodin\n"+
 		""+minutyString+" minut\n"+sekundyString+" sekund"+"<:peepoLove:687313976043765810>"+
 		"", discordgo.EmbedTypeRich)
 	return

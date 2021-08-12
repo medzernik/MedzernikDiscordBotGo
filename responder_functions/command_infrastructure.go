@@ -168,7 +168,9 @@ var (
 			Description: "Followup messages",
 		},
 	}
+	//Engaging the command handlers.
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
+		//This command just runs a basic test
 		"slovakia": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			FoxTest(s, i)
 
@@ -179,8 +181,14 @@ var (
 				},
 			})
 		},
+		//This command runs the AgeJoinedCMD function
 		"age": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			FoxTest(s, i)
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "⠀",
+				},
+			})
 			argumentArray := []interface{}{
 				// Here we need to convert raw interface{} value to wanted type.
 				// Also, as you can see, here is used utility functions to convert the value
@@ -188,9 +196,7 @@ var (
 				// but this is much simpler
 				i.ApplicationCommandData().Options[0].UserValue(s).ID,
 			}
-			fmt.Println(argumentArray)
-
-			AgeJoinedCMD(s, i, argumentArray)
+			go AgeJoinedCMD(s, i, argumentArray)
 
 		},
 		"basic-command-with-files": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
