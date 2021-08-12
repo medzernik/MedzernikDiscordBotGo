@@ -156,6 +156,9 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if command.IsCommand(&cmd, "setchannelperm") {
 		go responder_functions.SetRoleChannelPerm(s, cmd, m)
 	}
+	if command.IsCommand(&cmd, "commands") {
+		go responder_functions.CommandLoop(s)
+	}
 
 }
 
