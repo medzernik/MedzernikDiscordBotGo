@@ -53,6 +53,32 @@ var (
 			},
 		},
 		{
+			Name:        "mute",
+			Description: "mutes a user (adds a mute role)",
+			Options: []*discordgo.ApplicationCommandOption{
+
+				{
+					Type:        discordgo.ApplicationCommandOptionUser,
+					Name:        "user-mention",
+					Description: "user-mention",
+					Required:    true,
+				},
+			},
+		},
+		{
+			Name:        "unmute",
+			Description: "umutes a user (removes a mute role)",
+			Options: []*discordgo.ApplicationCommandOption{
+
+				{
+					Type:        discordgo.ApplicationCommandOptionUser,
+					Name:        "user-mention",
+					Description: "user-mention",
+					Required:    true,
+				},
+			},
+		},
+		{
 			Name:        "basic-command-with-files",
 			Description: "Basic command with files",
 		},
@@ -190,13 +216,36 @@ var (
 				},
 			})
 			argumentArray := []interface{}{
-				// Here we need to convert raw interface{} value to wanted type.
-				// Also, as you can see, here is used utility functions to convert the value
-				// to particular type. Yeah, you can use just switch type,
-				// but this is much simpler
 				i.ApplicationCommandData().Options[0].UserValue(s).ID,
 			}
 			go AgeJoinedCMD(s, i, argumentArray)
+
+		},
+		//This command runs the AgeJoinedCMD function
+		"mute": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "⠀",
+				},
+			})
+			argumentArray := []interface{}{
+				i.ApplicationCommandData().Options[0].UserValue(s).ID,
+			}
+			go MuteCMD(s, i, argumentArray)
+
+		},
+		"unmute": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "⠀",
+				},
+			})
+			argumentArray := []interface{}{
+				i.ApplicationCommandData().Options[0].UserValue(s).ID,
+			}
+			go UnmuteCMD(s, i, argumentArray)
 
 		},
 		"basic-command-with-files": func(s *discordgo.Session, i *discordgo.InteractionCreate) {

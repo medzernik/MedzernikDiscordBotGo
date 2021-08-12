@@ -316,3 +316,35 @@ func SendTextEmbedCommand(s *discordgo.Session, m string, status string, message
 		return
 	}
 }
+
+func VerifyAdminCMD(s *discordgo.Session, m string, authorised *bool, cmd *discordgo.InteractionCreate) bool {
+	var authorID = cmd.Member.Roles
+
+	//check if the user is admin, log the request if successful and then return true
+	for i := range authorID {
+		if authorID[i] == config.Cfg.RoleAdmin.RoleModID || authorID[i] == config.Cfg.RoleAdmin.RoleAdminID {
+			*authorised = true
+			fmt.Println("[OK] Command" + " authorised (Admin) by: " + cmd.Member.Nick + " (ID: " + cmd.Member.User.ID + ")")
+			break
+		}
+	}
+
+	return *authorised
+}
+
+// VerifyTrusted Function takes a bool and returns true or false based on whether the user has a priviledged role (defined by admins) or not. Logs to stdout.
+func VerifyTrustedCMD(s *discordgo.Session, m string, authorised *bool, cmd *discordgo.InteractionCreate) bool {
+
+	var authorID = cmd.Member.Roles
+
+	//check if the user is trusted, log the request if successful and then return true
+	for i := range authorID {
+		if authorID[i] == config.Cfg.RoleTrusted.RoleTrustedID2 || authorID[i] == config.Cfg.RoleTrusted.RoleTrustedID3 {
+			*authorised = true
+			fmt.Println("[OK] Command" + " authorised (Trusted) by: " + cmd.Member.Nick + " (ID: " + cmd.Member.User.ID + ")")
+			break
+		}
+	}
+
+	return *authorised
+}
