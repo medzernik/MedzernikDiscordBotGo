@@ -79,6 +79,57 @@ var (
 			},
 		},
 		{
+			Name:        "kick",
+			Description: "kicks a user (optional reason)",
+			Options: []*discordgo.ApplicationCommandOption{
+
+				{
+					Type:        discordgo.ApplicationCommandOptionUser,
+					Name:        "user-mention",
+					Description: "user-mention",
+					Required:    true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "dovod",
+					Description: "Reason for kick",
+					Required:    false,
+				},
+			},
+		},
+		{
+			Name:        "ban",
+			Description: "ban a user (optional reason)",
+			Options: []*discordgo.ApplicationCommandOption{
+
+				{
+					Type:        discordgo.ApplicationCommandOptionUser,
+					Name:        "user-mention",
+					Description: "user-mention",
+					Required:    true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "dovod",
+					Description: "Reason for ban",
+					Required:    false,
+				},
+			},
+		},
+		{
+			Name:        "check-users",
+			Description: "checks the users who joined less than 24 hours ago (default, optional custom time frame in hours)",
+			Options: []*discordgo.ApplicationCommandOption{
+
+				{
+					Type:        discordgo.ApplicationCommandOptionInteger,
+					Name:        "timeframe",
+					Description: "How far back should we look for new users?",
+					Required:    false,
+				},
+			},
+		},
+		{
 			Name:        "basic-command-with-files",
 			Description: "Basic command with files",
 		},
@@ -246,6 +297,52 @@ var (
 				i.ApplicationCommandData().Options[0].UserValue(s).ID,
 			}
 			go UnmuteCMD(s, i, argumentArray)
+
+		},
+		"kick": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "⠀",
+				},
+			})
+			argumentArray := []interface{}{
+				i.ApplicationCommandData().Options[0].UserValue(s).ID,
+			}
+			if len(i.ApplicationCommandData().Options) > 1 {
+				argumentArray = append(argumentArray, i.ApplicationCommandData().Options[1].StringValue())
+			}
+			go KickUserCMD(s, i, argumentArray)
+
+		},
+		"ban": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "⠀",
+				},
+			})
+			argumentArray := []interface{}{
+				i.ApplicationCommandData().Options[0].UserValue(s).ID,
+			}
+			if len(i.ApplicationCommandData().Options) > 1 {
+				argumentArray = append(argumentArray, i.ApplicationCommandData().Options[1].StringValue())
+			}
+			go BanUserCMD(s, i, argumentArray)
+
+		},
+		"check-users": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "⠀",
+				},
+			})
+			var argumentArray []interface{}
+			if len(i.ApplicationCommandData().Options) > 0 {
+				argumentArray = append(argumentArray, i.ApplicationCommandData().Options[0].IntValue())
+			}
+			go CheckUsersCMD(s, i, argumentArray)
 
 		},
 		"basic-command-with-files": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
