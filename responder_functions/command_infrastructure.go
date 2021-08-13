@@ -130,9 +130,170 @@ var (
 			},
 		},
 		{
+			Name:        "planned",
+			Description: "Outputs the currently planned games",
+		},
+		{
+			Name:        "plan",
+			Description: "Plans a game to play",
+			Options: []*discordgo.ApplicationCommandOption{
+
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "time",
+					Description: "Time to plan the new game at (HH:MM)",
+					Required:    true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "gamename",
+					Description: "Name of the game to play",
+					Required:    true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionUser,
+					Name:        "user",
+					Description: "Who to ping when the time to play is nigh",
+					Required:    true,
+				},
+			},
+		},
+		{
+			Name:        "topic",
+			Description: "A random topic for discussion",
+		},
+		{
 			Name:        "basic-command-with-files",
 			Description: "Basic command with files",
 		},
+		{
+			Name:        "weather",
+			Description: "Check the weather in your city",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "city",
+					Description: "City name",
+					Required:    true,
+				},
+			},
+		},
+		{
+			Name:        "purge",
+			Description: "Purges 1-100 messages in the current channel",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionInteger,
+					Name:        "amount",
+					Description: "Messages to purge 1-100",
+					Required:    true,
+				},
+			},
+		},
+		{
+			Name:        "members",
+			Description: "Shows how many members there are on the server",
+		},
+		{
+			Name:        "prune-count",
+			Description: "Checks how many members to prune with 7-30 days of inactivity",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionInteger,
+					Name:        "days",
+					Description: "Days of inactivity (7-30)",
+					Required:    true,
+				},
+			},
+		},
+		{
+			Name:        "prune-members",
+			Description: "Prunes members with 7-30 days of inactivity",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionInteger,
+					Name:        "days",
+					Description: "Days of inactivity (7-30)",
+					Required:    true,
+				},
+			},
+		},
+		{
+			Name:        "setroleperm",
+			Description: "Sets the current channel permissions by UID bits for a role",
+			Options: []*discordgo.ApplicationCommandOption{
+
+				{
+					Type:        discordgo.ApplicationCommandOptionBoolean,
+					Name:        "allow",
+					Description: "Allow or deny the permissions",
+					Required:    true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionRole,
+					Name:        "role",
+					Description: "Role to set the permissions to",
+					Required:    true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionInteger,
+					Name:        "permissions",
+					Description: "Permission ID",
+					Required:    true,
+				},
+			},
+		},
+		{
+			Name:        "setuserperm",
+			Description: "Sets the current channel permissions by UID bits for a user",
+			Options: []*discordgo.ApplicationCommandOption{
+
+				{
+					Type:        discordgo.ApplicationCommandOptionBoolean,
+					Name:        "allow",
+					Description: "Allow or deny the permissions",
+					Required:    true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionUser,
+					Name:        "user",
+					Description: "User to set the permissions to",
+					Required:    true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionInteger,
+					Name:        "permissions",
+					Description: "Permission ID",
+					Required:    true,
+				},
+			},
+		},
+		{
+			Name:        "redirect",
+			Description: "Redirects the discussion by setting a slowmode in current channel",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionChannel,
+					Name:        "channel",
+					Description: "Channel to redirect to",
+					Required:    true,
+				},
+			},
+		},
+		{
+			Name:        "slow",
+			Description: "Sets a slowmode in the current channel",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionInteger,
+					Name:        "duration",
+					Description: "Duration in seconds",
+					Required:    true,
+				},
+			},
+		},
+
+		//EXAMPLES BELOW
 		{
 			Name:        "options",
 			Description: "Command for demonstrating options",
@@ -345,6 +506,196 @@ var (
 			go CheckUsersCMD(s, i, argumentArray)
 
 		},
+		"planned": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "⠀",
+				},
+			})
+			var argumentArray []interface{}
+
+			go PlannedGamesCMD(s, i, argumentArray)
+
+		},
+		"plan": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "⠀",
+				},
+			})
+			var argumentArray []interface{}
+
+			argumentArray = []interface{}{
+				i.ApplicationCommandData().Options[0].StringValue(),
+				i.ApplicationCommandData().Options[1].StringValue(),
+				i.ApplicationCommandData().Options[2].UserValue(s).Mention(),
+			}
+
+			go PlanGameCMD(s, i, argumentArray)
+
+		},
+		"topic": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "⠀",
+				},
+			})
+			var argumentArray []interface{}
+
+			argumentArray = []interface{}{}
+
+			go TopicCMD(s, i, argumentArray)
+
+		},
+		"weather": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "⠀",
+				},
+			})
+			var argumentArray []interface{}
+
+			argumentArray = []interface{}{
+				i.ApplicationCommandData().Options[0].StringValue(),
+			}
+
+			go GetWeatherCMD(s, i, argumentArray)
+
+		},
+		"purge": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "⠀",
+				},
+			})
+			var argumentArray []interface{}
+
+			argumentArray = []interface{}{
+				i.ApplicationCommandData().Options[0].IntValue(),
+			}
+
+			go PurgeMessagesCMD(s, i, argumentArray)
+
+		},
+		"members": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "⠀",
+				},
+			})
+			var argumentArray []interface{}
+
+			argumentArray = []interface{}{}
+
+			go MembersCMD(s, i, argumentArray)
+
+		},
+		"prune-count": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "⠀",
+				},
+			})
+			var argumentArray []interface{}
+
+			argumentArray = []interface{}{
+				i.ApplicationCommandData().Options[0].IntValue(),
+			}
+
+			go PruneCountCMD(s, i, argumentArray)
+
+		},
+		"prune-members": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "⠀",
+				},
+			})
+			var argumentArray []interface{}
+
+			argumentArray = []interface{}{
+				i.ApplicationCommandData().Options[0].IntValue(),
+			}
+
+			go PruneMembersCMD(s, i, argumentArray)
+
+		},
+		"setroleperm": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "⠀",
+				},
+			})
+			var argumentArray []interface{}
+
+			argumentArray = []interface{}{
+				i.ApplicationCommandData().Options[0].BoolValue(),
+				i.ApplicationCommandData().Options[1].RoleValue(s, config.Cfg.ServerInfo.GuildIDNumber).Mention(),
+				i.ApplicationCommandData().Options[2].IntValue(),
+			}
+
+			go SetRoleChannelPermCMD(s, i, argumentArray)
+
+		},
+		"setuserperm": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "⠀",
+				},
+			})
+			var argumentArray []interface{}
+
+			argumentArray = []interface{}{
+				i.ApplicationCommandData().Options[0].BoolValue(),
+				i.ApplicationCommandData().Options[1].UserValue(s).Mention(),
+				i.ApplicationCommandData().Options[2].IntValue(),
+			}
+
+			go SetUserChannelPermCMD(s, i, argumentArray)
+
+		},
+		"redirect": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "⠀",
+				},
+			})
+			var argumentArray []interface{}
+
+			argumentArray = []interface{}{
+				i.ApplicationCommandData().Options[0].ChannelValue(s).Mention(),
+			}
+
+			go RedirectDiscussionCMD(s, i, argumentArray)
+		},
+		"slow": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "⠀",
+				},
+			})
+			var argumentArray []interface{}
+
+			argumentArray = []interface{}{
+				i.ApplicationCommandData().Options[0].UintValue(),
+			}
+
+			go SlowModeChannelCMD(s, i, argumentArray)
+		},
+
+		//BELOW THIS STARTS THE EXAMPLE FILE
 		"basic-command-with-files": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -360,6 +711,7 @@ var (
 				},
 			})
 		},
+
 		"options": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			margs := []interface{}{
 				// Here we need to convert raw interface{} value to wanted type.

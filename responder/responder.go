@@ -34,44 +34,6 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	//Zasielkovna EasterEgg
-	if command.IsCommand(&cmd, "zasielkovna") {
-		go responder_functions.Zasielkovna(s, cmd, m)
-	}
-
-	//Time since joined command
-	if command.IsCommand(&cmd, "age") {
-		go responder_functions.AgeJoined(s, cmd, m)
-	}
-	//Function that mutes a user (assigns him a muted role).
-	if command.IsCommand(&cmd, "mute") {
-		go responder_functions.Mute(s, cmd, m)
-	}
-
-	//right now this command checks for any 1000 users on the guild that have a join time less than 24hours, then prints the names one by one.
-	if command.IsCommand(&cmd, "checkusers") {
-		go responder_functions.CheckUsers(s, cmd, m)
-	}
-	//lets you play a game with a mention
-	if command.IsCommand(&cmd, "plan") {
-		go responder_functions.PlanGame(s, cmd, m)
-	}
-	//shows the currently planned games in the database
-	if command.IsCommand(&cmd, "planned") {
-		go responder_functions.PlannedGames(s, cmd, m)
-	}
-	// outputs a random topic for a discussion
-	if command.IsCommand(&cmd, "topic") {
-		go responder_functions.Topic(s, cmd, m)
-	}
-	//aaaaaa
-	if command.IsCommand(&cmd, "fox") || command.IsCommand(&cmd, "shake") {
-		go responder_functions.Fox(s, m)
-	}
-	//outputs a weather from openWeatherMap
-	if command.IsCommand(&cmd, "weather") || command.IsCommand(&cmd, "pocasie") {
-		go responder_functions.GetWeather(s, cmd, m)
-	}
 	//TODO: finish the help system
 	if command.IsCommand(&cmd, "help") {
 		command.SendTextEmbed(s, m, responder_functions.CommandStatusBot.OK+"**The available commands are:**", "**.zasielkovna** - AAAAAA.\n"+
@@ -93,18 +55,7 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 			"**.slow NUMBER (0-21600)** - **[ADMIN]** sets a channel slowmode.\n"+
 			"**.redirect #CHANNEL** - **[ADMIN]** redirects discussion in #CHANNELNAME. When Threads become available, redirect to a thread instead (TBD).\n", discordgo.EmbedTypeRich)
 	}
-	//kicks a user
-	if command.IsCommand(&cmd, "kick") {
-		go responder_functions.KickUser(s, cmd, m)
-	}
-	//bans a user
-	if command.IsCommand(&cmd, "ban") {
-		go responder_functions.BanUser(s, cmd, m)
-	}
-	//purges messages from a channel
-	if command.IsCommand(&cmd, "purge") {
-		go responder_functions.PurgeMessages(s, cmd, m)
-	}
+
 	//version of the bot running
 	if command.IsCommand(&cmd, "version") {
 		command.SendTextEmbed(s, m, responder_functions.CommandStatusBot.OK+responder_functions.Version, "Version number is: "+
@@ -130,10 +81,6 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 			command.SendTextEmbed(s, m, responder_functions.CommandStatusBot.OK+strconv.FormatInt(int64(pruneDaysCount), 10), "There are **"+strconv.FormatInt(int64(pruneDaysCount), 10)+"** members to prune", discordgo.EmbedTypeRich)
 		}
 	}
-	//prunes members from server
-	if command.IsCommand(&cmd, "prunemembers") {
-		go responder_functions.PruneMembers(s, cmd, m)
-	}
 
 	//testing command
 	if command.IsCommand(&cmd, "test") {
@@ -142,19 +89,6 @@ func messageCreated(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if command.IsCommand(&cmd, "configreload") {
 		responder_functions.ConfigurationReload(s, cmd, m)
 
-	}
-	if command.IsCommand(&cmd, "slow") {
-		go responder_functions.SlowModeChannel(s, cmd, m)
-	}
-	//Function that unmutes a user (removes the muted role).
-	if command.IsCommand(&cmd, "unmute") {
-		go responder_functions.Unmute(s, cmd, m)
-	}
-	if command.IsCommand(&cmd, "redirect") {
-		go responder_functions.RedirectDiscussion(s, cmd, m)
-	}
-	if command.IsCommand(&cmd, "setchannelperm") {
-		go responder_functions.SetRoleChannelPerm(s, cmd, m)
 	}
 
 }
