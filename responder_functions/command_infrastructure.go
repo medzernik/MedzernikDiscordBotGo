@@ -114,6 +114,12 @@ var (
 					Description: "Reason for ban",
 					Required:    false,
 				},
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "delete",
+					Description: "How many days back should we delete messages? (default 7)",
+					Required:    false,
+				},
 			},
 		},
 		{
@@ -289,6 +295,24 @@ var (
 					Name:        "duration",
 					Description: "Duration in seconds",
 					Required:    true,
+				},
+			},
+		},
+		{
+			Name:        "voicechannelmodify",
+			Description: "lists the user account age",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "channel-name",
+					Description: "Voice channel name",
+					Required:    true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionInteger,
+					Name:        "bitrate",
+					Description: "Specify bitrate (in kbps)",
+					Required:    false,
 				},
 			},
 		},
@@ -488,7 +512,12 @@ var (
 			}
 			if len(i.ApplicationCommandData().Options) > 1 {
 				argumentArray = append(argumentArray, i.ApplicationCommandData().Options[1].StringValue())
+
 			}
+			if len(i.ApplicationCommandData().Options) > 2 {
+				argumentArray = append(argumentArray, i.ApplicationCommandData().Options[2].UintValue())
+			}
+
 			go BanUserCMD(s, i, argumentArray)
 
 		},
@@ -693,6 +722,24 @@ var (
 			}
 
 			go SlowModeChannelCMD(s, i, argumentArray)
+		},
+		"voicechannelmodify": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "⠀",
+				},
+			})
+			var argumentArray []interface{}
+
+			argumentArray = []interface{}{
+				i.ApplicationCommandData().Options[0].StringValue(),
+			}
+			if len(i.ApplicationCommandData().Options) > 1 {
+				argumentArray = append(argumentArray, i.ApplicationCommandData().Options[1].UintValue())
+			}
+
+			go ChangeVoiceChannelCurrentCMD(s, i, argumentArray)
 		},
 
 		//BELOW THIS STARTS THE EXAMPLE FILE

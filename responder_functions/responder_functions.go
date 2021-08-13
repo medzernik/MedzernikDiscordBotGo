@@ -3,6 +3,7 @@ package responder_functions
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/medzernik/SlovakiaDiscordBotGo/command"
@@ -295,4 +296,16 @@ func ConfigurationReload(s *discordgo.Session, cmd command.Command, m *discordgo
 func FoxTest(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	s.ChannelMessageSend(i.ChannelID, "<a:medzernikShake:814055147583438848>")
 	return
+}
+
+// FindUserVoiceState Finds the user in a voice channel
+func FindUserVoiceState(session *discordgo.Session, userid string) (*discordgo.VoiceState, error) {
+	for _, guild := range session.State.Guilds {
+		for _, vs := range guild.VoiceStates {
+			if vs.UserID == userid {
+				return vs, nil
+			}
+		}
+	}
+	return nil, errors.New("Could not find user's voice state")
 }

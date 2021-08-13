@@ -328,11 +328,11 @@ func KickUserCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []int
 	return
 }
 
-// BanUser bans a user
+// BanUserCMD bans a user
 func BanUserCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 	var reason string
 	var reasonExists bool = false
-	var daysDelete int = 7
+	var daysDelete uint64 = 7
 	var authorisedAdmin bool = false
 	authorisedAdmin = command.VerifyAdminCMD(s, cmd.ChannelID, &authorisedAdmin, cmd)
 
@@ -348,6 +348,9 @@ func BanUserCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []inte
 		reason = fmt.Sprintf("%s", m[1])
 		reasonExists = true
 	}
+	if len(m) > 2 {
+		daysDelete = m[2].(uint64)
+	}
 
 	s.ChannelMessageSend(cmd.ChannelID, "**[PERM]** Permissions check complete.")
 
@@ -362,7 +365,7 @@ func BanUserCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []inte
 						s.ChannelMessageSend(userNotifChanID.ID, "You have been banned from the server. Reason: "+reason)
 					}
 
-					err := s.GuildBanCreateWithReason(config.Cfg.ServerInfo.GuildIDNumber, BanUserString, reason, daysDelete)
+					err := s.GuildBanCreateWithReason(config.Cfg.ServerInfo.GuildIDNumber, BanUserString, reason, int(daysDelete))
 					if err != nil {
 						command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error banning user ID "+membersCached[i].User.ID, discordgo.EmbedTypeRich)
 						return
@@ -377,7 +380,7 @@ func BanUserCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []inte
 						s.ChannelMessageSend(userNotifChanID.ID, "You have been banned from the server.")
 					}
 
-					err1 := s.GuildBanCreate(config.Cfg.ServerInfo.GuildIDNumber, BanUserString, daysDelete)
+					err1 := s.GuildBanCreate(config.Cfg.ServerInfo.GuildIDNumber, BanUserString, int(daysDelete))
 					if err1 != nil {
 						command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error banning user ID "+membersCached[i].User.ID, discordgo.EmbedTypeRich)
 						return
@@ -756,7 +759,7 @@ func PruneMembersCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m [
 
 }
 
-// SetRoleChannelPerm sets a channel permission using an int value
+// SetRoleChannelPermCMD sets a channel permission using an int value
 func SetRoleChannelPermCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 
 	var verifyAdmin bool = false
@@ -959,5 +962,82 @@ func SlowModeChannelCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, 
 
 	s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[OK]** Admin "+cmd.Member.Nick+" set a "+strconv.FormatInt(int64(channelEdited.RateLimitPerUser), 10)+""+
 		" seconds slowmode in channel "+command.ParseStringToChannelID(channelEdited.ID))
+	return
+}
+
+// ChangeVoiceChannelCurrentCMD I hate it when the bot creates a temp voice and I have to change the name and shit all the time
+func ChangeVoiceChannelCurrentCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
+
+	//find the user current voice channel
+	currentUserInfo, err := FindUserVoiceState(s, command.ParseMentionToString(cmd.Member.Mention()))
+	if err != nil {
+		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "You are not joined in any "+
+			"voice channel. Or the bot can't see you. Either one.", discordgo.EmbedTypeRich)
+		return
+	}
+
+	//get the original channel info
+	originalChannelInfo, err1 := s.Channel(currentUserInfo.ChannelID)
+	if err1 != nil {
+		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Cannot get any info of the"+
+			"channel you are joined in. Bot probably can't see into the channel.", discordgo.EmbedTypeRich)
+		return
+	}
+	//default variable
+	var bitrate int = 384000
+	var errorCounter uint = 0
+
+	name := fmt.Sprintf("%s", m[0])
+
+	if len(m) > 1 {
+		bitrate = int(m[1].(uint64))
+		bitrate = bitrate * 1000
+	}
+	if bitrate < 8 || bitrate > 384000 {
+		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.SYNTAX, "Bitrate can be from 8 to 384 kbps", discordgo.EmbedTypeRich)
+	}
+
+TRYAGAIN:
+	var voiceChannelSet discordgo.ChannelEdit = discordgo.ChannelEdit{
+		Name:                 name,
+		Topic:                originalChannelInfo.Topic,
+		NSFW:                 originalChannelInfo.NSFW,
+		Position:             originalChannelInfo.Position,
+		Bitrate:              bitrate,
+		UserLimit:            originalChannelInfo.UserLimit,
+		PermissionOverwrites: originalChannelInfo.PermissionOverwrites,
+		ParentID:             originalChannelInfo.ParentID,
+		RateLimitPerUser:     originalChannelInfo.RateLimitPerUser,
+	}
+
+	_, err2 := s.ChannelEditComplex(currentUserInfo.ChannelID, &voiceChannelSet)
+	if err2 != nil {
+		switch errorCounter {
+		case 0:
+			command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTOFIX, "Trying lower bitrate... 284kbps", discordgo.EmbedTypeRich)
+			bitrate = 284000
+			errorCounter += 1
+			goto TRYAGAIN
+		case 1:
+			command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTOFIX, "Trying lower bitrate... 128kbps", discordgo.EmbedTypeRich)
+			bitrate = 128000
+			errorCounter += 1
+			goto TRYAGAIN
+		case 2:
+			command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTOFIX, "Trying lower bitrate... 96kbps", discordgo.EmbedTypeRich)
+			bitrate = 96000
+			errorCounter += 1
+			goto TRYAGAIN
+		case 3:
+			command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Some weird error occured", discordgo.EmbedTypeRich)
+			return
+		default:
+			break
+		}
+
+	}
+
+	command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"CHANGED NAME AND BITRATE", "**Channel:** "+
+		""+name+"\n**Bitrate:** "+strconv.FormatInt(int64(bitrate), 10), discordgo.EmbedTypeRich)
 	return
 }
