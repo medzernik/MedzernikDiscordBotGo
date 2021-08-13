@@ -2,6 +2,7 @@
 # Server configurations
 serverInfo:
   # Choose your own prefix symbol. This is what the bot reacts to when a message begins with the symbol. By default it is preset to a dot (.) here.
+  # The bot uses commands now, these are for legacy commands if at all.
   prefix: "."
   # Your server ID
   guildIDNumber: ""
@@ -34,6 +35,7 @@ roleTrusted:
 # Service channels
 channelLog:
   channelLogID: ""
+  gamePlannedLog: ""
 
 # Mute functions
 muteFunction:

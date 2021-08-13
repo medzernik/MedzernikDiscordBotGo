@@ -7,6 +7,7 @@ import (
 	_ "fmt"
 	"github.com/bwmarrin/discordgo"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/medzernik/SlovakiaDiscordBotGo/config"
 	_ "io/ioutil"
 	"log"
 	_ "modernc.org/sqlite"
@@ -151,7 +152,7 @@ func CheckPlannedGames(s **discordgo.Session) {
 	//This is here for the function to wait until the database is created (since it's async). I should *really* make this a proper way, not a fixed wait time...)
 	var initInterval time.Duration = 2
 	//Channel into which to output the information
-	var gameReminderChannelID = "837987736416813076"
+	var gameReminderChannelID = config.Cfg.ChannelLog.GamePlannedLog
 
 	fmt.Println("Initializing CheckPlannedGames module")
 	time.Sleep(initInterval * time.Second)

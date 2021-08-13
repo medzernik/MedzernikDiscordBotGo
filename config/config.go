@@ -29,7 +29,8 @@ type Config struct {
 		ChannelTrustedID string `yaml:"channelTrustedID"`
 	} `yaml:"roleTrusted"`
 	ChannelLog struct {
-		ChannelLogID string `yaml:"channelLogID"`
+		ChannelLogID   string `yaml:"channelLogID"`
+		GamePlannedLog string `yaml:"gamePlannedLog"`
 	} `yaml:"channelLog"`
 	MuteFunction struct {
 		MuteRoleID           string `yaml:"muteRoleID"`

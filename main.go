@@ -24,6 +24,20 @@ func init() {
 
 }
 
+func guildCreate(s *discordgo.Session, event *discordgo.GuildCreate) {
+
+	if event.Guild.Unavailable {
+		return
+	}
+
+	for _, channel := range event.Guild.Channels {
+		if channel.ID == event.Guild.ID {
+			_, _ = s.ChannelMessageSend(channel.ID, "Thanks for adding me to your server!")
+			return
+		}
+	}
+}
+
 func main() {
 	//Initialize the config
 	config.LoadConfig()
@@ -34,9 +48,13 @@ func main() {
 		fmt.Println("error creating Discord session,", err)
 		return
 	}
+	//TODO: Intents still dont work well...
+	//dg.Identify.Intents = discordgo.IntentsGuildMembers | discordgo.IntentsGuilds | discordgo.IntentsAllWithoutPrivileged | discordgo.IntentsDirectMessages | discordgo.IntentsAll
+	dg.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsAll)
+	dg.Identify.Token = config.Cfg.ServerInfo.ServerToken
+	dg.Identify.LargeThreshold = 250
 
-	// In this example, we only care about receiving message events.
-	dg.Identify.Intents = discordgo.IntentsGuildMessages + discordgo.IntentsGuildMessageReactions
+	dg.AddHandler(guildCreate)
 
 	responder.RegisterPlugin(dg)
 
