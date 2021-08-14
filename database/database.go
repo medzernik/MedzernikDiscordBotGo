@@ -47,14 +47,14 @@ func Databaserun() {
 			println("error closing the database")
 		}
 	}(sqliteDatabase) // Defer Closing the database
-	createTable(sqliteDatabase) // Create Database Tables
+	createTableGamePlan(sqliteDatabase) // Create Database Tables
 
 	// DISPLAY INSERTED RECORDS
 	DisplayGamePlanned(sqliteDatabase, &test)
 }
 
-// createTable creates a game planning table
-func createTable(db *sql.DB) {
+// createTableGamePlan creates a game planning table
+func createTableGamePlan(db *sql.DB) {
 	createGamePlanningDB := `CREATE TABLE gameplanning (
 		"idGames" integer NOT NULL PRIMARY KEY AUTOINCREMENT,		
 		"time" INTEGER,

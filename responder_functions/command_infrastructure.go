@@ -942,7 +942,7 @@ func initialization(s *discordgo.Session) {
 }
 
 func CommandLoop(s *discordgo.Session) {
-	go initialization(s)
+	initialization(s)
 	for _, v := range BotCommands {
 		_, err := s.ApplicationCommandCreate(s.State.User.ID, config.Cfg.ServerInfo.GuildIDNumber, v)
 		if err != nil {

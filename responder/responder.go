@@ -106,6 +106,6 @@ func ready(s *discordgo.Session, _ *discordgo.Ready) {
 	go database.Databaserun()
 	go database.CheckPlannedGames(&s)
 	go responder_functions.TimedChannelUnlock(s)
-	go responder_functions.CommandLoop(s)
+	responder_functions.CommandLoop(s)
 
 }
