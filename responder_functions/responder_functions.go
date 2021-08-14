@@ -14,8 +14,8 @@ import (
 	"time"
 )
 
-const Version string = "0.5.1"
-const VersionFeatureName string = "The Slowmode Update"
+const Version string = "0.7.0"
+const VersionFeatureName string = "The Command Update"
 
 type CommandStatus struct {
 	OK      string
