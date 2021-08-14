@@ -925,7 +925,7 @@ func SlowModeChannelCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, 
 		return
 	} else if numOfSeconds == 0 {
 		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTOFIX, "Due to the bug in discord, setting the number to 1 (smallest possible wait time)", discordgo.EmbedTypeRich)
-		numOfSeconds = 0
+		numOfSeconds = 1
 	}
 
 	//get the original channel info
@@ -997,7 +997,6 @@ func ChangeVoiceChannelCurrentCMD(s *discordgo.Session, cmd *discordgo.Interacti
 		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.SYNTAX, "Bitrate can be from 8 to 384 kbps", discordgo.EmbedTypeRich)
 	}
 
-TRYAGAIN:
 	var voiceChannelSet discordgo.ChannelEdit = discordgo.ChannelEdit{
 		Name:                 name,
 		Topic:                originalChannelInfo.Topic,
@@ -1010,33 +1009,34 @@ TRYAGAIN:
 		RateLimitPerUser:     originalChannelInfo.RateLimitPerUser,
 	}
 
-	_, err2 := s.ChannelEditComplex(currentUserInfo.ChannelID, &voiceChannelSet)
-	if err2 != nil {
-		switch errorCounter {
-		case 0:
-			command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTOFIX, "Trying lower bitrate... 284kbps", discordgo.EmbedTypeRich)
-			bitrate = 284000
-			errorCounter += 1
-			goto TRYAGAIN
-		case 1:
-			command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTOFIX, "Trying lower bitrate... 128kbps", discordgo.EmbedTypeRich)
-			bitrate = 128000
-			errorCounter += 1
-			goto TRYAGAIN
-		case 2:
-			command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTOFIX, "Trying lower bitrate... 96kbps", discordgo.EmbedTypeRich)
-			bitrate = 96000
-			errorCounter += 1
-			goto TRYAGAIN
-		case 3:
-			command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Some weird error occured", discordgo.EmbedTypeRich)
-			return
-		default:
-			break
+	for {
+		_, err2 := s.ChannelEditComplex(currentUserInfo.ChannelID, &voiceChannelSet)
+		if err2 != nil {
+			switch errorCounter {
+			case 0:
+				command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTOFIX, "Trying lower bitrate... 284kbps", discordgo.EmbedTypeRich)
+				bitrate = 284000
+				errorCounter += 1
+
+			case 1:
+				command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTOFIX, "Trying lower bitrate... 128kbps", discordgo.EmbedTypeRich)
+				bitrate = 128000
+				errorCounter += 1
+
+			case 2:
+				command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTOFIX, "Trying lower bitrate... 96kbps", discordgo.EmbedTypeRich)
+				bitrate = 96000
+				errorCounter += 1
+
+			case 3:
+				command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Some weird error occured", discordgo.EmbedTypeRich)
+				return
+			default:
+				break
+			}
 		}
-
+		break
 	}
-
 	command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"CHANGED NAME AND BITRATE", "**Channel:** "+
 		""+name+"\n**Bitrate:** "+strconv.FormatInt(int64(bitrate), 10), discordgo.EmbedTypeRich)
 	return

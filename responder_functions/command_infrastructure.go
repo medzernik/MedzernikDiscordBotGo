@@ -442,6 +442,7 @@ var (
 					Content: "SPUTNIK V 150% UCINNOST GDE KOTLEBA BGATIA OMG GDE HRAZDOVE RUKY",
 				},
 			})
+			return
 		},
 		//This command runs the AgeJoinedCMD function
 		"age": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -455,7 +456,7 @@ var (
 				i.ApplicationCommandData().Options[0].UserValue(s).ID,
 			}
 			go AgeJoinedCMD(s, i, argumentArray)
-
+			return
 		},
 		//This command runs the AgeJoinedCMD function
 		"mute": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -469,7 +470,7 @@ var (
 				i.ApplicationCommandData().Options[0].UserValue(s).ID,
 			}
 			go MuteCMD(s, i, argumentArray)
-
+			return
 		},
 		"unmute": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -482,7 +483,7 @@ var (
 				i.ApplicationCommandData().Options[0].UserValue(s).ID,
 			}
 			go UnmuteCMD(s, i, argumentArray)
-
+			return
 		},
 		"kick": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -498,7 +499,7 @@ var (
 				argumentArray = append(argumentArray, i.ApplicationCommandData().Options[1].StringValue())
 			}
 			go KickUserCMD(s, i, argumentArray)
-
+			return
 		},
 		"ban": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -519,7 +520,7 @@ var (
 			}
 
 			go BanUserCMD(s, i, argumentArray)
-
+			return
 		},
 		"check-users": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -533,7 +534,7 @@ var (
 				argumentArray = append(argumentArray, i.ApplicationCommandData().Options[0].IntValue())
 			}
 			go CheckUsersCMD(s, i, argumentArray)
-
+			return
 		},
 		"planned": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -545,7 +546,7 @@ var (
 			var argumentArray []interface{}
 
 			go PlannedGamesCMD(s, i, argumentArray)
-
+			return
 		},
 		"plan": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -563,7 +564,7 @@ var (
 			}
 
 			go PlanGameCMD(s, i, argumentArray)
-
+			return
 		},
 		"topic": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -577,7 +578,7 @@ var (
 			argumentArray = []interface{}{}
 
 			go TopicCMD(s, i, argumentArray)
-
+			return
 		},
 		"weather": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -593,7 +594,7 @@ var (
 			}
 
 			go GetWeatherCMD(s, i, argumentArray)
-
+			return
 		},
 		"purge": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -609,7 +610,7 @@ var (
 			}
 
 			go PurgeMessagesCMD(s, i, argumentArray)
-
+			return
 		},
 		"members": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -623,7 +624,7 @@ var (
 			argumentArray = []interface{}{}
 
 			go MembersCMD(s, i, argumentArray)
-
+			return
 		},
 		"prune-count": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -639,7 +640,7 @@ var (
 			}
 
 			go PruneCountCMD(s, i, argumentArray)
-
+			return
 		},
 		"prune-members": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -655,6 +656,7 @@ var (
 			}
 
 			go PruneMembersCMD(s, i, argumentArray)
+			return
 
 		},
 		"setroleperm": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -673,6 +675,7 @@ var (
 			}
 
 			go SetRoleChannelPermCMD(s, i, argumentArray)
+			return
 
 		},
 		"setuserperm": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -691,7 +694,7 @@ var (
 			}
 
 			go SetUserChannelPermCMD(s, i, argumentArray)
-
+			return
 		},
 		"redirect": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -707,6 +710,7 @@ var (
 			}
 
 			go RedirectDiscussionCMD(s, i, argumentArray)
+			return
 		},
 		"slow": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -722,6 +726,7 @@ var (
 			}
 
 			go SlowModeChannelCMD(s, i, argumentArray)
+			return
 		},
 		"voicechannelmodify": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -740,6 +745,7 @@ var (
 			}
 
 			go ChangeVoiceChannelCurrentCMD(s, i, argumentArray)
+			return
 		},
 
 		//BELOW THIS STARTS THE EXAMPLE FILE
