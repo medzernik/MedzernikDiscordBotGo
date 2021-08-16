@@ -17,6 +17,16 @@ import (
 	"time"
 )
 
+func DatabaseOpen() {
+	sqliteDatabase, _ := sql.Open("sqlite3", "./sqlite-database.db") // Open the created SQLite File
+	defer func(sqliteDatabase *sql.DB) {
+		err := sqliteDatabase.Close()
+		if err != nil {
+			println("error closing the database")
+		}
+	}(sqliteDatabase)
+}
+
 // Databaserun will delete the old database and then create a new one, get all the file handlers and basic info
 func Databaserun() {
 	var test string

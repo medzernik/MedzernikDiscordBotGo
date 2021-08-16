@@ -788,7 +788,7 @@ func SetRoleChannelPermCMD(s *discordgo.Session, cmd *discordgo.InteractionCreat
 		}
 		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"PERMISSIONS ALLOWED", "Permissions "+strconv.FormatInt(permissionID, 10)+" successfully allowed"+
 			"", discordgo.EmbedTypeRich)
-		s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[OK]** Admin "+cmd.Member.Nick+" denied permissions "+strconv.FormatInt(permissionID, 10)+""+
+		s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[OK]** Admin "+cmd.Member.Nick+" allowed permissions "+strconv.FormatInt(permissionID, 10)+""+
 			" for channel "+command.ParseStringToChannelID(cmd.ChannelID)+" to a role "+command.ParseStringToRoleMention(permissionRole))
 		return
 

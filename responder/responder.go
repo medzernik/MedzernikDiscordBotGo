@@ -14,7 +14,37 @@ import (
 func RegisterPlugin(s *discordgo.Session) {
 	s.AddHandler(messageCreated)
 	s.AddHandler(ready)
+	s.AddHandler(userUpdate)
 
+}
+
+var PublicMembersList []*discordgo.Member
+
+// Function automatically unlocks the trusted channel until 6AM next day, when a new user becomes trusted
+func userUpdate(s *discordgo.Session, m *discordgo.GuildMemberUpdate) {
+
+	//if the autolocker is disabled, just don't do anything.
+	//TODO: only check on the current role update...
+	if config.Cfg.AutoLocker.AutoUnlockTrustedID1 == true {
+		//set the permissions we want to set when autounlocking (calculated online on discord permissions calculator)
+		var perms int64 = 2251673408
+		target := responder_functions.TargetTypeRoleID
+
+		fmt.Println("**[ROLE_UPDATE]** Checking the update role of a user " + m.Member.Nick)
+		s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[NEW DEBILKO]** Unlocking the channel for roles and will autolock at 6 AM next day.")
+		//search the roles of a user if he got the one we want.
+		for i := range m.Roles {
+			for j := range PublicMembersList {
+				if m.Roles[i] == config.Cfg.RoleTrusted.RoleTrustedID1 && m.Roles[j] != PublicMembersList[j].Roles[i] {
+					responder_functions.UnlockTrustedChannel(s, perms, target)
+					responder_functions.LockChannelToday = true
+					break
+				}
+			}
+		}
+	}
+
+	return
 }
 
 // This function will be called (due to AddHandler above) every time a new
@@ -103,9 +133,10 @@ func ready(s *discordgo.Session, _ *discordgo.Ready) {
 	}
 	//run the parallel functions
 	go responder_functions.CheckRegularSpamAttack(s)
-	go database.Databaserun()
+	go database.DatabaseOpen()
 	go database.CheckPlannedGames(&s)
 	go responder_functions.TimedChannelUnlock(s)
 	responder_functions.CommandLoop(s)
+	PublicMembersList = responder_functions.GetMemberListFromGuild(s, config.Cfg.ServerInfo.GuildIDNumber)
 
 }

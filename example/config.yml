@@ -46,6 +46,8 @@ muteFunction:
 autoLocker:
   #Enabled
   enabled: false
+  # Autounlock when a new trusted user ID1 gets his role
+  autoUnlockTrusted1: false
   # Unlock time. Use 0-23 and 0-59 format respectively. Day is a number 0-Sunday, 6 - Saturday
   timeDayUnlock: 0
   timeHourUnlock: 0

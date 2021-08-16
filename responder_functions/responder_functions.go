@@ -14,8 +14,11 @@ import (
 	"time"
 )
 
-const Version string = "0.7.0"
+const Version string = "0.7.1"
 const VersionFeatureName string = "The Command Update"
+
+const TargetTypeRoleID discordgo.PermissionOverwriteType = 0
+const TargetTypeMemberID discordgo.PermissionOverwriteType = 1
 
 type CommandStatus struct {
 	OK      string
@@ -171,6 +174,45 @@ func Fox(s *discordgo.Session, m *discordgo.MessageCreate) {
 	return
 }
 
+func UnlockTrustedChannel(s *discordgo.Session, perms int64, target discordgo.PermissionOverwriteType) {
+	var roleArrayToUnlock []string
+	roleArrayToUnlock = append(roleArrayToUnlock, config.Cfg.RoleTrusted.RoleTrustedID1)
+	roleArrayToUnlock = append(roleArrayToUnlock, config.Cfg.RoleTrusted.RoleTrustedID2)
+	roleArrayToUnlock = append(roleArrayToUnlock, config.Cfg.RoleTrusted.RoleTrustedID3)
+	roleArrayToUnlock = append(roleArrayToUnlock, config.Cfg.RoleTrusted.RoleTrustedID4)
+
+	for i := 0; i < len(roleArrayToUnlock); i++ {
+		//Unlock the channel
+		//TargetType 0 = roleID, 1 = memberID
+		err1 := s.ChannelPermissionSet(config.Cfg.RoleTrusted.ChannelTrustedID, roleArrayToUnlock[i], target, perms, 0)
+		if err1 != nil {
+			s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[ERR]** Error changing the permissions for role "+command.ParseStringToRoleMention(roleArrayToUnlock[i]))
+		}
+		s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[OK]** Unlocked the channel for "+command.ParseStringToRoleMention(roleArrayToUnlock[i]))
+	}
+	return
+}
+func LockTrustedChannel(s *discordgo.Session, perms int64, target discordgo.PermissionOverwriteType) {
+	var roleArrayToUnlock []string
+	roleArrayToUnlock = append(roleArrayToUnlock, config.Cfg.RoleTrusted.RoleTrustedID1)
+	roleArrayToUnlock = append(roleArrayToUnlock, config.Cfg.RoleTrusted.RoleTrustedID2)
+	roleArrayToUnlock = append(roleArrayToUnlock, config.Cfg.RoleTrusted.RoleTrustedID3)
+	roleArrayToUnlock = append(roleArrayToUnlock, config.Cfg.RoleTrusted.RoleTrustedID4)
+
+	for i := 0; i < len(roleArrayToUnlock); i++ {
+		//Unlock the channel
+		//TargetType 0 = roleID, 1 = memberID
+		err1 := s.ChannelPermissionSet(config.Cfg.RoleTrusted.ChannelTrustedID, roleArrayToUnlock[i], target, 0, perms)
+		if err1 != nil {
+			s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[ERR]** Error changing the permissions for role "+command.ParseStringToRoleMention(roleArrayToUnlock[i]))
+		}
+		s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[OK]** Locked the channel for "+command.ParseStringToRoleMention(roleArrayToUnlock[i]))
+	}
+	return
+}
+
+var LockChannelToday bool = false
+
 // TimedChannelUnlock automatically locks and unlocks a trusted channel
 func TimedChannelUnlock(s *discordgo.Session) {
 	if config.Cfg.AutoLocker.Enabled == false {
@@ -178,6 +220,7 @@ func TimedChannelUnlock(s *discordgo.Session) {
 	}
 
 	var checkInterval time.Duration = 60
+	var perms int64 = 2251673408
 
 	fmt.Println("[INIT OK] Channel unlock system module initialized")
 
@@ -185,48 +228,30 @@ func TimedChannelUnlock(s *discordgo.Session) {
 		if time.Now().Weekday() == config.Cfg.AutoLocker.TimeDayUnlock && time.Now().Hour() == config.Cfg.AutoLocker.TimeHourUnlock && time.Now().Minute() == config.Cfg.AutoLocker.TimeMinuteUnlock {
 			//Unlock the channel
 			//TargetType 0 = roleID, 1 = memberID
-			err1 := s.ChannelPermissionSet(config.Cfg.RoleTrusted.ChannelTrustedID, config.Cfg.RoleTrusted.RoleTrustedID1, 0, 2251673408, 0)
-			if err1 != nil {
-				s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[ERR]** Error changing the permissions for role "+"<@"+config.Cfg.RoleTrusted.RoleTrustedID1+">")
-			}
-			err2 := s.ChannelPermissionSet(config.Cfg.RoleTrusted.ChannelTrustedID, config.Cfg.RoleTrusted.RoleTrustedID2, 0, 2251673408, 0)
-			if err2 != nil {
-				s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[ERR]** Error changing the permissions for role "+"<@"+config.Cfg.RoleTrusted.RoleTrustedID2+">")
-			}
-			err3 := s.ChannelPermissionSet(config.Cfg.RoleTrusted.ChannelTrustedID, config.Cfg.RoleTrusted.RoleTrustedID3, 0, 2251673408, 0)
-			if err3 != nil {
-				s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[ERR]** Error changing the permissions for role "+"<@"+config.Cfg.RoleTrusted.RoleTrustedID3+">")
-			}
-			err4 := s.ChannelPermissionSet(config.Cfg.RoleTrusted.ChannelTrustedID, config.Cfg.RoleTrusted.RoleTrustedID4, 0, 2251673408, 0)
-			if err4 != nil {
-				s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[ERR]** Error changing the permissions for role "+"<@"+config.Cfg.RoleTrusted.RoleTrustedID4+">")
-			}
+			UnlockTrustedChannel(s, perms, TargetTypeRoleID)
 
 			fmt.Println("[OK] Opened the channel " + config.Cfg.RoleTrusted.ChannelTrustedID)
 		} else if time.Now().Weekday() == config.Cfg.AutoLocker.TimeDayLock && time.Now().Hour() == config.Cfg.AutoLocker.TimeHourLock && time.Now().Minute() == config.Cfg.AutoLocker.TimeMinuteLock {
 			//Lock the channel
 			//TargetType 0 = roleID, 1 = memberID
-			err1 := s.ChannelPermissionSet(config.Cfg.RoleTrusted.ChannelTrustedID, config.Cfg.RoleTrusted.RoleTrustedID1, 0, 0, 2251673408)
-			if err1 != nil {
-				s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[ERR]** Error changing the permissions for role "+"<@"+config.Cfg.RoleTrusted.RoleTrustedID1+">")
-			}
-			err2 := s.ChannelPermissionSet(config.Cfg.RoleTrusted.ChannelTrustedID, config.Cfg.RoleTrusted.RoleTrustedID2, 0, 0, 2251673408)
-			if err2 != nil {
-				s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[ERR]** Error changing the permissions for role "+"<@"+config.Cfg.RoleTrusted.RoleTrustedID2+">")
-			}
-			err3 := s.ChannelPermissionSet(config.Cfg.RoleTrusted.ChannelTrustedID, config.Cfg.RoleTrusted.RoleTrustedID3, 0, 0, 2251673408)
-			if err3 != nil {
-				s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[ERR]** Error changing the permissions for role "+"<@"+config.Cfg.RoleTrusted.RoleTrustedID3+">")
-			}
-			err4 := s.ChannelPermissionSet(config.Cfg.RoleTrusted.ChannelTrustedID, config.Cfg.RoleTrusted.RoleTrustedID4, 0, 0, 2251673408)
-			if err4 != nil {
-				s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[ERR]** Error changing the permissions for role "+"<@"+config.Cfg.RoleTrusted.RoleTrustedID4+">")
-			}
-			fmt.Println("[OK] Closed the channel " + config.Cfg.RoleTrusted.ChannelTrustedID)
+			LockTrustedChannel(s, perms, TargetTypeRoleID)
+			fmt.Println("[OK] Closed the channel because regular time" + config.Cfg.RoleTrusted.ChannelTrustedID)
+		} else if time.Now().Hour() == config.Cfg.AutoLocker.TimeHourLock && time.Now().Minute() == config.Cfg.AutoLocker.TimeMinuteLock && LockChannelToday == true && (time.Now().Weekday() != time.Sunday || time.Now().Weekday() != time.Saturday) {
+			LockTrustedChannel(s, perms, TargetTypeRoleID)
+			LockChannelToday = false
+			fmt.Println("[OK] Closed the channel because special event ended " + config.Cfg.RoleTrusted.ChannelTrustedID)
 		}
 
 		time.Sleep(checkInterval * time.Second)
 	}
+
+}
+
+// OneTimeChannelUnlock when a new trusted user is given a role, unlock the channel as a reward.
+//TODO: Make this also automatically lock the channel
+func OneTimeChannelUnlock(s *discordgo.Session) {
+	members := GetMemberListFromGuild(s, config.Cfg.ServerInfo.GuildIDNumber)
+	fmt.Println(members)
 
 }
 

@@ -37,13 +37,14 @@ type Config struct {
 		TrustedMutingEnabled bool   `yaml:"trustedMutingEnabled"`
 	} `yaml:"muteFunction"`
 	AutoLocker struct {
-		Enabled          bool         `yaml:"enabled"`
-		TimeDayUnlock    time.Weekday `yaml:"timeDayUnlock"`
-		TimeHourUnlock   int          `yaml:"timeHourUnlock"`
-		TimeMinuteUnlock int          `yaml:"timeMinuteUnlock"`
-		TimeDayLock      time.Weekday `yaml:"timeDayLock"`
-		TimeHourLock     int          `yaml:"timeHourLock"`
-		TimeMinuteLock   int          `yaml:"timeMinuteLock"`
+		Enabled              bool         `yaml:"enabled"`
+		AutoUnlockTrustedID1 bool         `yaml:"autoUnlockTrusted1"`
+		TimeDayUnlock        time.Weekday `yaml:"timeDayUnlock"`
+		TimeHourUnlock       int          `yaml:"timeHourUnlock"`
+		TimeMinuteUnlock     int          `yaml:"timeMinuteUnlock"`
+		TimeDayLock          time.Weekday `yaml:"timeDayLock"`
+		TimeHourLock         int          `yaml:"timeHourLock"`
+		TimeMinuteLock       int          `yaml:"timeMinuteLock"`
 	} `yaml:"autoLocker"`
 }
 
