@@ -644,15 +644,6 @@ func PurgeMessagesCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m 
 	if authorisedAdmin == true {
 		var messageArrayToDelete []string
 
-		/*
-			numMessages, err1 := strconv.ParseInt(fmt.Sprintf("%s", m[0]), 10, 64)
-			if err1 != nil {
-				command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Invalid number provided", discordgo.EmbedTypeRich)
-				return
-			}
-
-		*/
-
 		numMessages := m[0].(int64)
 		if numMessages > 99 || numMessages < 1 {
 			command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.SYNTAX, "The min-max of the number is 1-100", discordgo.EmbedTypeRich)
@@ -676,6 +667,86 @@ func PurgeMessagesCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m 
 		}
 		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"PURGED", "Purged "+strconv.FormatInt(int64(len(messageArrayToDelete)), 10)+" "+
 			"messages", discordgo.EmbedTypeRich)
+
+		s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[LOG]** User "+cmd.Member.Nick+" deleted "+strconv.FormatInt(int64(len(messageArrayToDelete)), 10)+" messages in channel "+"<#"+cmd.ChannelID+">")
+
+		return
+	} else {
+		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTH, "Insufficient permissions.", discordgo.EmbedTypeRich)
+		return
+	}
+
+}
+
+func PurgeMessagesCMDMessage(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
+
+	var authorisedAdmin bool = false
+	authorisedAdmin = command.VerifyAdminCMD(s, cmd.ChannelID, &authorisedAdmin, cmd)
+
+	if authorisedAdmin == true {
+		var messageArrayToDelete []string
+
+		messageArrayComplete, err1 := s.ChannelMessages(cmd.ChannelID, 0, cmd.ID, m[0].(string), "")
+		if err1 != nil {
+			command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Cannot get the ID of messages", discordgo.EmbedTypeRich)
+			return
+		}
+
+		for i := range messageArrayComplete {
+			messageArrayToDelete = append(messageArrayToDelete, messageArrayComplete[i].ID)
+		}
+
+		err2 := s.ChannelMessagesBulkDelete(cmd.ChannelID, messageArrayToDelete)
+		if err2 != nil {
+			command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error deleting the requested messages...", discordgo.EmbedTypeRich)
+			return
+		}
+		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"PURGED", "Purged "+strconv.FormatInt(int64(len(messageArrayToDelete)), 10)+" "+
+			"messages", discordgo.EmbedTypeRich)
+
+		s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[LOG]** User "+cmd.Member.Nick+" deleted "+strconv.FormatInt(int64(len(messageArrayToDelete)), 10)+" messages in channel "+"<#"+cmd.ChannelID+">")
+
+		return
+	} else {
+		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTH, "Insufficient permissions.", discordgo.EmbedTypeRich)
+		return
+	}
+
+}
+
+func PurgeMessagesCMDMessageOnlyAuthor(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
+
+	var authorisedAdmin bool = false
+	authorisedAdmin = command.VerifyAdminCMD(s, cmd.ChannelID, &authorisedAdmin, cmd)
+
+	if authorisedAdmin == true {
+		var messageArrayToDelete []string
+
+		messageArrayComplete, err1 := s.ChannelMessages(cmd.ChannelID, 0, cmd.ID, m[0].(string), "")
+		if err1 != nil {
+			command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Cannot get the ID of messages", discordgo.EmbedTypeRich)
+			return
+		}
+
+		messageArrayCompleteLastIndex, err3 := s.ChannelMessages(cmd.ChannelID, 1, "", "", m[0].(string))
+		if err3 != nil {
+			fmt.Println(err3)
+		}
+
+		for i := range messageArrayComplete {
+			if messageArrayComplete[i].Author.ID == messageArrayCompleteLastIndex[0].Author.ID {
+				messageArrayToDelete = append(messageArrayToDelete, messageArrayComplete[i].ID)
+			}
+		}
+
+		err2 := s.ChannelMessagesBulkDelete(cmd.ChannelID, messageArrayToDelete)
+		if err2 != nil {
+			command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error deleting the requested messages...", discordgo.EmbedTypeRich)
+			return
+		}
+		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"PURGED", "Purged "+
+			""+strconv.FormatInt(int64(len(messageArrayToDelete)), 10)+" messages from user: "+
+			""+messageArrayCompleteLastIndex[0].Author.Mention(), discordgo.EmbedTypeRich)
 
 		s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[LOG]** User "+cmd.Member.Nick+" deleted "+strconv.FormatInt(int64(len(messageArrayToDelete)), 10)+" messages in channel "+"<#"+cmd.ChannelID+">")
 

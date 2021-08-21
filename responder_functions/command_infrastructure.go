@@ -12,9 +12,9 @@ import (
 
 // Bot parameters
 var (
-	GuildID        = flag.String("guild", config.Cfg.ServerInfo.GuildIDNumber, "Test guild ID. If not passed - bot registers commands globally")
-	BotToken       = flag.String("token", config.Cfg.ServerInfo.ServerToken, "Bot access token")
-	RemoveCommands = flag.Bool("rmcmd", true, "Remove all commands after shutdowning or not")
+	GuildID  = flag.String("guild", config.Cfg.ServerInfo.GuildIDNumber, "Test guild ID. If not passed - bot registers commands globally")
+	BotToken = flag.String("token", config.Cfg.ServerInfo.ServerToken, "Bot access token")
+	Cleanup  = flag.Bool("cleanup", true, "Cleanup of commands")
 )
 
 func init() { flag.Parse() }
@@ -68,6 +68,14 @@ var (
 		{
 			Name: "Mute User",
 			Type: discordgo.UserApplicationCommand,
+		},
+		{
+			Name: "Purge To Here",
+			Type: discordgo.MessageApplicationCommand,
+		},
+		{
+			Name: "Purge To Here User",
+			Type: discordgo.MessageApplicationCommand,
 		},
 		{
 			Name:        "unmute",
@@ -478,6 +486,12 @@ var (
 		},
 		//This command runs the AgeJoinedCMD function
 		"Mute User": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "⠀",
+				},
+			})
 
 			argumentArray := []interface{}{
 				i.ApplicationCommandData().TargetID,
@@ -625,6 +639,34 @@ var (
 			}
 
 			go PurgeMessagesCMD(s, i, argumentArray)
+			return
+		},
+		"Purge To Here": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "⠀",
+				},
+			})
+			argumentArray := []interface{}{
+				i.ApplicationCommandData().TargetID,
+			}
+
+			go PurgeMessagesCMDMessage(s, i, argumentArray)
+			return
+		},
+		"Purge To Here User": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "⠀",
+				},
+			})
+			argumentArray := []interface{}{
+				i.ApplicationCommandData().TargetID,
+			}
+
+			go PurgeMessagesCMDMessageOnlyAuthor(s, i, argumentArray)
 			return
 		},
 		"members": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
