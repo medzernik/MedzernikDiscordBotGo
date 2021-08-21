@@ -678,6 +678,7 @@ func PurgeMessagesCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m 
 
 }
 
+// PurgeMessagesCMDMessage This function purges messages for the Application MessageCommand interface
 func PurgeMessagesCMDMessage(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 
 	var authorisedAdmin bool = false
@@ -714,6 +715,7 @@ func PurgeMessagesCMDMessage(s *discordgo.Session, cmd *discordgo.InteractionCre
 
 }
 
+// PurgeMessagesCMDMessageOnlyAuthor This function serves to purge messages of only the clicked author through the ApplicationMessageCommand interface
 func PurgeMessagesCMDMessageOnlyAuthor(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 
 	var authorisedAdmin bool = false
