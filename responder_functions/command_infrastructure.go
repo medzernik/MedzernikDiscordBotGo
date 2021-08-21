@@ -66,6 +66,10 @@ var (
 			},
 		},
 		{
+			Name: "Mute User",
+			Type: discordgo.UserApplicationCommand,
+		},
+		{
 			Name:        "unmute",
 			Description: "umutes a user (removes a mute role)",
 			Options: []*discordgo.ApplicationCommandOption{
@@ -472,6 +476,17 @@ var (
 			go MuteCMD(s, i, argumentArray)
 			return
 		},
+		//This command runs the AgeJoinedCMD function
+		"Mute User": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+
+			argumentArray := []interface{}{
+				i.ApplicationCommandData().TargetID,
+			}
+
+			go MuteCMD(s, i, argumentArray)
+			return
+		},
+
 		"unmute": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,

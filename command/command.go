@@ -210,7 +210,7 @@ func SendTextEmbed(s *discordgo.Session, m *discordgo.MessageCreate, status stri
 	//Fixed author message.
 	author := discordgo.MessageEmbedAuthor{
 		URL:          "",
-		Name:         "SlovakiaBot",
+		Name:         "MedzernikBot",
 		IconURL:      "https://cdn.discordapp.com/avatars/837982234597916672/51236a8235b1778f5d90bce35fbcf4d6.webp?size=256",
 		ProxyIconURL: "",
 	}
@@ -264,7 +264,7 @@ func SendTextEmbedCommand(s *discordgo.Session, m string, status string, message
 	//Fixed author message.
 	author := discordgo.MessageEmbedAuthor{
 		URL:          "",
-		Name:         "SlovakiaBot",
+		Name:         "MedzernikBot",
 		IconURL:      "https://cdn.discordapp.com/avatars/837982234597916672/51236a8235b1778f5d90bce35fbcf4d6.webp?size=256",
 		ProxyIconURL: "",
 	}
@@ -317,6 +317,7 @@ func SendTextEmbedCommand(s *discordgo.Session, m string, status string, message
 	}
 }
 
+// VerifyAdminCMD Function takes a bool and returns true or false based on whether the user has an admin or mod role or not. Logs to stdout.
 func VerifyAdminCMD(s *discordgo.Session, m string, authorised *bool, cmd *discordgo.InteractionCreate) bool {
 	var authorID = cmd.Member.Roles
 
@@ -332,7 +333,7 @@ func VerifyAdminCMD(s *discordgo.Session, m string, authorised *bool, cmd *disco
 	return *authorised
 }
 
-// VerifyTrusted Function takes a bool and returns true or false based on whether the user has a priviledged role (defined by admins) or not. Logs to stdout.
+// VerifyTrustedCMD Function takes a bool and returns true or false based on whether the user has a priviledged role (defined by admins) or not. Logs to stdout.
 func VerifyTrustedCMD(s *discordgo.Session, m string, authorised *bool, cmd *discordgo.InteractionCreate) bool {
 
 	var authorID = cmd.Member.Roles
