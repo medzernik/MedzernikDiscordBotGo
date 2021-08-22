@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/briandowns/openweathermap v0.16.0
-	github.com/bwmarrin/discordgo v0.23.3-0.20210820224845-d655d6df7bd3
+	github.com/bwmarrin/discordgo v0.23.3-0.20210821175000-0fad116c6c2a
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/mattn/go-isatty v0.0.13 // indirect
