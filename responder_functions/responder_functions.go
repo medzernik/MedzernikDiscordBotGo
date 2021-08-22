@@ -113,36 +113,17 @@ func GetGuildInfo(s *discordgo.Session, guildID string) *discordgo.GuildPreview 
 	return guildInfo
 }
 
-// GetMemberListFromGuild Gets the member info and tries to save it in a local (cached sort of) array to access later.
-func GetMemberListFromGuild(s *discordgo.Session, guildID string) []*discordgo.Member {
-	//TODO: This only works as a preview.. wtf
-	guildInfoTemp := GetGuildInfo(s, guildID)
-
-	membersList, err := s.GuildMembers(guildID, "0", guildInfoTemp.ApproximateMemberCount)
-	if err != nil {
-		s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[ERR]** Error getting information about users with the guildID. InvalidID or >1000 members (bug)")
-		fmt.Println("ERROR: ", err)
-		return membersList
-	}
-
-	//TODO: Fix this? How? Bug in the library?
-	/*
-		//membersListAdditional, _ := s.GuildMembers(guildID, "1000", 1000)
-
-
-		for j := range membersListAdditional {
-			membersList = append(membersList, membersListAdditional[j])
-		}
-
-	*/
-
-	return membersList
-}
-
 // CheckRegularSpamAttack Checks the server for spam attacks
 func CheckRegularSpamAttack(s *discordgo.Session, m *discordgo.MessageCreate) {
 	//variable definitons
-	var membersCached = GetMemberListFromGuild(s, m.GuildID)
+	var membersCached []*discordgo.Member
+
+	for i := range ReadyInfoPublic.Guilds {
+		if ReadyInfoPublic.Guilds[i].ID == m.GuildID {
+			membersCached = ReadyInfoPublic.Guilds[i].Members
+		}
+	}
+
 	var tempMsg string
 	var spamCounter int64
 	var checkInterval time.Duration = 90
@@ -250,21 +231,29 @@ func TimedChannelUnlock(s *discordgo.Session) {
 // OneTimeChannelUnlock when a new trusted user is given a role, unlock the channel as a reward.
 //TODO: Make this also automatically lock the channel
 func OneTimeChannelUnlock(s *discordgo.Session, m *discordgo.MessageCreate) {
-	members := GetMemberListFromGuild(s, m.GuildID)
-	fmt.Println(members)
+	var membersCached []*discordgo.Member
+
+	for i := range ReadyInfoPublic.Guilds {
+		if ReadyInfoPublic.Guilds[i].ID == m.GuildID {
+			membersCached = ReadyInfoPublic.Guilds[i].Members
+		}
+	}
+	fmt.Println(membersCached)
 
 }
 
 // Members returns a value of members on the server currently to another function.
 func Members(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) uint64 {
-	if len(cmd.Arguments) > 0 {
-		command.SendTextEmbed(s, m, CommandStatusBot.SYNTAX, "Usage: **.count**\n Automatically discarding arguments...", discordgo.EmbedTypeRich)
+
+	var membersCached int
+
+	for i := range ReadyInfoPublic.Guilds {
+		if ReadyInfoPublic.Guilds[i].ID == m.GuildID {
+			membersCached = ReadyInfoPublic.Guilds[i].MemberCount
+		}
 	}
 
-	memberList := GetMemberListFromGuild(s, m.GuildID)
-	memberListLength := uint64(len(memberList))
-
-	return memberListLength
+	return uint64(membersCached)
 }
 
 // PruneCount returns a value to another function of how many members to prune

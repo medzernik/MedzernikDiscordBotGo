@@ -27,7 +27,13 @@ func AgeJoinedCMD(s *discordgo.Session, m *discordgo.InteractionCreate, cmd []in
 
 	//Every time a command is run, get a list of all users. This serves the purpose to then print the name of the corresponding user.
 	//TODO: cache it in redis
-	membersCached := GetMemberListFromGuild(s, m.GuildID)
+	var membersCached []*discordgo.Member
+
+	for i := range ReadyInfoPublic.Guilds {
+		if ReadyInfoPublic.Guilds[i].ID == m.GuildID {
+			membersCached = ReadyInfoPublic.Guilds[i].Members
+		}
+	}
 
 	var userName string
 
@@ -75,19 +81,15 @@ func AgeJoinedCMD(s *discordgo.Session, m *discordgo.InteractionCreate, cmd []in
 func MuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 
 	//Variable initiation
-	var authorisedAdmin bool = false
 	var authorisedTrusted bool = false
 
-	authorisedAdmin, errPerm := command.MemberHasPermission(s, cmd.GuildID, cmd.User.ID, discordgo.PermissionAdministrator)
+	authorisedAdmin, errPerm := command.MemberHasPermission(s, cmd.GuildID, cmd.Member.User.ID, discordgo.PermissionAdministrator)
 	if errPerm != nil {
 		fmt.Println(errPerm)
 		return
 	}
 
 	timeToCheckUsers := 24.0 * -1.0
-
-	fmt.Println("authorisedadmin", authorisedAdmin)
-	fmt.Println("trusteduser", authorisedTrusted)
 
 	//Verify, if user has any rights at all
 	if authorisedAdmin == false && authorisedTrusted == false {
@@ -96,7 +98,13 @@ func MuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interfa
 	}
 
 	//Added only after the first check of rights, to prevent spamming of the requests
-	membersCached := GetMemberListFromGuild(s, cmd.GuildID)
+	var membersCached []*discordgo.Member
+
+	for i := range ReadyInfoPublic.Guilds {
+		if ReadyInfoPublic.Guilds[i].ID == cmd.GuildID {
+			membersCached = ReadyInfoPublic.Guilds[i].Members
+		}
+	}
 	var MuteUserString []string
 
 	MuteUserString = append(MuteUserString, command.ParseMentionToString(fmt.Sprintf("%s", m[0])))
@@ -173,9 +181,12 @@ func MuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interfa
 func UnmuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 
 	//Variable initiation
-	var authorisedAdmin bool = false
 	var authorisedTrusted bool = false
-	authorisedAdmin = command.VerifyAdminCMD(s, cmd.ChannelID, &authorisedAdmin, cmd)
+	authorisedAdmin, errPerm := command.MemberHasPermission(s, cmd.GuildID, cmd.Member.User.ID, discordgo.PermissionAdministrator)
+	if errPerm != nil {
+		fmt.Println(errPerm)
+		return
+	}
 	authorisedTrusted = command.VerifyTrustedCMD(s, cmd.ChannelID, &authorisedTrusted, cmd)
 
 	timeToCheckUsers := 24.0 * -1.0
@@ -187,7 +198,13 @@ func UnmuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []inter
 	}
 
 	//Added only after the first check of rights, to prevent spamming of the requests
-	membersCached := GetMemberListFromGuild(s, cmd.GuildID)
+	var membersCached []*discordgo.Member
+
+	for i := range ReadyInfoPublic.Guilds {
+		if ReadyInfoPublic.Guilds[i].ID == cmd.GuildID {
+			membersCached = ReadyInfoPublic.Guilds[i].Members
+		}
+	}
 	var UnmuteUserString []string
 
 	UnmuteUserString = append(UnmuteUserString, command.ParseMentionToString(fmt.Sprintf("%s", m[0])))
@@ -263,15 +280,24 @@ func UnmuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []inter
 func KickUserCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 	var reasonExists bool
 	var reason string
-	var authorisedAdmin bool = false
-	authorisedAdmin = command.VerifyAdminCMD(s, cmd.ChannelID, &authorisedAdmin, cmd)
+	authorisedAdmin, errPerm := command.MemberHasPermission(s, cmd.GuildID, cmd.Member.User.ID, discordgo.PermissionAdministrator)
+	if errPerm != nil {
+		fmt.Println(errPerm)
+		return
+	}
 
 	if authorisedAdmin == false {
 		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTH, "Error kicking a user - insufficient rights.", discordgo.EmbedTypeRich)
 		return
 	}
 
-	membersCached := GetMemberListFromGuild(s, cmd.GuildID)
+	var membersCached []*discordgo.Member
+
+	for i := range ReadyInfoPublic.Guilds {
+		if ReadyInfoPublic.Guilds[i].ID == cmd.GuildID {
+			membersCached = ReadyInfoPublic.Guilds[i].Members
+		}
+	}
 	if len(m) > 1 {
 		reason = fmt.Sprintf("%s", m[1])
 		reasonExists = true
@@ -337,15 +363,24 @@ func BanUserCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []inte
 	var reason string
 	var reasonExists bool = false
 	var daysDelete uint64 = 7
-	var authorisedAdmin bool = false
-	authorisedAdmin = command.VerifyAdminCMD(s, cmd.ChannelID, &authorisedAdmin, cmd)
+	authorisedAdmin, errPerm := command.MemberHasPermission(s, cmd.GuildID, cmd.Member.User.ID, discordgo.PermissionAdministrator)
+	if errPerm != nil {
+		fmt.Println(errPerm)
+		return
+	}
 
 	if authorisedAdmin == false {
 		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTH, "Error banning a user - insufficient rights.", discordgo.EmbedTypeRich)
 		return
 	}
 
-	membersCached := GetMemberListFromGuild(s, cmd.GuildID)
+	var membersCached []*discordgo.Member
+
+	for i := range ReadyInfoPublic.Guilds {
+		if ReadyInfoPublic.Guilds[i].ID == cmd.GuildID {
+			membersCached = ReadyInfoPublic.Guilds[i].Members
+		}
+	}
 
 	var BanUserString string = fmt.Sprintf("%s", m[0])
 	if len(m) > 1 {
@@ -411,11 +446,20 @@ func CheckUsersCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []i
 	}
 
 	//variable definitions
-	var authorisedAdmin bool = false
-	authorisedAdmin = command.VerifyAdminCMD(s, cmd.ChannelID, &authorisedAdmin, cmd)
+	authorisedAdmin, errPerm := command.MemberHasPermission(s, cmd.GuildID, cmd.Member.User.ID, discordgo.PermissionAdministrator)
+	if errPerm != nil {
+		fmt.Println(errPerm)
+		return
+	}
 
 	if authorisedAdmin == true {
-		membersCached := GetMemberListFromGuild(s, cmd.GuildID)
+		var membersCached []*discordgo.Member
+
+		for i := range ReadyInfoPublic.Guilds {
+			if ReadyInfoPublic.Guilds[i].ID == cmd.GuildID {
+				membersCached = ReadyInfoPublic.Guilds[i].Members
+			}
+		}
 		var mainOutputMsg string
 		var IDOutputMsg string
 
@@ -642,8 +686,11 @@ func GetWeatherCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []i
 // PurgeMessagesCMD Purges messages 1-100 in the current channel
 func PurgeMessagesCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 
-	var authorisedAdmin bool = false
-	authorisedAdmin = command.VerifyAdminCMD(s, cmd.ChannelID, &authorisedAdmin, cmd)
+	authorisedAdmin, errPerm := command.MemberHasPermission(s, cmd.GuildID, cmd.Member.User.ID, discordgo.PermissionAdministrator)
+	if errPerm != nil {
+		fmt.Println(errPerm)
+		return
+	}
 
 	if authorisedAdmin == true {
 		var messageArrayToDelete []string
@@ -685,8 +732,11 @@ func PurgeMessagesCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m 
 // PurgeMessagesCMDMessage This function purges messages for the Application MessageCommand interface
 func PurgeMessagesCMDMessage(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 
-	var authorisedAdmin bool = false
-	authorisedAdmin = command.VerifyAdminCMD(s, cmd.ChannelID, &authorisedAdmin, cmd)
+	authorisedAdmin, errPerm := command.MemberHasPermission(s, cmd.GuildID, cmd.Member.User.ID, discordgo.PermissionAdministrator)
+	if errPerm != nil {
+		fmt.Println(errPerm)
+		return
+	}
 
 	if authorisedAdmin == true {
 		var messageArrayToDelete []string
@@ -722,8 +772,11 @@ func PurgeMessagesCMDMessage(s *discordgo.Session, cmd *discordgo.InteractionCre
 // PurgeMessagesCMDMessageOnlyAuthor This function serves to purge messages of only the clicked author through the ApplicationMessageCommand interface
 func PurgeMessagesCMDMessageOnlyAuthor(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 
-	var authorisedAdmin bool = false
-	authorisedAdmin = command.VerifyAdminCMD(s, cmd.ChannelID, &authorisedAdmin, cmd)
+	authorisedAdmin, errPerm := command.MemberHasPermission(s, cmd.GuildID, cmd.Member.User.ID, discordgo.PermissionAdministrator)
+	if errPerm != nil {
+		fmt.Println(errPerm)
+		return
+	}
 
 	if authorisedAdmin == true {
 		var messageArrayToDelete []string
@@ -766,11 +819,16 @@ func PurgeMessagesCMDMessageOnlyAuthor(s *discordgo.Session, cmd *discordgo.Inte
 
 // MembersCMD outputs the number of current members of the server. No returns
 func MembersCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
-	memberList := GetMemberListFromGuild(s, cmd.GuildID)
-	memberListLength := uint64(len(memberList))
+	var memberListLength int
 
-	command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+strconv.FormatUint(memberListLength, 10), ""+
-		"There are "+strconv.FormatUint(memberListLength, 10)+" members on the server", discordgo.EmbedTypeRich)
+	for i := range ReadyInfoPublic.Guilds {
+		if ReadyInfoPublic.Guilds[i].ID == cmd.GuildID {
+			memberListLength = ReadyInfoPublic.Guilds[i].MemberCount
+		}
+	}
+
+	command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+strconv.FormatUint(uint64(memberListLength), 10), ""+
+		"There are "+strconv.FormatUint(uint64(memberListLength), 10)+" members on the server", discordgo.EmbedTypeRich)
 
 	return
 }
@@ -799,8 +857,11 @@ func PruneCountCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []i
 
 // PruneMembersCMD prunes members
 func PruneMembersCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
-	var authorisedAdmin bool = false
-	authorisedAdmin = command.VerifyAdminCMD(s, cmd.ChannelID, &authorisedAdmin, cmd)
+	authorisedAdmin, errPerm := command.MemberHasPermission(s, cmd.GuildID, cmd.Member.User.ID, discordgo.PermissionAdministrator)
+	if errPerm != nil {
+		fmt.Println(errPerm)
+		return
+	}
 
 	if authorisedAdmin == true {
 		//request prune number amount
@@ -839,11 +900,14 @@ func PruneMembersCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m [
 // SetRoleChannelPermCMD sets a channel permission using an int value
 func SetRoleChannelPermCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 
-	var verifyAdmin bool = false
-	verifyAdmin = command.VerifyAdminCMD(s, cmd.ChannelID, &verifyAdmin, cmd)
+	authorisedAdmin, errPerm := command.MemberHasPermission(s, cmd.GuildID, cmd.Member.User.ID, discordgo.PermissionAdministrator)
+	if errPerm != nil {
+		fmt.Println(errPerm)
+		return
+	}
 
 	//check if user is admin before using the command
-	if verifyAdmin == false {
+	if authorisedAdmin == false {
 		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTH, "You do not have the permission to change the channel permissions for a role.", discordgo.EmbedTypeRich)
 		return
 	}
@@ -894,11 +958,14 @@ func SetRoleChannelPermCMD(s *discordgo.Session, cmd *discordgo.InteractionCreat
 // SetUserChannelPermCMD sets a channel permission using an int value
 func SetUserChannelPermCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 
-	var verifyAdmin bool = false
-	verifyAdmin = command.VerifyAdminCMD(s, cmd.ChannelID, &verifyAdmin, cmd)
+	authorisedAdmin, errPerm := command.MemberHasPermission(s, cmd.GuildID, cmd.Member.User.ID, discordgo.PermissionAdministrator)
+	if errPerm != nil {
+		fmt.Println(errPerm)
+		return
+	}
 
 	//check if user is admin before using the command
-	if verifyAdmin == false {
+	if authorisedAdmin == false {
 		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTH, "You do not have the permission to change the channel permissions for a role.", discordgo.EmbedTypeRich)
 		return
 	}
@@ -940,11 +1007,14 @@ func SetUserChannelPermCMD(s *discordgo.Session, cmd *discordgo.InteractionCreat
 //RedirectDiscussionCMD  sets a channel to a big slowmode for 10 minutes and then redirects the conversation elsewhere. When threads become available, sets the thread and more...
 func RedirectDiscussionCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 
-	var verifyAdmin bool = false
-	verifyAdmin = command.VerifyAdminCMD(s, cmd.ChannelID, &verifyAdmin, cmd)
+	authorisedAdmin, errPerm := command.MemberHasPermission(s, cmd.GuildID, cmd.Member.User.ID, discordgo.PermissionAdministrator)
+	if errPerm != nil {
+		fmt.Println(errPerm)
+		return
+	}
 
 	//check if user is admin before using the command
-	if verifyAdmin == false {
+	if authorisedAdmin == false {
 		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTH, "You do not have the permission to change the channel slowmode.", discordgo.EmbedTypeRich)
 		return
 	}
@@ -984,11 +1054,14 @@ func RedirectDiscussionCMD(s *discordgo.Session, cmd *discordgo.InteractionCreat
 // SlowModeChannelCMD sets a channel to a desired slowmode. 0 is a bugged value, so at least sets to 1 second.
 func SlowModeChannelCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 
-	var verifyAdmin bool = false
-	verifyAdmin = command.VerifyAdminCMD(s, cmd.ChannelID, &verifyAdmin, cmd)
+	authorisedAdmin, errPerm := command.MemberHasPermission(s, cmd.GuildID, cmd.Member.User.ID, discordgo.PermissionAdministrator)
+	if errPerm != nil {
+		fmt.Println(errPerm)
+		return
+	}
 
 	//check if user is admin before using the command
-	if verifyAdmin == false {
+	if authorisedAdmin == false {
 		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTH, "You do not have the permission to change the channel slowmode.", discordgo.EmbedTypeRich)
 		return
 	}

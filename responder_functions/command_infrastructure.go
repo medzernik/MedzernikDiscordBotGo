@@ -10,14 +10,21 @@ import (
 	"time"
 )
 
+func RegisterPlugin(s *discordgo.Session) {
+	s.AddHandler(Ready)
+
+}
+
 // Bot parameters
+
 var (
-	GuildID  = flag.String("guild", config.Cfg.ServerInfo.GuildIDNumber, "Test guild ID. If not passed - bot registers commands globally")
 	BotToken = flag.String("token", config.Cfg.ServerInfo.ServerToken, "Bot access token")
 	Cleanup  = flag.Bool("cleanup", true, "Cleanup of commands")
 )
 
-func init() { flag.Parse() }
+func init() {
+	flag.Parse()
+}
 
 /*
 func init() {
@@ -998,12 +1005,18 @@ func initialization(s *discordgo.Session) {
 	})
 }
 
-func CommandLoop(s *discordgo.Session) {
+var ReadyInfoPublic *discordgo.Ready
+
+func Ready(s *discordgo.Session, readyInfo *discordgo.Ready) {
 	initialization(s)
-	for _, v := range BotCommands {
-		_, err := s.ApplicationCommandCreate(s.State.User.ID, config.Cfg.ServerInfo.GuildIDNumber, v)
-		if err != nil {
-			log.Panicf("Cannot create '%v' command: %v", v.Name, err)
+	ReadyInfoPublic = readyInfo
+
+	for i := range readyInfo.Guilds {
+		for _, v := range BotCommands {
+			_, err := s.ApplicationCommandCreate(s.State.User.ID, readyInfo.Guilds[i].ID, v)
+			if err != nil {
+				log.Panicf("Cannot create '%v' command: %v", v.Name, err)
+			}
 		}
 	}
 }
