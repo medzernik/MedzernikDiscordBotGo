@@ -24,20 +24,6 @@ func init() {
 
 }
 
-func guildCreate(s *discordgo.Session, event *discordgo.GuildCreate) {
-
-	if event.Guild.Unavailable {
-		return
-	}
-
-	for _, channel := range event.Guild.Channels {
-		if channel.ID == event.Guild.ID {
-			_, _ = s.ChannelMessageSend(channel.ID, "Thanks for adding me to your server!")
-			return
-		}
-	}
-}
-
 func main() {
 	//Initialize the config
 	config.LoadConfig()
@@ -53,8 +39,6 @@ func main() {
 	dg.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsAll)
 	dg.Identify.Token = config.Cfg.ServerInfo.ServerToken
 	dg.Identify.LargeThreshold = 250
-
-	dg.AddHandler(guildCreate)
 
 	responder.RegisterPlugin(dg)
 

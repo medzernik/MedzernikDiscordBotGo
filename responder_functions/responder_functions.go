@@ -2,15 +2,14 @@
 package responder_functions
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/medzernik/SlovakiaDiscordBotGo/command"
 	"github.com/medzernik/SlovakiaDiscordBotGo/config"
-	"github.com/medzernik/SlovakiaDiscordBotGo/database"
+
 	"strconv"
-	"strings"
+
 	"time"
 )
 
@@ -39,6 +38,7 @@ var CommandStatusBot CommandStatus = CommandStatus{
 	AUTOFIX: ":wrench: AUTOCORRECTING",
 }
 
+/*
 // GamePlanInsert Inserts the game into the database
 func GamePlanInsert(c *command.Command, s **discordgo.Session, m **discordgo.MessageCreate) {
 	//open database and then close it (defer)
@@ -50,33 +50,8 @@ func GamePlanInsert(c *command.Command, s **discordgo.Session, m **discordgo.Mes
 		}
 	}(sqliteDatabase)
 
-	//transform to timestamp
-	splitTimeArgument := strings.Split(c.Arguments[0], ":")
 
-	//TODO: Check the capacity if it's sufficient, otherwise the program is panicking every time...
-	if cap(splitTimeArgument) < 1 {
-		command.SendTextEmbed(*s, *m, CommandStatusBot.ERR, "Error parsing time", discordgo.EmbedTypeRich)
 
-		//(*s).ChannelMessageSend((*m).ChannelID, "**[ERR]** Error parsing time")
-		return
-	}
-
-	//Put hours into timeHours
-	timeHour, err := strconv.Atoi(splitTimeArgument[0])
-	if err != nil {
-		command.SendTextEmbed(*s, *m, CommandStatusBot.ERR, "Error converting hours", discordgo.EmbedTypeRich)
-		//(*s).ChannelMessageSend((*m).ChannelID, "**[ERR]** Error converting hours")
-		//fmt.Printf("%s", err)
-		return
-	}
-	//put minutes into timeMinute
-	timeMinute, err := strconv.Atoi(splitTimeArgument[1])
-	if err != nil {
-		command.SendTextEmbed(*s, *m, CommandStatusBot.ERR, "Error converting minutes", discordgo.EmbedTypeRich)
-		//(*s).ChannelMessageSend((*m).ChannelID, "**[ERR]** Error converting minutes")
-		//fmt.Printf("%s", err)
-		return
-	}
 	//get current date and replace hours and minutes with user variables
 	gameTimestamp := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), timeHour, timeMinute, time.Now().Second(), 0, time.Now().Location())
 	gameTimestampInt := gameTimestamp.Unix()
@@ -89,9 +64,11 @@ func GamePlanInsert(c *command.Command, s **discordgo.Session, m **discordgo.Mes
 	var plannedGames string
 	database.DisplayGamePlanned(sqliteDatabase, &plannedGames)
 
-	command.SendTextEmbed(*s, *m, CommandStatusBot.OK+"PLANNED A GAME", plannedGames, discordgo.EmbedTypeRich)
+	command.SendTextEmbedCommand(*s, m, CommandStatusBot.OK+"PLANNED A GAME", plannedGames, discordgo.EmbedTypeRich)
 	return
 }
+
+*/
 
 // SnowflakeTimestamp Function to check the user's join date
 func SnowflakeTimestamp(ID string) (t time.Time, err error) {
@@ -105,44 +82,25 @@ func SnowflakeTimestamp(ID string) (t time.Time, err error) {
 }
 
 // GetGuildInfo gets info of a guild (preview) and returns the struct
-func GetGuildInfo(s *discordgo.Session, guildIDT string) *discordgo.GuildPreview {
-	guildInfo, err := s.GuildPreview(guildIDT)
+func GetGuildInfo(s *discordgo.Session, guildID string) *discordgo.GuildPreview {
+	guildInfo, err := s.GuildPreview(guildID)
 	if err != nil {
-		s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[ERR]** Error getting preview info about guild: "+guildIDT)
+		s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[ERR]** Error getting preview info about guild: "+guildID)
 	}
 	return guildInfo
 }
 
-// GetMemberListFromGuild Gets the member info and tries to save it in a local (cached sort of) array to access later.
-func GetMemberListFromGuild(s *discordgo.Session, guildID string) []*discordgo.Member {
-	//TODO: This only works as a preview.. wtf
-	guildInfoTemp := GetGuildInfo(s, config.Cfg.ServerInfo.GuildIDNumber)
+// CheckRegularSpamAttack Checks the server for spam attacks
+func CheckRegularSpamAttack(s *discordgo.Session, m *discordgo.MessageCreate) {
+	//variable definitons
+	var membersCached []*discordgo.Member
 
-	membersList, err := s.GuildMembers(guildID, "0", guildInfoTemp.ApproximateMemberCount)
-	if err != nil {
-		s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[ERR]** Error getting information about users with the guildID. InvalidID or >1000 members (bug)")
-		fmt.Println("ERROR: ", err)
-		return membersList
+	for i := range ReadyInfoPublic.Guilds {
+		if ReadyInfoPublic.Guilds[i].ID == m.GuildID {
+			membersCached = ReadyInfoPublic.Guilds[i].Members
+		}
 	}
 
-	//TODO: Fix this? How? Bug in the library?
-	/*
-		//membersListAdditional, _ := s.GuildMembers(guildID, "1000", 1000)
-
-
-		for j := range membersListAdditional {
-			membersList = append(membersList, membersListAdditional[j])
-		}
-
-	*/
-
-	return membersList
-}
-
-// CheckRegularSpamAttack Checks the server for spam attacks
-func CheckRegularSpamAttack(s *discordgo.Session) {
-	//variable definitons
-	var membersCached = GetMemberListFromGuild(s, config.Cfg.ServerInfo.GuildIDNumber)
 	var tempMsg string
 	var spamCounter int64
 	var checkInterval time.Duration = 90
@@ -249,63 +207,19 @@ func TimedChannelUnlock(s *discordgo.Session) {
 
 // OneTimeChannelUnlock when a new trusted user is given a role, unlock the channel as a reward.
 //TODO: Make this also automatically lock the channel
-func OneTimeChannelUnlock(s *discordgo.Session) {
-	members := GetMemberListFromGuild(s, config.Cfg.ServerInfo.GuildIDNumber)
-	fmt.Println(members)
+func OneTimeChannelUnlock(s *discordgo.Session, m *discordgo.MessageCreate) {
+	var membersCached []*discordgo.Member
+
+	for i := range ReadyInfoPublic.Guilds {
+		if ReadyInfoPublic.Guilds[i].ID == m.GuildID {
+			membersCached = ReadyInfoPublic.Guilds[i].Members
+		}
+	}
+	fmt.Println(membersCached)
 
 }
 
-// Members returns a value of members on the server currently to another function.
-func Members(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) uint64 {
-	if len(cmd.Arguments) > 0 {
-		command.SendTextEmbed(s, m, CommandStatusBot.SYNTAX, "Usage: **.count**\n Automatically discarding arguments...", discordgo.EmbedTypeRich)
-	}
-
-	memberList := GetMemberListFromGuild(s, config.Cfg.ServerInfo.GuildIDNumber)
-	memberListLength := uint64(len(memberList))
-
-	return memberListLength
-}
-
-// PruneCount returns a value to another function of how many members to prune
-func PruneCount(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) uint32 {
-
-	if len(cmd.Arguments) < 1 {
-		command.SendTextEmbed(s, m, CommandStatusBot.SYNTAX, "Usage **.prunecount days**", discordgo.EmbedTypeRich)
-		return 0
-	}
-
-	pruneDaysString := cmd.Arguments[0]
-	pruneDaysInt, err1 := strconv.ParseInt(pruneDaysString, 10, 64)
-	if err1 != nil {
-		command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Error parsing the argument as uint32 days number", discordgo.EmbedTypeRich)
-		return 0
-	}
-
-	if pruneDaysInt < 7 {
-		pruneDaysInt = 0
-		command.SendTextEmbed(s, m, CommandStatusBot.WARN, "Command is limited to range 7-30 for safety reasons", discordgo.EmbedTypeRich)
-		return 0
-	}
-
-	pruneDaysCount, err2 := s.GuildPruneCount(config.Cfg.ServerInfo.GuildIDNumber, uint32(pruneDaysInt))
-	if err2 != nil {
-		return 0
-	}
-	return pruneDaysCount
-
-}
-
-// MassKick mass kicks user IDs
-func MassKick(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
-
-}
-
-// MassBan mass bans user IDs
-func MassBan(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
-
-}
-
+/*
 // ConfigurationReload reloads the config file
 func ConfigurationReload(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
 	var authorisedAdmin bool = false
@@ -317,6 +231,8 @@ func ConfigurationReload(s *discordgo.Session, cmd command.Command, m *discordgo
 		command.SendTextEmbed(s, m, CommandStatusBot.AUTH, "Insufficient permissions", discordgo.EmbedTypeRich)
 	}
 }
+
+*/
 
 func FoxTest(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	s.ChannelMessageSend(i.ChannelID, "<a:medzernikShake:814055147583438848>")
