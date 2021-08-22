@@ -2,15 +2,14 @@
 package responder_functions
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/medzernik/SlovakiaDiscordBotGo/command"
 	"github.com/medzernik/SlovakiaDiscordBotGo/config"
-	"github.com/medzernik/SlovakiaDiscordBotGo/database"
+
 	"strconv"
-	"strings"
+
 	"time"
 )
 
@@ -39,6 +38,7 @@ var CommandStatusBot CommandStatus = CommandStatus{
 	AUTOFIX: ":wrench: AUTOCORRECTING",
 }
 
+/*
 // GamePlanInsert Inserts the game into the database
 func GamePlanInsert(c *command.Command, s **discordgo.Session, m **discordgo.MessageCreate) {
 	//open database and then close it (defer)
@@ -50,33 +50,8 @@ func GamePlanInsert(c *command.Command, s **discordgo.Session, m **discordgo.Mes
 		}
 	}(sqliteDatabase)
 
-	//transform to timestamp
-	splitTimeArgument := strings.Split(c.Arguments[0], ":")
 
-	//TODO: Check the capacity if it's sufficient, otherwise the program is panicking every time...
-	if cap(splitTimeArgument) < 1 {
-		command.SendTextEmbed(*s, *m, CommandStatusBot.ERR, "Error parsing time", discordgo.EmbedTypeRich)
 
-		//(*s).ChannelMessageSend((*m).ChannelID, "**[ERR]** Error parsing time")
-		return
-	}
-
-	//Put hours into timeHours
-	timeHour, err := strconv.Atoi(splitTimeArgument[0])
-	if err != nil {
-		command.SendTextEmbed(*s, *m, CommandStatusBot.ERR, "Error converting hours", discordgo.EmbedTypeRich)
-		//(*s).ChannelMessageSend((*m).ChannelID, "**[ERR]** Error converting hours")
-		//fmt.Printf("%s", err)
-		return
-	}
-	//put minutes into timeMinute
-	timeMinute, err := strconv.Atoi(splitTimeArgument[1])
-	if err != nil {
-		command.SendTextEmbed(*s, *m, CommandStatusBot.ERR, "Error converting minutes", discordgo.EmbedTypeRich)
-		//(*s).ChannelMessageSend((*m).ChannelID, "**[ERR]** Error converting minutes")
-		//fmt.Printf("%s", err)
-		return
-	}
 	//get current date and replace hours and minutes with user variables
 	gameTimestamp := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), timeHour, timeMinute, time.Now().Second(), 0, time.Now().Location())
 	gameTimestampInt := gameTimestamp.Unix()
@@ -89,9 +64,11 @@ func GamePlanInsert(c *command.Command, s **discordgo.Session, m **discordgo.Mes
 	var plannedGames string
 	database.DisplayGamePlanned(sqliteDatabase, &plannedGames)
 
-	command.SendTextEmbed(*s, *m, CommandStatusBot.OK+"PLANNED A GAME", plannedGames, discordgo.EmbedTypeRich)
+	command.SendTextEmbedCommand(*s, m, CommandStatusBot.OK+"PLANNED A GAME", plannedGames, discordgo.EmbedTypeRich)
 	return
 }
+
+*/
 
 // SnowflakeTimestamp Function to check the user's join date
 func SnowflakeTimestamp(ID string) (t time.Time, err error) {
@@ -242,59 +219,7 @@ func OneTimeChannelUnlock(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 }
 
-// Members returns a value of members on the server currently to another function.
-func Members(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) uint64 {
-
-	var membersCached int
-
-	for i := range ReadyInfoPublic.Guilds {
-		if ReadyInfoPublic.Guilds[i].ID == m.GuildID {
-			membersCached = ReadyInfoPublic.Guilds[i].MemberCount
-		}
-	}
-
-	return uint64(membersCached)
-}
-
-// PruneCount returns a value to another function of how many members to prune
-func PruneCount(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) uint32 {
-
-	if len(cmd.Arguments) < 1 {
-		command.SendTextEmbed(s, m, CommandStatusBot.SYNTAX, "Usage **.prunecount days**", discordgo.EmbedTypeRich)
-		return 0
-	}
-
-	pruneDaysString := cmd.Arguments[0]
-	pruneDaysInt, err1 := strconv.ParseInt(pruneDaysString, 10, 64)
-	if err1 != nil {
-		command.SendTextEmbed(s, m, CommandStatusBot.ERR, "Error parsing the argument as uint32 days number", discordgo.EmbedTypeRich)
-		return 0
-	}
-
-	if pruneDaysInt < 7 {
-		pruneDaysInt = 0
-		command.SendTextEmbed(s, m, CommandStatusBot.WARN, "Command is limited to range 7-30 for safety reasons", discordgo.EmbedTypeRich)
-		return 0
-	}
-
-	pruneDaysCount, err2 := s.GuildPruneCount(m.GuildID, uint32(pruneDaysInt))
-	if err2 != nil {
-		return 0
-	}
-	return pruneDaysCount
-
-}
-
-// MassKick mass kicks user IDs
-func MassKick(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
-
-}
-
-// MassBan mass bans user IDs
-func MassBan(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
-
-}
-
+/*
 // ConfigurationReload reloads the config file
 func ConfigurationReload(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCreate) {
 	var authorisedAdmin bool = false
@@ -306,6 +231,8 @@ func ConfigurationReload(s *discordgo.Session, cmd command.Command, m *discordgo
 		command.SendTextEmbed(s, m, CommandStatusBot.AUTH, "Insufficient permissions", discordgo.EmbedTypeRich)
 	}
 }
+
+*/
 
 func FoxTest(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	s.ChannelMessageSend(i.ChannelID, "<a:medzernikShake:814055147583438848>")

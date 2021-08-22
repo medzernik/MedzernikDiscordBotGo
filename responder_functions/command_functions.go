@@ -99,12 +99,21 @@ func MuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interfa
 
 	//Added only after the first check of rights, to prevent spamming of the requests
 	var membersCached []*discordgo.Member
+	var muteRoleID string
+
+	//This checks and selects the correct server and then assigns the Muted role. The role has to be named "Muted" exactly, else it won't work
 
 	for i := range ReadyInfoPublic.Guilds {
 		if ReadyInfoPublic.Guilds[i].ID == cmd.GuildID {
 			membersCached = ReadyInfoPublic.Guilds[i].Members
+			for j := range ReadyInfoPublic.Guilds[i].Roles {
+				if ReadyInfoPublic.Guilds[i].Roles[j].Name == "Muted" {
+					muteRoleID = ReadyInfoPublic.Guilds[i].Roles[j].ID
+				}
+			}
 		}
 	}
+
 	var MuteUserString []string
 
 	MuteUserString = append(MuteUserString, command.ParseMentionToString(fmt.Sprintf("%s", m[0])))
@@ -116,7 +125,7 @@ func MuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interfa
 				if membersCached[i].User.ID == MuteUserString[j] {
 					//Try to mute
 					s.GuildMemberMute(cmd.GuildID, MuteUserString[j], true)
-					err2 := s.GuildMemberRoleAdd(cmd.GuildID, MuteUserString[j], config.Cfg.MuteFunction.MuteRoleID)
+					err2 := s.GuildMemberRoleAdd(cmd.GuildID, MuteUserString[j], muteRoleID)
 					if err2 != nil {
 						command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error muting a user - cannot assign the MuteRole."+
 							" "+config.Cfg.MuteFunction.MuteRoleID, discordgo.EmbedTypeRich)
@@ -143,7 +152,7 @@ func MuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interfa
 					//Error checking
 					s.GuildMemberMute(cmd.GuildID, MuteUserString[j], true)
 
-					err2 := s.GuildMemberRoleAdd(cmd.GuildID, MuteUserString[j], config.Cfg.MuteFunction.MuteRoleID)
+					err2 := s.GuildMemberRoleAdd(cmd.GuildID, MuteUserString[j], muteRoleID)
 					if err2 != nil {
 						command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error muting a user - cannot assign the MuteRole."+
 							" "+config.Cfg.MuteFunction.MuteRoleID, discordgo.EmbedTypeRich)
@@ -181,28 +190,31 @@ func MuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interfa
 func UnmuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 
 	//Variable initiation
-	var authorisedTrusted bool = false
 	authorisedAdmin, errPerm := command.MemberHasPermission(s, cmd.GuildID, cmd.Member.User.ID, discordgo.PermissionAdministrator)
 	if errPerm != nil {
 		fmt.Println(errPerm)
 		return
 	}
-	authorisedTrusted = command.VerifyTrustedCMD(s, cmd.ChannelID, &authorisedTrusted, cmd)
-
-	timeToCheckUsers := 24.0 * -1.0
 
 	//Verify, if user has any rights at all
-	if authorisedAdmin == false && authorisedTrusted == false {
+	if authorisedAdmin == false {
 		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTH, "Error unmuting a user - insufficient rights.", discordgo.EmbedTypeRich)
 		return
 	}
 
 	//Added only after the first check of rights, to prevent spamming of the requests
 	var membersCached []*discordgo.Member
+	var muteRoleID string
 
+	//This checks and selects the correct server and then assigns the Muted role. The role has to be named "Muted" exactly, else it won't work
 	for i := range ReadyInfoPublic.Guilds {
 		if ReadyInfoPublic.Guilds[i].ID == cmd.GuildID {
 			membersCached = ReadyInfoPublic.Guilds[i].Members
+			for j := range ReadyInfoPublic.Guilds[i].Roles {
+				if ReadyInfoPublic.Guilds[i].Roles[j].Name == "Muted" {
+					muteRoleID = ReadyInfoPublic.Guilds[i].Roles[j].ID
+				}
+			}
 		}
 	}
 	var UnmuteUserString []string
@@ -216,7 +228,7 @@ func UnmuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []inter
 				if membersCached[i].User.ID == UnmuteUserString[j] {
 					//Try to mute
 					s.GuildMemberMute(cmd.GuildID, UnmuteUserString[j], false)
-					err2 := s.GuildMemberRoleRemove(cmd.GuildID, UnmuteUserString[j], config.Cfg.MuteFunction.MuteRoleID)
+					err2 := s.GuildMemberRoleRemove(cmd.GuildID, UnmuteUserString[j], muteRoleID)
 					if err2 != nil {
 						command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error Unmuting a user - cannot remove the MuteRole."+
 							" "+config.Cfg.MuteFunction.MuteRoleID, discordgo.EmbedTypeRich)
@@ -231,41 +243,8 @@ func UnmuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []inter
 
 			}
 		}
-	}
 
-	//If not, verify for the role of Trusted to try to mute
-	if authorisedTrusted == true && authorisedAdmin == false && config.Cfg.MuteFunction.TrustedMutingEnabled == true {
-		for i := range membersCached {
-			for j := range UnmuteUserString {
-				userTimeJoin, _ := membersCached[i].JoinedAt.Parse()
-				timevar := userTimeJoin.Sub(time.Now()).Hours()
-				if membersCached[i].User.ID == UnmuteUserString[j] && timevar > timeToCheckUsers {
-					//Error checking
-					s.GuildMemberMute(cmd.GuildID, UnmuteUserString[j], false)
-
-					err2 := s.GuildMemberRoleRemove(cmd.GuildID, UnmuteUserString[j], config.Cfg.MuteFunction.MuteRoleID)
-					if err2 != nil {
-						command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error Unmuting a user - cannot remove the MuteRole."+
-							" "+config.Cfg.MuteFunction.MuteRoleID, discordgo.EmbedTypeRich)
-						return
-					}
-					command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"UNMUTED", "Unmuted user younger than "+
-						""+strconv.FormatInt(int64(timeToCheckUsers*-1.0), 10)+UnmuteUserString[j], discordgo.EmbedTypeRich)
-
-					s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[LOG]** Trusted user "+command.ParseStringToMentionID(cmd.User.Username)+" Unmuted user: "+
-						""+command.ParseStringToMentionID(membersCached[i].User.ID))
-					return
-
-					//muting cannot be done if the time limit has been passed
-				} else if membersCached[i].User.ID == UnmuteUserString[j] && timevar < timeToCheckUsers {
-					command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTH, "Trusted users cannot unmuted anyone who has joined more than "+
-						""+strconv.FormatInt(int64(timeToCheckUsers*-1.0), 10)+" hours ago.", discordgo.EmbedTypeRich)
-					return
-				}
-			}
-		}
-
-	} else if config.Cfg.MuteFunction.TrustedMutingEnabled == false && authorisedTrusted == true && authorisedAdmin == false {
+	} else if config.Cfg.MuteFunction.TrustedMutingEnabled == false && authorisedAdmin == false {
 		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.WARN, "Unmuting by Trusted users is currently disabled"+
 			" "+config.Cfg.MuteFunction.MuteRoleID, discordgo.EmbedTypeRich)
 		return
@@ -642,25 +621,6 @@ func GetWeatherCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []i
 		sunset:     time.Unix(int64(w.Sys.Sunset), 0).Format(time.Kitchen),
 	}
 
-	/*
-		var weatherDataString string = "```\n" +
-			"City:\t\t" + weatherData.name + "\n" +
-			"Weather:\t" + weatherData.weather + "\n" +
-			"Condition:\t" + weatherData.condition + "\n" +
-			"Temperature:" + weatherData.temp + "\n" +
-			"Max Temp:\t" + weatherData.tempMax + "\n" +
-			"Min Temp:\t" + weatherData.tempMin + "\n" +
-			"Feel Temp:\t" + weatherData.tempFeel + "\n" +
-			"Pressure:\t" + weatherData.pressure + "\n" +
-			"Humidity:\t" + weatherData.humidity + "\n" +
-			"Wind Speed:\t" + weatherData.windSpeed + "\n" +
-			"Rainfall:\t" + weatherData.rainAmount + "\n" +
-			"Sunrise:\t" + weatherData.sunrise + "\n" +
-			"Sunset:\t" + weatherData.sunset + "\n" +
-			"```"
-
-	*/
-
 	embed := NewEmbed().
 		SetTitle("WEATHER IN: "+strings.ToUpper(weatherData.name)).
 		SetDescription(":cloud: **"+strings.ToUpper(weatherData.condition)+"**").
@@ -817,15 +777,38 @@ func PurgeMessagesCMDMessageOnlyAuthor(s *discordgo.Session, cmd *discordgo.Inte
 
 }
 
-// MembersCMD outputs the number of current members of the server. No returns
-func MembersCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
+func GetMemberCount(cmd *discordgo.InteractionCreate) int {
 	var memberListLength int
 
 	for i := range ReadyInfoPublic.Guilds {
 		if ReadyInfoPublic.Guilds[i].ID == cmd.GuildID {
 			memberListLength = ReadyInfoPublic.Guilds[i].MemberCount
+			return memberListLength
 		}
 	}
+
+	fmt.Println("Error getting the member list length.")
+	return 0
+}
+
+func GetMemberList(cmd *discordgo.InteractionCreate) []*discordgo.Member {
+	var membersList []*discordgo.Member
+
+	for i := range ReadyInfoPublic.Guilds {
+		if ReadyInfoPublic.Guilds[i].ID == cmd.GuildID {
+			membersList = ReadyInfoPublic.Guilds[i].Members
+			return membersList
+		}
+	}
+
+	fmt.Println("Error getting the memberlist.")
+	return nil
+}
+
+// MembersCMD outputs the number of current members of the server. No returns
+func MembersCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
+
+	memberListLength := GetMemberCount(cmd)
 
 	command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+strconv.FormatUint(uint64(memberListLength), 10), ""+
 		"There are "+strconv.FormatUint(uint64(memberListLength), 10)+" members on the server", discordgo.EmbedTypeRich)
