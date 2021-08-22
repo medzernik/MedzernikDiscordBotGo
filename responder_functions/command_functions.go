@@ -27,7 +27,7 @@ func AgeJoinedCMD(s *discordgo.Session, m *discordgo.InteractionCreate, cmd []in
 
 	//Every time a command is run, get a list of all users. This serves the purpose to then print the name of the corresponding user.
 	//TODO: cache it in redis
-	membersCached := GetMemberListFromGuild(s, config.Cfg.ServerInfo.GuildIDNumber)
+	membersCached := GetMemberListFromGuild(s, m.GuildID)
 
 	var userName string
 
@@ -77,8 +77,12 @@ func MuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interfa
 	//Variable initiation
 	var authorisedAdmin bool = false
 	var authorisedTrusted bool = false
-	authorisedAdmin = command.VerifyAdminCMD(s, cmd.ChannelID, &authorisedAdmin, cmd)
-	authorisedTrusted = command.VerifyTrustedCMD(s, cmd.ChannelID, &authorisedTrusted, cmd)
+
+	authorisedAdmin, errPerm := command.MemberHasPermission(s, cmd.GuildID, cmd.User.ID, discordgo.PermissionAdministrator)
+	if errPerm != nil {
+		fmt.Println(errPerm)
+		return
+	}
 
 	timeToCheckUsers := 24.0 * -1.0
 
@@ -92,7 +96,7 @@ func MuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interfa
 	}
 
 	//Added only after the first check of rights, to prevent spamming of the requests
-	membersCached := GetMemberListFromGuild(s, config.Cfg.ServerInfo.GuildIDNumber)
+	membersCached := GetMemberListFromGuild(s, cmd.GuildID)
 	var MuteUserString []string
 
 	MuteUserString = append(MuteUserString, command.ParseMentionToString(fmt.Sprintf("%s", m[0])))
@@ -103,8 +107,8 @@ func MuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interfa
 			for j := range MuteUserString {
 				if membersCached[i].User.ID == MuteUserString[j] {
 					//Try to mute
-					s.GuildMemberMute(config.Cfg.ServerInfo.GuildIDNumber, MuteUserString[j], true)
-					err2 := s.GuildMemberRoleAdd(config.Cfg.ServerInfo.GuildIDNumber, MuteUserString[j], config.Cfg.MuteFunction.MuteRoleID)
+					s.GuildMemberMute(cmd.GuildID, MuteUserString[j], true)
+					err2 := s.GuildMemberRoleAdd(cmd.GuildID, MuteUserString[j], config.Cfg.MuteFunction.MuteRoleID)
 					if err2 != nil {
 						command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error muting a user - cannot assign the MuteRole."+
 							" "+config.Cfg.MuteFunction.MuteRoleID, discordgo.EmbedTypeRich)
@@ -129,9 +133,9 @@ func MuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interfa
 				timevar := userTimeJoin.Sub(time.Now()).Hours()
 				if membersCached[i].User.ID == MuteUserString[j] && timevar > timeToCheckUsers {
 					//Error checking
-					s.GuildMemberMute(config.Cfg.ServerInfo.GuildIDNumber, MuteUserString[j], true)
+					s.GuildMemberMute(cmd.GuildID, MuteUserString[j], true)
 
-					err2 := s.GuildMemberRoleAdd(config.Cfg.ServerInfo.GuildIDNumber, MuteUserString[j], config.Cfg.MuteFunction.MuteRoleID)
+					err2 := s.GuildMemberRoleAdd(cmd.GuildID, MuteUserString[j], config.Cfg.MuteFunction.MuteRoleID)
 					if err2 != nil {
 						command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error muting a user - cannot assign the MuteRole."+
 							" "+config.Cfg.MuteFunction.MuteRoleID, discordgo.EmbedTypeRich)
@@ -183,7 +187,7 @@ func UnmuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []inter
 	}
 
 	//Added only after the first check of rights, to prevent spamming of the requests
-	membersCached := GetMemberListFromGuild(s, config.Cfg.ServerInfo.GuildIDNumber)
+	membersCached := GetMemberListFromGuild(s, cmd.GuildID)
 	var UnmuteUserString []string
 
 	UnmuteUserString = append(UnmuteUserString, command.ParseMentionToString(fmt.Sprintf("%s", m[0])))
@@ -194,8 +198,8 @@ func UnmuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []inter
 			for j := range UnmuteUserString {
 				if membersCached[i].User.ID == UnmuteUserString[j] {
 					//Try to mute
-					s.GuildMemberMute(config.Cfg.ServerInfo.GuildIDNumber, UnmuteUserString[j], false)
-					err2 := s.GuildMemberRoleRemove(config.Cfg.ServerInfo.GuildIDNumber, UnmuteUserString[j], config.Cfg.MuteFunction.MuteRoleID)
+					s.GuildMemberMute(cmd.GuildID, UnmuteUserString[j], false)
+					err2 := s.GuildMemberRoleRemove(cmd.GuildID, UnmuteUserString[j], config.Cfg.MuteFunction.MuteRoleID)
 					if err2 != nil {
 						command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error Unmuting a user - cannot remove the MuteRole."+
 							" "+config.Cfg.MuteFunction.MuteRoleID, discordgo.EmbedTypeRich)
@@ -220,9 +224,9 @@ func UnmuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []inter
 				timevar := userTimeJoin.Sub(time.Now()).Hours()
 				if membersCached[i].User.ID == UnmuteUserString[j] && timevar > timeToCheckUsers {
 					//Error checking
-					s.GuildMemberMute(config.Cfg.ServerInfo.GuildIDNumber, UnmuteUserString[j], false)
+					s.GuildMemberMute(cmd.GuildID, UnmuteUserString[j], false)
 
-					err2 := s.GuildMemberRoleRemove(config.Cfg.ServerInfo.GuildIDNumber, UnmuteUserString[j], config.Cfg.MuteFunction.MuteRoleID)
+					err2 := s.GuildMemberRoleRemove(cmd.GuildID, UnmuteUserString[j], config.Cfg.MuteFunction.MuteRoleID)
 					if err2 != nil {
 						command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error Unmuting a user - cannot remove the MuteRole."+
 							" "+config.Cfg.MuteFunction.MuteRoleID, discordgo.EmbedTypeRich)
@@ -267,7 +271,7 @@ func KickUserCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []int
 		return
 	}
 
-	membersCached := GetMemberListFromGuild(s, config.Cfg.ServerInfo.GuildIDNumber)
+	membersCached := GetMemberListFromGuild(s, cmd.GuildID)
 	if len(m) > 1 {
 		reason = fmt.Sprintf("%s", m[1])
 		reasonExists = true
@@ -290,7 +294,7 @@ func KickUserCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []int
 					}
 
 					//perform the kick itself
-					err := s.GuildMemberDeleteWithReason(config.Cfg.ServerInfo.GuildIDNumber, KickUserString, reason)
+					err := s.GuildMemberDeleteWithReason(cmd.GuildID, KickUserString, reason)
 					if err != nil {
 						command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error kicking user ID "+membersCached[i].User.ID, discordgo.EmbedTypeRich)
 						return
@@ -310,7 +314,7 @@ func KickUserCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []int
 					}
 
 					//perform the kick itself
-					err := s.GuildMemberDelete(config.Cfg.ServerInfo.GuildIDNumber, KickUserString)
+					err := s.GuildMemberDelete(cmd.GuildID, KickUserString)
 					if err != nil {
 						command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error kicking user ID "+membersCached[i].User.ID, discordgo.EmbedTypeRich)
 						return
@@ -341,7 +345,7 @@ func BanUserCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []inte
 		return
 	}
 
-	membersCached := GetMemberListFromGuild(s, config.Cfg.ServerInfo.GuildIDNumber)
+	membersCached := GetMemberListFromGuild(s, cmd.GuildID)
 
 	var BanUserString string = fmt.Sprintf("%s", m[0])
 	if len(m) > 1 {
@@ -365,7 +369,7 @@ func BanUserCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []inte
 						s.ChannelMessageSend(userNotifChanID.ID, "You have been banned from the server. Reason: "+reason)
 					}
 
-					err := s.GuildBanCreateWithReason(config.Cfg.ServerInfo.GuildIDNumber, BanUserString, reason, int(daysDelete))
+					err := s.GuildBanCreateWithReason(cmd.GuildID, BanUserString, reason, int(daysDelete))
 					if err != nil {
 						command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error banning user ID "+membersCached[i].User.ID, discordgo.EmbedTypeRich)
 						return
@@ -380,7 +384,7 @@ func BanUserCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []inte
 						s.ChannelMessageSend(userNotifChanID.ID, "You have been banned from the server.")
 					}
 
-					err1 := s.GuildBanCreate(config.Cfg.ServerInfo.GuildIDNumber, BanUserString, int(daysDelete))
+					err1 := s.GuildBanCreate(cmd.GuildID, BanUserString, int(daysDelete))
 					if err1 != nil {
 						command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error banning user ID "+membersCached[i].User.ID, discordgo.EmbedTypeRich)
 						return
@@ -411,7 +415,7 @@ func CheckUsersCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []i
 	authorisedAdmin = command.VerifyAdminCMD(s, cmd.ChannelID, &authorisedAdmin, cmd)
 
 	if authorisedAdmin == true {
-		membersCached := GetMemberListFromGuild(s, config.Cfg.ServerInfo.GuildIDNumber)
+		membersCached := GetMemberListFromGuild(s, cmd.GuildID)
 		var mainOutputMsg string
 		var IDOutputMsg string
 
@@ -762,7 +766,7 @@ func PurgeMessagesCMDMessageOnlyAuthor(s *discordgo.Session, cmd *discordgo.Inte
 
 // MembersCMD outputs the number of current members of the server. No returns
 func MembersCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
-	memberList := GetMemberListFromGuild(s, config.Cfg.ServerInfo.GuildIDNumber)
+	memberList := GetMemberListFromGuild(s, cmd.GuildID)
 	memberListLength := uint64(len(memberList))
 
 	command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+strconv.FormatUint(memberListLength, 10), ""+
@@ -781,7 +785,7 @@ func PruneCountCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []i
 		return
 	}
 
-	pruneDaysCount, err := s.GuildPruneCount(config.Cfg.ServerInfo.GuildIDNumber, uint32(pruneDaysInt))
+	pruneDaysCount, err := s.GuildPruneCount(cmd.GuildID, uint32(pruneDaysInt))
 	if err != nil {
 		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error checking members to prune.", discordgo.EmbedTypeRich)
 		return
@@ -811,7 +815,7 @@ func PruneMembersCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m [
 		}
 
 		//prunes the members and assigns the result of the pruned members count to a variable
-		prunedMembersCount, err1 := s.GuildPrune(config.Cfg.ServerInfo.GuildIDNumber, pruneDaysCountUInt)
+		prunedMembersCount, err1 := s.GuildPrune(cmd.GuildID, pruneDaysCountUInt)
 		if err1 != nil {
 			command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error pruning members", discordgo.EmbedTypeRich)
 		}

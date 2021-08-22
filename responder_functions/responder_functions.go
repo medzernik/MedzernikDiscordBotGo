@@ -105,10 +105,10 @@ func SnowflakeTimestamp(ID string) (t time.Time, err error) {
 }
 
 // GetGuildInfo gets info of a guild (preview) and returns the struct
-func GetGuildInfo(s *discordgo.Session, guildIDT string) *discordgo.GuildPreview {
-	guildInfo, err := s.GuildPreview(guildIDT)
+func GetGuildInfo(s *discordgo.Session, guildID string) *discordgo.GuildPreview {
+	guildInfo, err := s.GuildPreview(guildID)
 	if err != nil {
-		s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[ERR]** Error getting preview info about guild: "+guildIDT)
+		s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[ERR]** Error getting preview info about guild: "+guildID)
 	}
 	return guildInfo
 }
@@ -116,7 +116,7 @@ func GetGuildInfo(s *discordgo.Session, guildIDT string) *discordgo.GuildPreview
 // GetMemberListFromGuild Gets the member info and tries to save it in a local (cached sort of) array to access later.
 func GetMemberListFromGuild(s *discordgo.Session, guildID string) []*discordgo.Member {
 	//TODO: This only works as a preview.. wtf
-	guildInfoTemp := GetGuildInfo(s, config.Cfg.ServerInfo.GuildIDNumber)
+	guildInfoTemp := GetGuildInfo(s, guildID)
 
 	membersList, err := s.GuildMembers(guildID, "0", guildInfoTemp.ApproximateMemberCount)
 	if err != nil {
@@ -140,9 +140,9 @@ func GetMemberListFromGuild(s *discordgo.Session, guildID string) []*discordgo.M
 }
 
 // CheckRegularSpamAttack Checks the server for spam attacks
-func CheckRegularSpamAttack(s *discordgo.Session) {
+func CheckRegularSpamAttack(s *discordgo.Session, m *discordgo.MessageCreate) {
 	//variable definitons
-	var membersCached = GetMemberListFromGuild(s, config.Cfg.ServerInfo.GuildIDNumber)
+	var membersCached = GetMemberListFromGuild(s, m.GuildID)
 	var tempMsg string
 	var spamCounter int64
 	var checkInterval time.Duration = 90
@@ -249,8 +249,8 @@ func TimedChannelUnlock(s *discordgo.Session) {
 
 // OneTimeChannelUnlock when a new trusted user is given a role, unlock the channel as a reward.
 //TODO: Make this also automatically lock the channel
-func OneTimeChannelUnlock(s *discordgo.Session) {
-	members := GetMemberListFromGuild(s, config.Cfg.ServerInfo.GuildIDNumber)
+func OneTimeChannelUnlock(s *discordgo.Session, m *discordgo.MessageCreate) {
+	members := GetMemberListFromGuild(s, m.GuildID)
 	fmt.Println(members)
 
 }
@@ -261,7 +261,7 @@ func Members(s *discordgo.Session, cmd command.Command, m *discordgo.MessageCrea
 		command.SendTextEmbed(s, m, CommandStatusBot.SYNTAX, "Usage: **.count**\n Automatically discarding arguments...", discordgo.EmbedTypeRich)
 	}
 
-	memberList := GetMemberListFromGuild(s, config.Cfg.ServerInfo.GuildIDNumber)
+	memberList := GetMemberListFromGuild(s, m.GuildID)
 	memberListLength := uint64(len(memberList))
 
 	return memberListLength
@@ -288,7 +288,7 @@ func PruneCount(s *discordgo.Session, cmd command.Command, m *discordgo.MessageC
 		return 0
 	}
 
-	pruneDaysCount, err2 := s.GuildPruneCount(config.Cfg.ServerInfo.GuildIDNumber, uint32(pruneDaysInt))
+	pruneDaysCount, err2 := s.GuildPruneCount(m.GuildID, uint32(pruneDaysInt))
 	if err2 != nil {
 		return 0
 	}

@@ -727,7 +727,7 @@ var (
 
 			argumentArray = []interface{}{
 				i.ApplicationCommandData().Options[0].BoolValue(),
-				i.ApplicationCommandData().Options[1].RoleValue(s, config.Cfg.ServerInfo.GuildIDNumber).Mention(),
+				i.ApplicationCommandData().Options[1].RoleValue(s, i.GuildID).Mention(),
 				i.ApplicationCommandData().Options[2].IntValue(),
 			}
 
