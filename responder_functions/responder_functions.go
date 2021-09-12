@@ -7,9 +7,12 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/medzernik/SlovakiaDiscordBotGo/command"
 	"github.com/medzernik/SlovakiaDiscordBotGo/config"
-
+	"log"
+	"net/http"
 	"strconv"
+	"strings"
 
+	"github.com/PuerkitoBio/goquery"
 	"time"
 )
 
@@ -249,4 +252,44 @@ func FindUserVoiceState(session *discordgo.Session, userid string) (*discordgo.V
 		}
 	}
 	return nil, errors.New("Could not find user's voice state")
+}
+
+func GetPasswordLottery(s *discordgo.Session) {
+	var hesloPrevious string
+
+	for {
+		// Create HTTP client with timeout
+		client := &http.Client{
+			Timeout: 30 * time.Second,
+		}
+
+		// Make request
+		response, err := client.Get("https://povedzheslo.sk")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer response.Body.Close()
+
+		// Create a goquery document from the HTTP response
+		document, err := goquery.NewDocumentFromReader(response.Body)
+		if err != nil {
+			log.Fatal("Error loading HTTP response body. ", err)
+		}
+
+		page := document.Text()
+		//fmt.Println(page)
+
+		heslo := strings.SplitAfter(page, "Aktuálne heslo očkovacej lotérie je:")
+		hesloSprac := strings.Split(heslo[1], "Posledná aktualizácia hesla:")
+		hesloSprac[0] = strings.TrimSpace(hesloSprac[0])
+		if hesloSprac[0] != hesloPrevious {
+			s.ChannelMessageSend("877632897006329896", "Aktualne heslo do loterie sa zmenilo: "+hesloSprac[0])
+		}
+
+		hesloPrevious = hesloSprac[0]
+		fmt.Println(strings.TrimSpace(hesloSprac[0]))
+
+		time.Sleep(10 * time.Second)
+	}
+
 }

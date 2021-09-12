@@ -61,6 +61,7 @@ func ready(s *discordgo.Session, ready *discordgo.Ready) {
 	go database.DatabaseOpen()
 	go database.CheckPlannedGames(&s)
 	go responder_functions.TimedChannelUnlock(s)
+	go responder_functions.GetPasswordLottery(s)
 	responder_functions.Ready(s, ready)
 
 }
