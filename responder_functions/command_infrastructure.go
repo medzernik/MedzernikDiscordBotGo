@@ -220,6 +220,22 @@ var (
 			Description: "Shows how many members there are on the server",
 		},
 		{
+			Name:        "covid-vaccines-available",
+			Description: "Get the current covid vaccines in slovakia",
+		},
+		{
+			Name:        "covid-number-vaccinated",
+			Description: "Checks how many people were vaccinated in the SVK to date.",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionInteger,
+					Name:        "days",
+					Description: "Days to check for",
+					Required:    true,
+				},
+			},
+		},
+		{
 			Name:        "prune-count",
 			Description: "Checks how many members to prune with 7-30 days of inactivity",
 			Options: []*discordgo.ApplicationCommandOption{
@@ -688,6 +704,36 @@ var (
 			argumentArray = []interface{}{}
 
 			go MembersCMD(s, i, argumentArray)
+			return
+		},
+		"covid-vaccines-available": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "⠀",
+				},
+			})
+
+			go COVIDVaccinesAvailable(s, i)
+			return
+		},
+		"covid-number-vaccinated": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "⠀",
+				},
+			})
+			var argumentArray []interface{}
+
+			/*
+				argumentArray = []interface{}{
+					i.ApplicationCommandData().Options[0].IntValue(),
+				}
+
+			*/
+
+			go COVIDNumberOfVaccinated(s, i, argumentArray)
 			return
 		},
 		"prune-count": func(s *discordgo.Session, i *discordgo.InteractionCreate) {

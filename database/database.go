@@ -41,7 +41,7 @@ func Databaserun() {
 	log.Println("Creating sqlite-database.db...")
 	file, err := os.Create("sqlite-database.db") // Create SQLite file
 	if err != nil {
-		log.Fatal(err.Error())
+		fmt.Println("Error creating the file", err)
 	}
 	err2 := file.Close()
 	if err2 != nil {
@@ -75,7 +75,7 @@ func createTableGamePlan(db *sql.DB) {
 	log.Println("Create game table...")
 	statement, err := db.Prepare(createGamePlanningDB) // Prepare SQL Statement
 	if err != nil {
-		log.Fatal(err.Error())
+		fmt.Println("error creating the database: ", err)
 	}
 	_, err3 := statement.Exec()
 	if err3 != nil {
@@ -92,11 +92,11 @@ func InsertGame(db *sql.DB, time int64, gamename string, mentions string) {
 	statement, err := db.Prepare(insertGamePlanning) // Prepare statement.
 	// This is good to avoid SQL injections
 	if err != nil {
-		log.Fatalln(err.Error())
+		fmt.Println("error creating the database: ", err)
 	}
 	_, err = statement.Exec(time, gamename, mentions)
 	if err != nil {
-		log.Fatalln(err.Error())
+		fmt.Println("error creating the database: ", err)
 	}
 }
 
@@ -104,7 +104,7 @@ func InsertGame(db *sql.DB, time int64, gamename string, mentions string) {
 func DisplayGamePlanned(db *sql.DB, output *string) string {
 	row, err := db.Query("SELECT * FROM gameplanning ORDER BY gamename")
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("error creating the database: ", err)
 	}
 	defer func(row *sql.Rows) {
 		err := row.Close()
@@ -132,7 +132,7 @@ func DisplayGamePlanned(db *sql.DB, output *string) string {
 func DisplayAllGamesPlanned(db *sql.DB, output *string) string {
 	row, err := db.Query("SELECT * FROM gameplanning ORDER BY time")
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("error creating the database: ", err)
 	}
 	defer func(row *sql.Rows) {
 		err := row.Close()
@@ -173,7 +173,7 @@ func CheckPlannedGames(s **discordgo.Session) {
 		sqliteDatabase, _ := sql.Open("sqlite3", "./sqlite-database.db")
 		plannedGame, err := sqliteDatabase.Query("SELECT * FROM gameplanning ORDER BY time")
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println("error creating the database: ", err)
 		}
 
 		for plannedGame.Next() {

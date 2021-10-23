@@ -6,7 +6,6 @@ import (
 	"github.com/bwmarrin/discordgo"
 
 	"github.com/medzernik/SlovakiaDiscordBotGo/config"
-	"github.com/medzernik/SlovakiaDiscordBotGo/database"
 	"github.com/medzernik/SlovakiaDiscordBotGo/responder_functions"
 )
 
@@ -58,8 +57,8 @@ func ready(s *discordgo.Session, ready *discordgo.Ready) {
 		return
 	}
 	//run the parallel functions
-	go database.DatabaseOpen()
-	go database.CheckPlannedGames(&s)
+	//go database.DatabaseOpen()
+	//go database.CheckPlannedGames(&s)
 	go responder_functions.TimedChannelUnlock(s)
 	responder_functions.Ready(s, ready)
 
