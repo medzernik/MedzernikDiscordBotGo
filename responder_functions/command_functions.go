@@ -8,6 +8,9 @@ import (
 	"fmt"
 	owm "github.com/briandowns/openweathermap"
 	"github.com/bwmarrin/discordgo"
+	_ "github.com/dustin/go-humanize"
+	"github.com/go-echarts/go-echarts/v2/charts"
+	"github.com/go-echarts/go-echarts/v2/opts"
 	"github.com/medzernik/SlovakiaDiscordBotGo/command"
 	"github.com/medzernik/SlovakiaDiscordBotGo/config"
 	"github.com/medzernik/SlovakiaDiscordBotGo/database"
@@ -1243,39 +1246,40 @@ func COVIDVaccinesAvailable(s *discordgo.Session, cmd *discordgo.InteractionCrea
 	return
 }
 
+type Page struct {
+	Id          string `json:"id"`
+	Dose1Count  int    `json:"dose1_count"`
+	Dose2Count  int    `json:"dose2_count"`
+	Dose1Sum    int    `json:"dose1_sum"`
+	Dose2Sum    int    `json:"dose2_sum"`
+	UpdatedAt   string `json:"updated_at"`
+	PublishedOn string `json:"published_on"`
+}
+
+type VaccinatedSlovakiaResponse struct {
+	Success    bool   `json:"success"`
+	NextOffset int    `json:"next_offset"`
+	Page       []Page `json:"page"`
+}
+
 // COVIDNumberOfVaccinated Function to output a graph of the current vaccinated people
 func COVIDNumberOfVaccinated(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 	var err error
 
 	//?updated_since=2021-10-13%2012%3A34%3A56
 
-	var parsedDate string = "2021-10-13%2012%3A34%3A56"
+	var year, month, day = time.Now().AddDate(0, 0, -7).Date()
+	var requestedDate string = strconv.FormatInt(int64(year), 10) + "-" + strconv.FormatInt(int64(month), 10) + "-" + strconv.FormatInt(int64(day), 10) + "%2000%3A00%3A01"
 
-	type Page struct {
-		Id          string `json:"id"`
-		Dose1Count  int    `json:"dose1_count"`
-		Dose2Count  int    `json:"dose2_count"`
-		Dose1Sum    int    `json:"dose1_sum"`
-		Dose2Sum    int    `json:"dose2_sum"`
-		UpdatedAt   string `json:"updated_at"`
-		PublishedOn string `json:"published_on"`
-	}
+	//var parsedDate string = "2021-10-13%2012%3A34%3A56"
 
-	type Response struct {
-		Success    bool   `json:"success"`
-		NextOffset int    `json:"next_offset"`
-		Page       []Page `json:"page"`
-	}
-
-	bodyBytes := GetCOVIDSlovakInfo("https://data.korona.gov.sk/api/vaccinations/in-slovakia?offset=0?updated_since=" + parsedDate)
+	bodyBytes := GetCOVIDSlovakInfo("https://data.korona.gov.sk/api/vaccinations/in-slovakia?updated_since=" + requestedDate)
 	fmt.Println(string(bodyBytes))
 
-	var currentResponse Response
+	var currentResponse VaccinatedSlovakiaResponse
 	err = json.Unmarshal(bodyBytes, &currentResponse)
 	if err != nil {
 		fmt.Println("ERROR UNMARSHALING DATA: ", err)
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR+" CANNOT GET THE GODDAMN DATA", "Unknown error, go complain to the government to fix it.", discordgo.EmbedTypeRich)
-		return
 	}
 
 	if len(currentResponse.Page) == 0 {
@@ -1290,11 +1294,82 @@ func COVIDNumberOfVaccinated(s *discordgo.Session, cmd *discordgo.InteractionCre
 		fmt.Println(currentResponse.Page[i].Dose2Count)
 	}
 
+	var dose1Count []int
+	var dose2Count []int
+
+	for _, j := range currentResponse.Page {
+		dose1Count = append(dose1Count, j.Dose1Count)
+		dose2Count = append(dose2Count, j.Dose2Count)
+	}
+
 	output := currentResponse.Page[0].Dose2Count
 
 	fmt.Printf("%+v\n", currentResponse)
 
 	command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"VACCINATED PEOPLE ", strconv.FormatInt(int64(output), 10), discordgo.EmbedTypeRich)
 
+	COVIDOutputVaccinatedGraph(currentResponse)
+
 	return
+}
+
+func COVIDOutputVaccinatedGraph(response VaccinatedSlovakiaResponse) {
+	// create a new bar instance
+	bar := charts.NewBar()
+
+	bar.SetGlobalOptions(
+		charts.WithTitleOpts(opts.Title{Title: "toolbox options"}),
+		charts.WithToolboxOpts(opts.Toolbox{
+			Show:  true,
+			Right: "20%",
+			Feature: &opts.ToolBoxFeature{
+				SaveAsImage: &opts.ToolBoxFeatureSaveAsImage{
+					Show:  true,
+					Type:  "png",
+					Title: "Anything you want",
+				},
+				DataView: &opts.ToolBoxFeatureDataView{
+					Show:  true,
+					Title: "DataView",
+					// set the language
+					// Chinese version: ["数据视图", "关闭", "刷新"]
+					Lang: []string{"data view", "turn off", "refresh"},
+				},
+			}},
+		),
+	)
+
+	// set some global options like Title/Legend/ToolTip or anything else
+	bar.SetGlobalOptions(charts.WithTitleOpts(opts.Title{
+		Title:    "Number of vaccinated people in slovakia for the past 7 days",
+		Subtitle: "Blue - first dosage; Green - second dosage",
+	}))
+
+	// Put data into instance
+	bar.SetXAxis([]string{response.Page[0].PublishedOn, response.Page[1].PublishedOn, response.Page[2].PublishedOn, response.Page[3].PublishedOn, response.Page[4].PublishedOn, response.Page[5].PublishedOn, response.Page[6].PublishedOn}).
+		AddSeries("Prva davka", generateBarItems1(response)).
+		AddSeries("Druha davka", generateBarItems2(response))
+	// Where the magic happens
+	f, _ := os.Create("bar.html")
+	bar.Render(f)
+
+	return
+}
+
+// generate random data for bar chart
+func generateBarItems1(response VaccinatedSlovakiaResponse) []opts.BarData {
+	items := make([]opts.BarData, 0)
+	for i := 0; i < 7; i++ {
+		items = append(items, opts.BarData{Value: response.Page[i].Dose1Count})
+	}
+	return items
+}
+
+// generate random data for bar chart2
+func generateBarItems2(response VaccinatedSlovakiaResponse) []opts.BarData {
+	items := make([]opts.BarData, 0)
+	for i := 0; i < 7; i++ {
+		items = append(items, opts.BarData{Value: response.Page[i].Dose2Count})
+	}
+	return items
 }

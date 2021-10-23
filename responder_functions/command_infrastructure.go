@@ -444,7 +444,7 @@ var (
 			Options: []*discordgo.ApplicationCommandOption{
 				{
 					Name:        "resp-type",
-					Description: "Response type",
+					Description: "VaccinatedSlovakiaResponse type",
 					Type:        discordgo.ApplicationCommandOptionInteger,
 					Choices: []*discordgo.ApplicationCommandOptionChoice{
 						{
