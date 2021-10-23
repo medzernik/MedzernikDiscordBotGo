@@ -1360,7 +1360,7 @@ func COVIDOutputVaccinatedGraph(response VaccinatedSlovakiaResponse) {
 func generateBarItems1(response VaccinatedSlovakiaResponse) []opts.BarData {
 	items := make([]opts.BarData, 0)
 	for i := 0; i < 7; i++ {
-		items = append(items, opts.BarData{Value: response.Page[i].Dose1Count})
+		items = append(items, opts.BarData{Name: "Prva davka", Value: response.Page[i].Dose1Count})
 	}
 	return items
 }
@@ -1369,7 +1369,7 @@ func generateBarItems1(response VaccinatedSlovakiaResponse) []opts.BarData {
 func generateBarItems2(response VaccinatedSlovakiaResponse) []opts.BarData {
 	items := make([]opts.BarData, 0)
 	for i := 0; i < 7; i++ {
-		items = append(items, opts.BarData{Value: response.Page[i].Dose2Count})
+		items = append(items, opts.BarData{Name: "Druha davka", Value: response.Page[i].Dose2Count})
 	}
 	return items
 }
