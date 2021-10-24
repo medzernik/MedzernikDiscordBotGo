@@ -1,11 +1,20 @@
 package covid_slovakia
 
 import (
-	"github.com/go-echarts/go-echarts/v2/charts"
-	"github.com/go-echarts/go-echarts/v2/opts"
-	"os"
+	"github.com/guptarohit/asciigraph"
 )
 
+func PrintLineASCII(data []float64, graphLabel string) string {
+	graph := asciigraph.Plot(data, asciigraph.Width(22), asciigraph.Height(15), asciigraph.Caption(graphLabel))
+
+	return graph
+}
+
+func NormalizeXAxis(startDate, endDate string) string {
+	return "―――――――――――――――――――――\n\t" + startDate + " <-> " + endDate
+}
+
+/*
 func COVIDOutputVaccinatedGraph(response VaccinatedSlovakiaResponse) {
 	// create a new bar instance
 	bar := charts.NewBar()
@@ -66,3 +75,6 @@ func generateBarItems2(response VaccinatedSlovakiaResponse) []opts.BarData {
 	}
 	return items
 }
+
+
+*/

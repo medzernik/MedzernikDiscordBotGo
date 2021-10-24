@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -98,9 +99,10 @@ func COVIDNumberOfVaccinated(s *discordgo.Session, cmd *discordgo.InteractionCre
 
 	//?updated_since=2021-10-13%2012%3A34%3A56
 
-	var year, month, day = time.Now().AddDate(0, 0, -7).Date()
+	var year, month, day = time.Now().AddDate(0, -5, 0).Date()
 	var requestedDate string = strconv.FormatInt(int64(year), 10) + "-" + strconv.FormatInt(int64(month), 10) + "-" + strconv.FormatInt(int64(day), 10) + "%2000%3A00%3A01"
-
+	dateStringStart := strconv.FormatInt(int64(year), 10) + "-" + strconv.FormatInt(int64(month), 10) + "-" + strconv.FormatInt(int64(day), 10)
+	var dateStringEnd string
 	//var parsedDate string = "2021-10-13%2012%3A34%3A56"
 
 	bodyBytes := GetCOVIDSlovakInfo("https://data.korona.gov.sk/api/vaccinations/in-slovakia?updated_since=" + requestedDate)
@@ -112,33 +114,103 @@ func COVIDNumberOfVaccinated(s *discordgo.Session, cmd *discordgo.InteractionCre
 		fmt.Println("ERROR UNMARSHALING DATA: ", err)
 	}
 
-	if len(currentResponse.Page) == 0 {
-		fmt.Println("Invalid whatever")
-		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR+" CANNOT GET THE GODDAMN DATA", "Unknown error, go complain to the government to fix it.", discordgo.EmbedTypeRich)
-		return
+	embed := command.NewEmbed().
+		SetTitle("ROZLOŽENIE PACIENTOV S COVID")
+
+	var dose2Count []float64
+
+	for i, j := range currentResponse.Page {
+		if i == 0 {
+			dateStringEnd = strings.Split(j.UpdatedAt, " ")[0]
+			embed = embed.SetDescription(j.UpdatedAt)
+			embed = embed.AddField("Administrovaná 1. dávka", strconv.FormatInt(int64(j.Dose1Count), 10))
+			embed = embed.AddField("Celkový počet 1. dávky", strconv.FormatInt(int64(j.Dose1Sum), 10))
+			embed = embed.AddField("Administrovaná 2. dávka", strconv.FormatInt(int64(j.Dose2Count), 10))
+			embed = embed.AddField("Celkový počet 2. dávky", strconv.FormatInt(int64(j.Dose2Sum), 10))
+
+		}
+		dose2Count = append(dose2Count, float64(j.Dose2Count))
 	}
 
-	for i := range currentResponse.Page {
-		fmt.Println("--------------")
-		fmt.Println(currentResponse.Page[i].PublishedOn + "\n")
-		fmt.Println(currentResponse.Page[i].Dose2Count)
-	}
+	messageEmbed := embed.InlineAllFields().SetColor(3066993).MessageEmbed
 
-	var dose1Count []int
-	var dose2Count []int
+	normalizedLabel := NormalizeXAxis(dateStringStart, dateStringEnd)
+	graph := PrintLineASCII(dose2Count, normalizedLabel)
 
-	for _, j := range currentResponse.Page {
-		dose1Count = append(dose1Count, j.Dose1Count)
-		dose2Count = append(dose2Count, j.Dose2Count)
-	}
-
-	output := currentResponse.Page[0].Dose2Count
-
-	fmt.Printf("%+v\n", currentResponse)
-
-	command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK+"VACCINATED PEOPLE ", strconv.FormatInt(int64(output), 10), discordgo.EmbedTypeRich)
-
-	COVIDOutputVaccinatedGraph(currentResponse)
-
+	s.ChannelMessageSendEmbed(cmd.ChannelID, messageEmbed)
+	//s.ChannelMessageSend(cmd.ChannelID, "**Celkový trend podania 2. dávky od mesiaca "+month.String()+"**\n```go\n"+graph+"```")
+	command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK, "**Celkový trend podania 2. dávky od mesiaca "+month.String()+"**\n```go\n"+graph+"```", discordgo.EmbedTypeRich)
 	return
+
+}
+
+func COVIDSlovakiaCapacity(s *discordgo.Session, cmd *discordgo.InteractionCreate) {
+	type PatientsInfo struct {
+		Success    bool `json:"success"`
+		NextOffset int  `json:"next_offset"`
+		Page       []struct {
+			HospitalId         int    `json:"hospital_id"`
+			Id                 int    `json:"id"`
+			ReportedAt         string `json:"reported_at"`
+			UpdatedAt          string `json:"updated_at"`
+			PublishedOn        string `json:"published_on"`
+			CapacityAll        int    `json:"capacity_all"`
+			FreeAll            int    `json:"free_all"`
+			CapacityCovid      int    `json:"capacity_covid"`
+			OccupiedJisCovid   int    `json:"occupied_jis_covid"`
+			OccupiedOaimCovid  int    `json:"occupied_oaim_covid"`
+			OccupiedO2Covid    int    `json:"occupied_o2_covid"`
+			OccupiedOtherCovid int    `json:"occupied_other_covid"`
+		} `json:"page"`
+	}
+
+	var year, month, day = time.Now().AddDate(0, -5, 0).Date()
+	var requestedDate string = strconv.FormatInt(int64(year), 10) + "-" + strconv.FormatInt(int64(month), 10) + "-" + strconv.FormatInt(int64(day), 10) + "%2000%3A00%3A01"
+
+	dateStringStart := strconv.FormatInt(int64(year), 10) + "-" + strconv.FormatInt(int64(month), 10) + "-" + strconv.FormatInt(int64(day), 10)
+	var dateStringEnd string
+	//var parsedDate string = "2021-10-13%2012%3A34%3A56"
+
+	patientsInfoBytes := GetCOVIDSlovakInfo("https://data.korona.gov.sk/api/hospital-beds/in-slovakia?updated_since=" + requestedDate)
+
+	var patientsInfoUnmarshaled PatientsInfo
+	err := json.Unmarshal(patientsInfoBytes, &patientsInfoUnmarshaled)
+	if err != nil {
+		fmt.Println("ERROR UNMARSHALING: ", err)
+	}
+
+	var totalCovidPeople []float64
+	embed := command.NewEmbed().
+		SetTitle("ROZLOŽENIE PACIENTOV S COVID")
+
+	for i, j := range patientsInfoUnmarshaled.Page {
+		if i == 0 {
+			embed = embed.SetDescription(j.UpdatedAt)
+			dateStringEnd = strings.Split(j.UpdatedAt, " ")[0]
+			embed = embed.AddField("Celková kapacita", strconv.FormatInt(int64(j.CapacityAll), 10))
+			embed = embed.AddField("Celkové voľné miesta", strconv.FormatInt(int64(j.FreeAll), 10))
+			embed = embed.AddField("Kapacita COVID", strconv.FormatInt(int64(j.CapacityCovid), 10))
+			embed = embed.AddField("Zaplnenie JIS", strconv.FormatInt(int64(j.OccupiedJisCovid), 10))
+			embed = embed.AddField("Zaplnenie ÁRO", strconv.FormatInt(int64(j.OccupiedOaimCovid), 10))
+			embed = embed.AddField("Zaplnenie kyslíkových lôžok", strconv.FormatInt(int64(j.OccupiedO2Covid), 10))
+			embed = embed.AddField("Zaplnenie obyčajných lôžok", strconv.FormatInt(int64(j.OccupiedOtherCovid), 10))
+
+		}
+		totalCovidPeople = append(totalCovidPeople, float64(j.OccupiedO2Covid+j.OccupiedJisCovid+j.OccupiedOtherCovid+j.OccupiedOaimCovid))
+	}
+
+	for i, j := 0, len(totalCovidPeople)-1; i < j; i, j = i+1, j-1 {
+		totalCovidPeople[i], totalCovidPeople[j] = totalCovidPeople[j], totalCovidPeople[i]
+	}
+
+	messageEmbed := embed.InlineAllFields().SetColor(3066993).MessageEmbed
+
+	normalizedLabel := NormalizeXAxis(dateStringStart, dateStringEnd)
+	graph := PrintLineASCII(totalCovidPeople, normalizedLabel)
+
+	s.ChannelMessageSendEmbed(cmd.ChannelID, messageEmbed)
+	//s.ChannelMessageSend(cmd.ChannelID, "**Celkový trend hospitalizácií od "+strconv.FormatInt(int64(month), 10)+". mesiaca doteraz:**\n"+"```go\n"+graph+"```")
+	command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK, "**Celkový trend hospitalizácií od mesiaca "+month.String()+"**\n```go\n"+graph+"```", discordgo.EmbedTypeRich)
+	return
+
 }

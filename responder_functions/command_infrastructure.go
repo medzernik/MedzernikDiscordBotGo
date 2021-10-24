@@ -59,6 +59,10 @@ var (
 			Description: "Bot version and feature update",
 		},
 		{
+			Name:        "covid-capacity",
+			Description: "Capacity and load of covid patients",
+		},
+		{
 			Name:        "mute",
 			Description: "mutes a user (adds a mute role)",
 			Options: []*discordgo.ApplicationCommandOption{
@@ -802,6 +806,22 @@ var (
 
 			if config.Cfg.Modules.COVIDSlovakInfo == true {
 				go covid_slovakia.COVIDVaccinesAvailable(s, i)
+			} else {
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "COVID SVK Info module is disabled.", discordgo.EmbedTypeRich)
+			}
+
+			return
+		},
+		"covid-capacity": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "⠀",
+				},
+			})
+
+			if config.Cfg.Modules.COVIDSlovakInfo == true {
+				go covid_slovakia.COVIDSlovakiaCapacity(s, i)
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "COVID SVK Info module is disabled.", discordgo.EmbedTypeRich)
 			}
