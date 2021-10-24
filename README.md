@@ -13,7 +13,7 @@ Get the token and your guildID. Then invite the bot into the guild and give it p
 COPY THE `config.yml` FILE FROM THE EXAMPLES DIRECTORY -> ROOT NEXT TO WHERE THE MAIN EXECUTABLE IS TO USE, **THEN EDIT
 IT** AND RUN THE BOT
 
-**Currently only LINUX ARM64 BUILDS ARE PRECOMPILED**
+**Currently pre-built: LINUX ARM64, LINUX AMD64, WINDOWS AMD64**
 
 # Instructions for adding the bot directly
 
@@ -21,12 +21,7 @@ Coming very soon (support is already done and working!)
 
 # Automatic functions
 
-## These features run automatically as goroutines
-
-#### RAID checking
-
-The bot automatically checks for users connected in the last ~10 minutes and alerts admins if there is a possible raid
-attack. This is done concurrently.
+## Almost all functions run in separate goroutines, making the bot scaleable.
 
 #### Planned games reminding
 
@@ -39,7 +34,8 @@ roles.
 
 # Current syntax:
 
-**prefix:** `/` *(we use commands now!!!)*
+**prefix:** `/` *(Discord command system)*
+![image](https://user-images.githubusercontent.com/1900179/138592653-3ec239f6-a80c-481b-8960-fa513fa78acb.png)
 
 # commands:
 
@@ -50,6 +46,8 @@ roles.
 `/unmute @mention`
 
 ### (Muting is also available as a right-click command)
+![image](https://user-images.githubusercontent.com/1900179/138592669-fd5ce32a-a7a6-4570-8816-930da9659a11.png)
+
 
 mutes or unmutes a user. Checks if the user is either an Admin/Mod, or at least a Trusted user. For a trusted user, only
 muting of users that have joined less than 24 hours ago is allowed.
@@ -84,6 +82,7 @@ SELECT * from planned games table. Outputs into the same Discord channel.
 `/weather City Name`
 
 Check to see the weather information of a particular city. Supports cities with spaces in names. Runs concurrently.
+![image](https://user-images.githubusercontent.com/1900179/138592679-b73a73c5-aeec-438f-bfea-872917751fb9.png)
 
 ## topic
 
@@ -116,6 +115,7 @@ Displays the version of the bot
 `/purge NUMBERINT`
 
 ### (PurgeTo and a new command PurgeToUser available as messageRightclickCommand)
+![image](https://user-images.githubusercontent.com/1900179/138592702-ea36a27f-5aa6-40d3-bc86-bb4a56875210.png)
 
 PurgeTo rightclick deletes up to 100 messages under your selected message.
 
