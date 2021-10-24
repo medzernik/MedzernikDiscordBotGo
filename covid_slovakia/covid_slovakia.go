@@ -95,9 +95,9 @@ type Page struct {
 }
 
 type VaccinatedSlovakiaResponse struct {
-	Success    bool   `json:"success"`
-	NextOffset int    `json:"next_offset"`
-	Page       []Page `json:"page"`
+	Success    bool    `json:"success"`
+	NextOffset float64 `json:"next_offset"`
+	Page       []Page  `json:"page"`
 }
 
 // COVIDNumberOfVaccinated Function to output a graph of the current vaccinated people
@@ -174,8 +174,8 @@ func COVIDNumberOfVaccinated(s *discordgo.Session, cmd *discordgo.InteractionCre
 
 func COVIDSlovakiaCapacity(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 	type PatientsInfo struct {
-		Success    bool `json:"success"`
-		NextOffset int  `json:"next_offset"`
+		Success    bool    `json:"success"`
+		NextOffset float64 `json:"next_offset"`
 		Page       []struct {
 			HospitalId         int    `json:"hospital_id"`
 			Id                 int    `json:"id"`
