@@ -61,6 +61,14 @@ var (
 		{
 			Name:        "covid-capacity",
 			Description: "Capacity and load of covid patients",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionInteger,
+					Name:        "days",
+					Description: "Days to check for",
+					Required:    false,
+				},
+			},
 		},
 		{
 			Name:        "mute",
@@ -234,7 +242,7 @@ var (
 					Type:        discordgo.ApplicationCommandOptionInteger,
 					Name:        "days",
 					Description: "Days to check for",
-					Required:    true,
+					Required:    false,
 				},
 			},
 		},
@@ -820,8 +828,15 @@ var (
 				},
 			})
 
+			var argumentArray []interface{}
+
+			if len(i.ApplicationCommandData().Options) > 0 {
+				argumentArray = []interface{}{
+					i.ApplicationCommandData().Options[0].UintValue(),
+				}
+			}
 			if config.Cfg.Modules.COVIDSlovakInfo == true {
-				go covid_slovakia.COVIDSlovakiaCapacity(s, i)
+				go covid_slovakia.COVIDSlovakiaCapacity(s, i, argumentArray)
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "COVID SVK Info module is disabled.", discordgo.EmbedTypeRich)
 			}
@@ -837,12 +852,12 @@ var (
 			})
 			var argumentArray []interface{}
 
-			/*
+			if len(i.ApplicationCommandData().Options) > 0 {
 				argumentArray = []interface{}{
-					i.ApplicationCommandData().Options[0].IntValue(),
+					i.ApplicationCommandData().Options[0].UintValue(),
 				}
+			}
 
-			*/
 			if config.Cfg.Modules.COVIDSlovakInfo == true {
 				go covid_slovakia.COVIDNumberOfVaccinated(s, i, argumentArray)
 			} else {

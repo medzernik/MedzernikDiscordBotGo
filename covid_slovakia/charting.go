@@ -7,7 +7,15 @@ import (
 // PrintLineASCII Prints the actual chart, gets the data as well as the labelstring to put in.
 func PrintLineASCII(data []float64, dateStringStart, dateStringEnd string) string {
 	graphLabel := NormalizeXAxis(dateStringStart, dateStringEnd)
-	chart := asciigraph.Plot(data, asciigraph.Width(22), asciigraph.Height(15), asciigraph.Caption(graphLabel))
+	var chart string
+
+	// The length 22 is the magical number for correct formatting on iPhones (tested on iPhone 11 Pro and iPhone SE 2020)
+	// that's why we wrap it around when it's bigger than that
+	if len(data) > 21 {
+		chart = asciigraph.Plot(data, asciigraph.Width(22), asciigraph.Height(15), asciigraph.Caption(graphLabel))
+	} else {
+		chart = asciigraph.Plot(data, asciigraph.Height(15), asciigraph.Caption(graphLabel))
+	}
 
 	return chart
 }
