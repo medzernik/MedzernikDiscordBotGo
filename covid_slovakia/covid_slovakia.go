@@ -235,7 +235,7 @@ func COVIDSlovakiaCapacity(s *discordgo.Session, cmd *discordgo.InteractionCreat
 			embed = embed.AddField("Celkové voľné miesta", ":bed: "+humanize.Comma(int64(j.FreeAll)))
 			embed = embed.AddField("Kapacita COVID", ":microbe: "+humanize.Comma(int64(j.CapacityCovid)))
 			embed = embed.AddField("Zaplnenie JIS", ":mending_heart: "+humanize.Comma(int64(j.OccupiedJisCovid)))
-			embed = embed.AddField("Zaplnenie ÁRO", ":broken_heart: "+humanize.Comma(int64(j.OccupiedOaimCovid)))
+			embed = embed.AddField("Zaplnenie ARO", ":broken_heart: "+humanize.Comma(int64(j.OccupiedOaimCovid)))
 			embed = embed.AddField("Zaplnenie kyslíkových lôžok", ":diving_mask: "+humanize.Comma(int64(j.OccupiedO2Covid)))
 			embed = embed.AddField("Zaplnenie obyčajných lôžok", ":thermometer: "+humanize.Comma(int64(j.OccupiedOtherCovid)))
 
