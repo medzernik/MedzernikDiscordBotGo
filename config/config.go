@@ -91,7 +91,7 @@ func LoadConfig() {
 		return
 	}
 
-	fmt.Println(Cfg)
+	fmt.Println("Config loaded.")
 
 }
 
