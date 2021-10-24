@@ -180,3 +180,14 @@ autocorrect to 1.
 
 Changes the name of the channel. Optionally you can specify a bitrate. The bot tries to use the highest possible by
 default.
+
+## COVID related commands (Slovakia relevant only)
+![image](https://user-images.githubusercontent.com/1900179/138609676-1d4d7efd-7b34-417d-abd8-bbd5c2a7e971.png)
+Using the public API https://data.korona.gov.sk/ the bot can request a range of data specified by the user in days, and parse it with a very simple ASCII based chart output. Examples below:
+![image](https://user-images.githubusercontent.com/1900179/138609711-6d0b0f54-c800-4d34-bb55-ed964c674089.png)
+![image](https://user-images.githubusercontent.com/1900179/138609718-8b7471b4-3eaa-4108-b1c9-11ceb1994299.png)
+![image](https://user-images.githubusercontent.com/1900179/138609723-3370314e-810e-4804-9cfa-d175900c4d99.png)
+![image](https://user-images.githubusercontent.com/1900179/138609727-c8d27fc5-4767-4787-bda6-8249d112a8f4.png)
+![image](https://user-images.githubusercontent.com/1900179/138609730-11d7f03c-3a20-4e6c-bf29-7b5049566763.png)
+![image](https://user-images.githubusercontent.com/1900179/138609735-e9accea8-0604-4a02-9932-e75d76c36102.png)
+
