@@ -151,7 +151,6 @@ func COVIDNumberOfVaccinated(s *discordgo.Session, cmd *discordgo.InteractionCre
 			fmt.Println("ERROR PARSING TIME: ", err)
 		}
 
-		fmt.Println(datePublished.String())
 		if yearPrint <= datePublished.Year() && monthPrint <= datePublished.Month() && dayPrint <= datePublished.Day() {
 			dose2Count = append(dose2Count, float64(j.Dose2Count))
 		}
@@ -160,6 +159,10 @@ func COVIDNumberOfVaccinated(s *discordgo.Session, cmd *discordgo.InteractionCre
 
 	messageEmbed := embed.SetColor(3066993).MessageEmbed
 
+	if len(dose2Count) == 0 {
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.WARN+": NO DATA EXISTS", "No data exists for the set timeframe.", discordgo.EmbedTypeRich)
+		return
+	}
 	graph := PrintLineASCII(dose2Count, dateStringStart, dateStringEnd)
 
 	s.ChannelMessageSendEmbed(cmd.ChannelID, messageEmbed)
@@ -256,6 +259,10 @@ func COVIDSlovakiaCapacity(s *discordgo.Session, cmd *discordgo.InteractionCreat
 
 	messageEmbed := embed.InlineAllFields().SetColor(3066993).MessageEmbed
 
+	if len(totalCovidPeople) == 0 {
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.WARN+": NO DATA EXISTS", "No data exists for the set timeframe.", discordgo.EmbedTypeRich)
+		return
+	}
 	graph := PrintLineASCII(totalCovidPeople, dateStringStart, dateStringEnd)
 
 	s.ChannelMessageSendEmbed(cmd.ChannelID, messageEmbed)
