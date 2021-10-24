@@ -38,6 +38,30 @@ roles.
 
 ![image](https://user-images.githubusercontent.com/1900179/138592653-3ec239f6-a80c-481b-8960-fa513fa78acb.png)
 
+# Config
+
+You can configure the bot according to your liking, and also disable various modules globally, when hosting.
+
+```
+modules:
+  # Administration module includes: kick, ban, mute, purgeUsers
+  administration: false
+  # Not used right now
+  logging: false
+  # Slovak lottery password fetcher.
+  lottery: false
+  # Game planning isn't functional currently.
+  planning: false
+  # openWeather command /weather
+  weather: true
+  # Message purging feature (separate from administration)
+  purge: false
+  # API for the COVID info for SVK
+  COVIDSlovakInfo: true
+  # Automatic channel unlocking (must specify ID above)
+  timedChannelUnlock: false
+  ```
+
 # commands:
 
 ## muting / umuting [ADMIN] [TRUSTED]
