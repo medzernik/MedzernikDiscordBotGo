@@ -271,3 +271,260 @@ func COVIDSlovakiaCapacity(s *discordgo.Session, cmd *discordgo.InteractionCreat
 	return
 
 }
+
+func COVIDPatientsStatus(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
+	type PatientsInfo struct {
+		Success    bool    `json:"success"`
+		NextOffset float64 `json:"next_offset"`
+		Page       []struct {
+			OldestReportedAt string `json:"oldest_reported_at"`
+			NewestReportedAt string `json:"newest_reported_at"`
+			PublishedOn      string `json:"published_on"`
+			Id               int    `json:"id"`
+			VentilatedCovid  int    `json:"ventilated_covid"`
+			NonCovid         int    `json:"non_covid"`
+			ConfirmedCovid   int    `json:"confirmed_covid"`
+			SuspectedCovid   int    `json:"suspected_covid"`
+			UpdatedAt        string `json:"updated_at"`
+		} `json:"page"`
+	}
+
+	var err error
+	var yearPrint, dayPrint int
+	var monthPrint time.Month
+	//var daysRequested int
+
+	yearRequest, monthRequest, dayRequest := time.Now().AddDate(0, -5, 0).Date()
+
+	if m != nil {
+		yearPrint, monthPrint, dayPrint = time.Now().AddDate(0, 0, int(m[0].(uint64))*-1).Date()
+
+	} else {
+		yearPrint, monthPrint, dayPrint = time.Now().AddDate(0, -5, 0).Date()
+
+	}
+
+	var requestedDate string = strconv.FormatInt(int64(yearRequest), 10) + "-" + strconv.FormatInt(int64(monthRequest), 10) + "-" + strconv.FormatInt(int64(dayRequest), 10) + "%2000%3A00%3A01"
+	//var printDate string = strconv.FormatInt(int64(yearPrint), 10) + "-" + strconv.FormatInt(int64(monthPrint), 10) + "-" + strconv.FormatInt(int64(dayPrint), 10)
+
+	dateStringStart := strconv.FormatInt(int64(yearPrint), 10) + "-" + strconv.FormatInt(int64(monthPrint), 10) + "-" + strconv.FormatInt(int64(dayPrint), 10)
+	var dateStringEnd string
+	var datePublished time.Time
+	//var parsedDate string = "2021-10-13%2012%3A34%3A56"
+
+	patientsInfoBytes := GetCOVIDSlovakInfo("https://data.korona.gov.sk/api/hospital-patients/in-slovakia?updated_since=" + requestedDate)
+
+	var patientsInfoUnmarshaled PatientsInfo
+	err = json.Unmarshal(patientsInfoBytes, &patientsInfoUnmarshaled)
+	if err != nil {
+		fmt.Println("ERROR UNMARSHALING: ", err)
+	}
+
+	var positiveCovidPeople []float64
+	embed := command.NewEmbed().
+		SetTitle("STAV TESTOV A PACIENTOV")
+
+	for i, j := range patientsInfoUnmarshaled.Page {
+		if i == 0 {
+			embed = embed.SetDescription(j.PublishedOn)
+			dateStringEnd = j.PublishedOn
+			embed = embed.AddField("Negatívni pacienti", ":white_check_mark: "+humanize.Comma(int64(j.NonCovid)))
+			embed = embed.AddField("Podozrenie na COVID", ":warning: "+humanize.Comma(int64(j.SuspectedCovid)))
+			embed = embed.AddField("Pozitívni pacienti", ":microbe: "+humanize.Comma(int64(j.ConfirmedCovid)))
+			embed = embed.AddField("Najnovšie hlásený", ":clock5: "+j.NewestReportedAt)
+
+		}
+		datePublished, err = time.Parse(time.RFC3339, j.PublishedOn+"T00:03:01Z")
+		if err != nil {
+			fmt.Println("ERROR PARSING TIME: ", err)
+		}
+
+		if yearPrint <= datePublished.Year() && monthPrint <= datePublished.Month() && dayPrint <= datePublished.Day() {
+			positiveCovidPeople = append(positiveCovidPeople, float64(j.ConfirmedCovid))
+		}
+
+	}
+
+	if len(positiveCovidPeople) > 0 {
+		for i, j := 0, len(positiveCovidPeople)-1; i < j; i, j = i+1, j-1 {
+			positiveCovidPeople[i], positiveCovidPeople[j] = positiveCovidPeople[j], positiveCovidPeople[i]
+		}
+	}
+
+	messageEmbed := embed.InlineAllFields().SetColor(3066993).MessageEmbed
+
+	if len(positiveCovidPeople) == 0 {
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.WARN+": NO DATA EXISTS", "No data exists for the set timeframe.", discordgo.EmbedTypeRich)
+		return
+	}
+	graph := PrintLineASCII(positiveCovidPeople, dateStringStart, dateStringEnd)
+
+	s.ChannelMessageSendEmbed(cmd.ChannelID, messageEmbed)
+
+	command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK, "**Trend pozitívnych pacientov "+strconv.FormatInt(int64(dayPrint), 10)+" "+monthPrint.String()+GetGraphReadyForDiscordPrint(graph), discordgo.EmbedTypeRich)
+	return
+
+}
+
+func COVIDTestsStatus(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
+	type PatientsInfo struct {
+		Success    bool    `json:"success"`
+		NextOffset float64 `json:"next_offset"`
+		Page       []struct {
+			PositivityRate float64 `json:"positivity_rate"`
+			Id             string  `json:"id"`
+			UpdatedAt      string  `json:"updated_at"`
+			PublishedOn    string  `json:"published_on"`
+			PositivesCount int     `json:"positives_count"`
+			NegativesCount int     `json:"negatives_count"`
+			PositivesSum   int     `json:"positives_sum"`
+			NegativesSum   int     `json:"negatives_sum"`
+		} `json:"page"`
+	}
+
+	var err error
+	var yearPrint, dayPrint int
+	var monthPrint time.Month
+	//var daysRequested int
+
+	yearRequest, monthRequest, dayRequest := time.Now().AddDate(0, -5, 0).Date()
+
+	if m != nil {
+		yearPrint, monthPrint, dayPrint = time.Now().AddDate(0, 0, int(m[0].(uint64))*-1).Date()
+
+	} else {
+		yearPrint, monthPrint, dayPrint = time.Now().AddDate(0, -5, 0).Date()
+
+	}
+
+	var requestedDate string = strconv.FormatInt(int64(yearRequest), 10) + "-" + strconv.FormatInt(int64(monthRequest), 10) + "-" + strconv.FormatInt(int64(dayRequest), 10) + "%2000%3A00%3A01"
+	//var printDate string = strconv.FormatInt(int64(yearPrint), 10) + "-" + strconv.FormatInt(int64(monthPrint), 10) + "-" + strconv.FormatInt(int64(dayPrint), 10)
+
+	dateStringStart := strconv.FormatInt(int64(yearPrint), 10) + "-" + strconv.FormatInt(int64(monthPrint), 10) + "-" + strconv.FormatInt(int64(dayPrint), 10)
+	var dateStringEnd string
+	var datePublished time.Time
+	//var parsedDate string = "2021-10-13%2012%3A34%3A56"
+
+	patientsInfoBytes := GetCOVIDSlovakInfo("https://data.korona.gov.sk/api/ag-tests/in-slovakia?updated_since=" + requestedDate)
+
+	var patientsInfoUnmarshaled PatientsInfo
+	err = json.Unmarshal(patientsInfoBytes, &patientsInfoUnmarshaled)
+	if err != nil {
+		fmt.Println("ERROR UNMARSHALING: ", err)
+	}
+
+	var positiveCovidPeople []float64
+	embed := command.NewEmbed().
+		SetTitle("STAV ANTIGÉNOVÝCH TESTOV")
+
+	for i, j := range patientsInfoUnmarshaled.Page {
+		if i == 0 {
+			embed = embed.SetFooter(j.PublishedOn)
+			dateStringEnd = j.PublishedOn
+			embed = embed.AddField("Negatívni pacienti", ":white_check_mark: "+humanize.Comma(int64(j.NegativesCount)))
+			embed = embed.AddField("Pozitívni pacienti", ":microbe: "+humanize.Comma(int64(j.PositivesCount)))
+			embed = embed.AddField("Pozitivita", ":scales: "+strconv.FormatFloat(j.PositivityRate, 'f', 3, 64)+" %")
+
+		}
+		datePublished, err = time.Parse(time.RFC3339, j.PublishedOn+"T00:03:01Z")
+		if err != nil {
+			fmt.Println("ERROR PARSING TIME: ", err)
+		}
+
+		if yearPrint <= datePublished.Year() && monthPrint <= datePublished.Month() && dayPrint <= datePublished.Day() {
+			positiveCovidPeople = append(positiveCovidPeople, j.PositivityRate)
+		}
+
+	}
+
+	if len(positiveCovidPeople) > 0 {
+		for i, j := 0, len(positiveCovidPeople)-1; i < j; i, j = i+1, j-1 {
+			positiveCovidPeople[i], positiveCovidPeople[j] = positiveCovidPeople[j], positiveCovidPeople[i]
+		}
+	}
+
+	messageEmbed := embed.InlineAllFields().SetColor(3066993).SetDescription("COVID AG Testy:\nhttps://covidforms.nczisk.sk/covid-19-patient-form_ag.php").MessageEmbed
+
+	if len(positiveCovidPeople) == 0 {
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.WARN+": NO DATA EXISTS", "No data exists for the set timeframe.", discordgo.EmbedTypeRich)
+		return
+	}
+	graph := PrintLineASCII(positiveCovidPeople, dateStringStart, dateStringEnd)
+
+	s.ChannelMessageSendEmbed(cmd.ChannelID, messageEmbed)
+
+	command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK, "**Pozitivita testovaných výsledkov "+strconv.FormatInt(int64(dayPrint), 10)+" "+monthPrint.String()+GetGraphReadyForDiscordPrint(graph), discordgo.EmbedTypeRich)
+	return
+
+}
+
+func COVIDDoctorsIll(s *discordgo.Session, cmd *discordgo.InteractionCreate) {
+	type PatientsInfo struct {
+		Success    bool    `json:"success"`
+		NextOffset float64 `json:"next_offset"`
+		Page       []struct {
+			HospitalId           int     `json:"hospital_id"`
+			Id                   int     `json:"id"`
+			ReportedAt           string  `json:"reported_at"`
+			OutOfWorkRatioDoctor float64 `json:"out_of_work_ratio_doctor"`
+			OutOfWorkRatioNurse  float64 `json:"out_of_work_ratio_nurse"`
+			OutOfWorkRatioOther  float64 `json:"out_of_work_ratio_other"`
+			UpdatedAt            string  `json:"updated_at"`
+			PublishedOn          string  `json:"published_on"`
+		} `json:"page"`
+	}
+
+	var err error
+	//var yearPrint, dayPrint int
+	//var monthPrint time.Month
+	//var daysRequested int
+
+	//yearRequest, monthRequest, dayRequest := time.Now().AddDate(0, -5, 0).Date()
+
+	//var requestedDate string = strconv.FormatInt(int64(yearRequest), 10) + "-" + strconv.FormatInt(int64(monthRequest), 10) + "-" + strconv.FormatInt(int64(dayRequest), 10) + "%2000%3A00%3A01"
+	//var printDate string = strconv.FormatInt(int64(yearPrint), 10) + "-" + strconv.FormatInt(int64(monthPrint), 10) + "-" + strconv.FormatInt(int64(dayPrint), 10)
+
+	//dateStringStart := strconv.FormatInt(int64(yearPrint), 10) + "-" + strconv.FormatInt(int64(monthPrint), 10) + "-" + strconv.FormatInt(int64(dayPrint), 10)
+	//var dateStringEnd string
+	//var datePublished time.Time
+	//var parsedDate string = "2021-10-13%2012%3A34%3A56"
+
+	patientsInfoBytes := GetCOVIDSlovakInfo("https://data.korona.gov.sk/api/hospital-staff")
+
+	var patientsInfoUnmarshaled PatientsInfo
+	err = json.Unmarshal(patientsInfoBytes, &patientsInfoUnmarshaled)
+	if err != nil {
+		fmt.Println("ERROR UNMARSHALING: ", err)
+	}
+
+	var positiveDoctors, positiveNurses, positiveOthers float64
+
+	embed := command.NewEmbed().
+		SetTitle("% LEKÁROV NA COVID PN")
+
+	for _, j := range patientsInfoUnmarshaled.Page {
+
+		embed = embed.SetDescription(j.PublishedOn)
+
+		positiveDoctors += j.OutOfWorkRatioDoctor
+		positiveNurses += j.OutOfWorkRatioNurse
+		positiveOthers += j.OutOfWorkRatioOther
+
+		if err != nil {
+			fmt.Println("ERROR PARSING TIME: ", err)
+		}
+
+	}
+	positiveAverage := (positiveDoctors + positiveNurses + positiveOthers) / 3
+
+	embed = embed.AddField("Pozitívni doktori", ":stethoscope: "+strconv.FormatFloat(positiveDoctors, 'f', 3, 64)+" %")
+	embed = embed.AddField("Pozitívne zdravotné sestry", ":syringe: "+strconv.FormatFloat(positiveNurses, 'f', 3, 64)+" %")
+	embed = embed.AddField("Pozitívny ostatný personál", ":plunger: "+strconv.FormatFloat(positiveOthers, 'f', 3, 64)+" %")
+	embed = embed.AddField("Priemer", ":scales: "+strconv.FormatFloat(positiveAverage, 'f', 3, 64)+" %")
+
+	messageEmbed := embed.InlineAllFields().SetColor(3066993).MessageEmbed
+
+	s.ChannelMessageSendEmbed(cmd.ChannelID, messageEmbed)
+	return
+
+}
