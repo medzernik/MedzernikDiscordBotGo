@@ -134,12 +134,11 @@ func COVIDNumberOfVaccinated(s *discordgo.Session, cmd *discordgo.InteractionCre
 
 	messageEmbed := embed.InlineAllFields().SetColor(3066993).MessageEmbed
 
-	normalizedLabel := NormalizeXAxis(dateStringStart, dateStringEnd)
-	graph := PrintLineASCII(dose2Count, normalizedLabel)
+	graph := PrintLineASCII(dose2Count, dateStringStart, dateStringEnd)
 
 	s.ChannelMessageSendEmbed(cmd.ChannelID, messageEmbed)
 	//s.ChannelMessageSend(cmd.ChannelID, "**Celkový trend podania 2. dávky od mesiaca "+month.String()+"**\n```go\n"+graph+"```")
-	command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK, "**Celkový trend podania 2. dávky od mesiaca "+month.String()+"**\n```go\n"+graph+"```", discordgo.EmbedTypeRich)
+	command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK, "**Celkový trend podania 2. dávky od mesiaca "+month.String()+GetGraphReadyForDiscordPrint(graph), discordgo.EmbedTypeRich)
 	return
 
 }
@@ -205,12 +204,11 @@ func COVIDSlovakiaCapacity(s *discordgo.Session, cmd *discordgo.InteractionCreat
 
 	messageEmbed := embed.InlineAllFields().SetColor(3066993).MessageEmbed
 
-	normalizedLabel := NormalizeXAxis(dateStringStart, dateStringEnd)
-	graph := PrintLineASCII(totalCovidPeople, normalizedLabel)
+	graph := PrintLineASCII(totalCovidPeople, dateStringStart, dateStringEnd)
 
 	s.ChannelMessageSendEmbed(cmd.ChannelID, messageEmbed)
-	//s.ChannelMessageSend(cmd.ChannelID, "**Celkový trend hospitalizácií od "+strconv.FormatInt(int64(month), 10)+". mesiaca doteraz:**\n"+"```go\n"+graph+"```")
-	command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK, "**Celkový trend hospitalizácií od mesiaca "+month.String()+"**\n```go\n"+graph+"```", discordgo.EmbedTypeRich)
+
+	command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK, "**Celkový trend hospitalizácií od mesiaca "+month.String()+GetGraphReadyForDiscordPrint(graph), discordgo.EmbedTypeRich)
 	return
 
 }

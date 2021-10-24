@@ -4,14 +4,22 @@ import (
 	"github.com/guptarohit/asciigraph"
 )
 
-func PrintLineASCII(data []float64, graphLabel string) string {
-	graph := asciigraph.Plot(data, asciigraph.Width(22), asciigraph.Height(15), asciigraph.Caption(graphLabel))
+// PrintLineASCII Prints the actual chart, gets the data as well as the labelstring to put in.
+func PrintLineASCII(data []float64, dateStringStart, dateStringEnd string) string {
+	graphLabel := NormalizeXAxis(dateStringStart, dateStringEnd)
+	chart := asciigraph.Plot(data, asciigraph.Width(22), asciigraph.Height(15), asciigraph.Caption(graphLabel))
 
-	return graph
+	return chart
 }
 
+// NormalizeXAxis Inserts the X axis-like line at least, since there is no X axis...
 func NormalizeXAxis(startDate, endDate string) string {
 	return "―――――――――――――――――――――\n\t" + startDate + " <-> " + endDate
+}
+
+// GetGraphReadyForDiscordPrint Simplifies the printout for reuse
+func GetGraphReadyForDiscordPrint(input string) string {
+	return "**\n```go\n" + input + "```"
 }
 
 /*
