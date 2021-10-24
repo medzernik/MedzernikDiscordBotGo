@@ -1,15 +1,37 @@
 # YOU MUST COPY THIS CONFIG TO THE ROOT OF THE FILESYSTEM WHERE THE (MAIN) EXECUTABLE IS. KEEP THIS HERE FOR EXPERIMENTATION, VERSIONING, ETC.
 # Server configurations
 serverInfo:
-  # Choose your own prefix symbol. This is what the bot reacts to when a message begins with the symbol. By default it is preset to a dot (.) here.
-  # The bot uses commands now, these are for legacy commands if at all.
-  prefix: "."
   # Your server ID
   guildIDNumber: ""
   # WeatherAPI of openWeatherMap for your bot. Get yours at the webpage (its free)
   weatherAPIKey: ""
   # The token of the bot to run it. You get yours on the discord developer page when you add it to the server.
   serverToken: ""
+  # The bot logo
+  botLogo: "https://cdn.discordapp.com/avatars/877115622725672991/1b9e83cf7c9f29ed63de3364ed71b452.webp?size=160"
+  # Bot name
+  botName: "CleverFox"
+
+# Various modules to enable or disable
+modules:
+  # Administration module includes: kick, ban, mute, purgeUsers
+  administration: false
+  # Not used right now
+  logging: false
+  # Slovak lottery password fetcher.
+  lottery: false
+  # Game planning isn't functional currently.
+  planning: false
+  # openWeather command /weather
+  weather: false
+  # Message purging feature (separate from administration)
+  purge: false
+  # API for the COVID info for SVK
+  COVIDSlovakInfo: false
+  # Automatic channel unlocking (must specify ID above)
+  timedChannelUnlock: false
+
+
 
 # Admin roleID and mod roleID
 roleAdmin:
@@ -56,4 +78,19 @@ autoLocker:
   timeDayLock: 0
   timeHourLock: 0
   timeMinuteLock: 0
+
+lotteryTime:
+  # Enables the checker to run between specific times only. Disabling means it runs every 180 seconds
+  enabled: true
+  #time start
+  timeDayStart: 6
+  timeHourStart: 20
+  timeMinuteStart: 30
+  #time end
+  timeDayEnd: 6
+  timeHourEnd: 21
+  timeMinuteEnd: 40
+
+
+
 

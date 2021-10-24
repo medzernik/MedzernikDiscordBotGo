@@ -3,7 +3,9 @@ package command
 
 import (
 	"github.com/bwmarrin/discordgo"
+	"github.com/medzernik/SlovakiaDiscordBotGo/config"
 	"strings"
+	"time"
 )
 
 // ParseMentionToString Parses the <@!userId> into userId and returns the string
@@ -16,6 +18,7 @@ func ParseMentionToString(s string) string {
 	return s
 }
 
+// ParseRoleMentionToString Parses the <@&roleId> into roleId and returns the string
 func ParseRoleMentionToString(s string) string {
 	s = strings.Replace(s, "<", "", 1)
 	s = strings.Replace(s, ">", "", 1)
@@ -26,6 +29,7 @@ func ParseRoleMentionToString(s string) string {
 	return s
 }
 
+// ParseStringToRoleMention Parses the string Id and returns <@&roleId>
 func ParseStringToRoleMention(s string) string {
 	var mentionID string
 
@@ -61,12 +65,13 @@ func ParseStringToChannelID(s string) string {
 	return channelID
 }
 
+// SendTextEmbedCommand Custom embed parser. Sends a parsed embed.
 func SendTextEmbedCommand(s *discordgo.Session, m string, status string, messageContent string, mode discordgo.EmbedType) {
 	//Fixed author message.
 	author := discordgo.MessageEmbedAuthor{
 		URL:          "",
-		Name:         "MedzernikBot",
-		IconURL:      "https://cdn.discordapp.com/avatars/837982234597916672/51236a8235b1778f5d90bce35fbcf4d6.webp?size=256",
+		Name:         config.Cfg.ServerInfo.BotName,
+		IconURL:      config.Cfg.ServerInfo.BotLogo,
 		ProxyIconURL: "",
 	}
 
@@ -86,6 +91,7 @@ func SendTextEmbedCommand(s *discordgo.Session, m string, status string, message
 		color = 16776960
 
 	default:
+		//Set a default color as well
 		color = 3066993
 	}
 
@@ -97,7 +103,7 @@ func SendTextEmbedCommand(s *discordgo.Session, m string, status string, message
 		Type:        mode,
 		Title:       status,
 		Description: messageContent,
-		Timestamp:   "",
+		Timestamp:   time.Now().Format(time.RFC3339),
 		Color:       color,
 		Footer:      nil,
 		Image:       nil,
@@ -118,6 +124,7 @@ func SendTextEmbedCommand(s *discordgo.Session, m string, status string, message
 	}
 }
 
+// MemberHasPermission Check whether the member has permissions of a given number (in integer)
 func MemberHasPermission(s *discordgo.Session, guildID string, userID string, permission int64) (bool, error) {
 	member, err := s.State.Member(guildID, userID)
 	if err != nil {

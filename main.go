@@ -2,7 +2,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/medzernik/SlovakiaDiscordBotGo/config"
@@ -12,10 +11,12 @@ import (
 	"syscall"
 )
 
-// Token Variables used for command line parameters
+/*
+// Token Variables used for command line parameters (deprecated in my bot)
 var (
-	Token string
+	Token string =
 )
+
 
 func init() {
 
@@ -23,6 +24,8 @@ func init() {
 	flag.Parse()
 
 }
+
+*/
 
 func main() {
 	//Initialize the config

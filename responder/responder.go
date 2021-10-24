@@ -4,9 +4,14 @@ package responder
 import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
-
+	"github.com/medzernik/SlovakiaDiscordBotGo/command"
 	"github.com/medzernik/SlovakiaDiscordBotGo/config"
+	"github.com/medzernik/SlovakiaDiscordBotGo/database"
 	"github.com/medzernik/SlovakiaDiscordBotGo/responder_functions"
+	"io/ioutil"
+	"net/http"
+	"strings"
+	"time"
 )
 
 func RegisterPlugin(s *discordgo.Session) {
@@ -48,18 +53,64 @@ func userUpdate(s *discordgo.Session, m *discordgo.GuildMemberUpdate) {
 	return
 }
 
+func PasswordLottery(s *discordgo.Session) {
+	var stringResultCache string
+
+	for {
+		//Check the time sensitive info or skip it
+		if (time.Now().Weekday() == config.Cfg.LotteryChecker.TimeDayStart && time.Now().Hour() >= config.Cfg.LotteryChecker.TimeHourStart && time.Now().Hour() <= config.Cfg.LotteryChecker.TimeHourEnd && time.Now().Minute() >= config.Cfg.LotteryChecker.TimeMinuteStart && time.Now().Minute() <= config.Cfg.LotteryChecker.TimeMinuteEnd) || config.Cfg.LotteryChecker.Enabled == false {
+
+			response, err := http.Get("https://www.ockovacie.info/")
+			if err != nil {
+				fmt.Println(err)
+			}
+			defer response.Body.Close()
+			if response.StatusCode == 200 {
+				bodyText, err := ioutil.ReadAll(response.Body)
+				if err != nil {
+					fmt.Println(err)
+				}
+				bodyTextProcessed := fmt.Sprintf("%s\n", bodyText)
+
+				stringResult := strings.SplitAfter(bodyTextProcessed, "text-align:center;white-space:pre-wrap;\">")
+				stringResult = strings.Split(stringResult[2], "</h2></div></div></div></div></div>")
+				fmt.Println(stringResult[0])
+
+				if stringResult[0] != stringResultCache {
+					command.SendTextEmbedCommand(s, config.Cfg.ChannelLog.GamePlannedLog, responder_functions.CommandStatusBot.OK+"HESLO DO LOTÉRIE", stringResult[0], discordgo.EmbedTypeRich)
+					stringResultCache = stringResult[0]
+				}
+
+			}
+		}
+		time.Sleep(180 * time.Second)
+
+	}
+
+	//https://www.ockovacie.info/
+}
+
 //Ready runs when the bot starts. Starts the automatic functions and sets the status of the bot
 func ready(s *discordgo.Session, ready *discordgo.Ready) {
-	//Set the status
+	//Set the bot status according to the config file
 	err := s.UpdateGameStatus(0, config.Cfg.ServerInfo.BotStatus)
 	if err != nil {
 		fmt.Println("error setting the bot status")
 		return
 	}
-	//run the parallel functions
-	//go database.DatabaseOpen()
-	//go database.CheckPlannedGames(&s)
-	go responder_functions.TimedChannelUnlock(s)
+
+	//run the parallel functions only if enabled in the config file
+	if config.Cfg.Modules.Planning == true {
+		go database.DatabaseOpen()
+		go database.CheckPlannedGames(&s)
+	}
+	if config.Cfg.Modules.Lottery == true {
+		go PasswordLottery(s)
+	}
+	if config.Cfg.Modules.TimedChannelUnlock == true {
+		go responder_functions.TimedChannelUnlock(s)
+	}
+	//Initialize the commands for Discord
 	responder_functions.Ready(s, ready)
 
 }

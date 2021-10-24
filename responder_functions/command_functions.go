@@ -1064,7 +1064,7 @@ func SlowModeChannelCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, 
 		return
 	} else if numOfSeconds == 0 {
 		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTOFIX, "Due to the bug in discord, setting the number to 1 (smallest possible wait time)", discordgo.EmbedTypeRich)
-		numOfSeconds = 1
+		numOfSeconds = 0
 	}
 
 	//get the original channel info

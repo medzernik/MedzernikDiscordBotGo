@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
+	"github.com/medzernik/SlovakiaDiscordBotGo/command"
 	"github.com/medzernik/SlovakiaDiscordBotGo/config"
 	"log"
 	"strings"
@@ -58,6 +59,14 @@ var (
 					Required:    true,
 				},
 			},
+		},
+		{
+			Name:        "reload-config",
+			Description: "Reload the config file",
+		},
+		{
+			Name:        "version",
+			Description: "Bot version and feature update",
 		},
 		{
 			Name:        "mute",
@@ -504,7 +513,12 @@ var (
 			argumentArray := []interface{}{
 				i.ApplicationCommandData().Options[0].UserValue(s).ID,
 			}
-			go MuteCMD(s, i, argumentArray)
+
+			if config.Cfg.Modules.Administration == true {
+				go MuteCMD(s, i, argumentArray)
+			} else {
+				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
+			}
 			return
 		},
 		//This command runs the AgeJoinedCMD function
@@ -520,7 +534,11 @@ var (
 				i.ApplicationCommandData().TargetID,
 			}
 
-			go MuteCMD(s, i, argumentArray)
+			if config.Cfg.Modules.Administration == true {
+				go MuteCMD(s, i, argumentArray)
+			} else {
+				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
+			}
 			return
 		},
 
@@ -534,7 +552,11 @@ var (
 			argumentArray := []interface{}{
 				i.ApplicationCommandData().Options[0].UserValue(s).ID,
 			}
-			go UnmuteCMD(s, i, argumentArray)
+			if config.Cfg.Modules.Administration == true {
+				go UnmuteCMD(s, i, argumentArray)
+			} else {
+				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
+			}
 			return
 		},
 		"kick": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -550,7 +572,12 @@ var (
 			if len(i.ApplicationCommandData().Options) > 1 {
 				argumentArray = append(argumentArray, i.ApplicationCommandData().Options[1].StringValue())
 			}
-			go KickUserCMD(s, i, argumentArray)
+
+			if config.Cfg.Modules.Administration == true {
+				go KickUserCMD(s, i, argumentArray)
+			} else {
+				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
+			}
 			return
 		},
 		"ban": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -570,9 +597,13 @@ var (
 			if len(i.ApplicationCommandData().Options) > 2 {
 				argumentArray = append(argumentArray, i.ApplicationCommandData().Options[2].UintValue())
 			}
-
-			go BanUserCMD(s, i, argumentArray)
+			if config.Cfg.Modules.Administration == true {
+				go BanUserCMD(s, i, argumentArray)
+			} else {
+				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
+			}
 			return
+
 		},
 		"check-users": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -596,8 +627,12 @@ var (
 				},
 			})
 			var argumentArray []interface{}
+			if config.Cfg.Modules.Planning == true {
+				go PlannedGamesCMD(s, i, argumentArray)
+			} else {
+				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "Planning module is disabled.", discordgo.EmbedTypeRich)
+			}
 
-			go PlannedGamesCMD(s, i, argumentArray)
 			return
 		},
 		"plan": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -615,7 +650,22 @@ var (
 				i.ApplicationCommandData().Options[2].UserValue(s).Mention(),
 			}
 
-			go PlanGameCMD(s, i, argumentArray)
+			if config.Cfg.Modules.Planning == true {
+				go PlanGameCMD(s, i, argumentArray)
+			} else {
+				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "Planning module is disabled.", discordgo.EmbedTypeRich)
+			}
+
+			return
+		},
+		"version": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: Version + "\n" + VersionFeatureName,
+				},
+			})
+
 			return
 		},
 		"topic": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -630,6 +680,7 @@ var (
 			argumentArray = []interface{}{}
 
 			go TopicCMD(s, i, argumentArray)
+
 			return
 		},
 		"weather": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -645,7 +696,15 @@ var (
 				i.ApplicationCommandData().Options[0].StringValue(),
 			}
 
-			go GetWeatherCMD(s, i, argumentArray)
+			if config.Cfg.ServerInfo.WeatherAPIKey == "" {
+				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" API KEY NOT SET", "Please set the API key in the config.", discordgo.EmbedTypeRich)
+				return
+			} else if config.Cfg.Modules.Weather == true {
+				go GetWeatherCMD(s, i, argumentArray)
+			} else {
+				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+"  MODULE DISABLED", "Weather module is disabled.", discordgo.EmbedTypeRich)
+			}
+
 			return
 		},
 		"purge": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -661,7 +720,12 @@ var (
 				i.ApplicationCommandData().Options[0].IntValue(),
 			}
 
-			go PurgeMessagesCMD(s, i, argumentArray)
+			if config.Cfg.Modules.Purge == true {
+				go PurgeMessagesCMD(s, i, argumentArray)
+			} else {
+				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "Purge module is disabled.", discordgo.EmbedTypeRich)
+			}
+
 			return
 		},
 		"Purge To Here": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -674,8 +738,12 @@ var (
 			argumentArray := []interface{}{
 				i.ApplicationCommandData().TargetID,
 			}
+			if config.Cfg.Modules.Purge == true {
+				go PurgeMessagesCMDMessage(s, i, argumentArray)
+			} else {
+				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "Purge module is disabled.", discordgo.EmbedTypeRich)
+			}
 
-			go PurgeMessagesCMDMessage(s, i, argumentArray)
 			return
 		},
 		"Purge To Here User": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -689,7 +757,12 @@ var (
 				i.ApplicationCommandData().TargetID,
 			}
 
-			go PurgeMessagesCMDMessageOnlyAuthor(s, i, argumentArray)
+			if config.Cfg.Modules.Purge == true {
+				go PurgeMessagesCMDMessageOnlyAuthor(s, i, argumentArray)
+			} else {
+				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "Purge module is disabled.", discordgo.EmbedTypeRich)
+			}
+
 			return
 		},
 		"members": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -706,6 +779,28 @@ var (
 			go MembersCMD(s, i, argumentArray)
 			return
 		},
+		"reload-config": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "⠀",
+				},
+			})
+
+			authorisedAdmin, errPerm := command.MemberHasPermission(s, i.GuildID, i.Member.User.ID, discordgo.PermissionAdministrator)
+			if errPerm != nil {
+				fmt.Println(errPerm)
+				return
+			}
+			if authorisedAdmin == true {
+				go config.LoadConfig()
+				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.OK+" CONFIG RELOADING", "", discordgo.EmbedTypeRich)
+			} else {
+				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.AUTH+" Insufficient permissions", "", discordgo.EmbedTypeRich)
+			}
+
+			return
+		},
 		"covid-vaccines-available": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -714,7 +809,12 @@ var (
 				},
 			})
 
-			go COVIDVaccinesAvailable(s, i)
+			if config.Cfg.Modules.COVIDSlovakInfo == true {
+				go COVIDVaccinesAvailable(s, i)
+			} else {
+				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "COVID SVK Info module is disabled.", discordgo.EmbedTypeRich)
+			}
+
 			return
 		},
 		"covid-number-vaccinated": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -732,8 +832,12 @@ var (
 				}
 
 			*/
+			if config.Cfg.Modules.COVIDSlovakInfo == true {
+				go COVIDNumberOfVaccinated(s, i, argumentArray)
+			} else {
+				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "COVID SVK Info module is disabled.", discordgo.EmbedTypeRich)
+			}
 
-			go COVIDNumberOfVaccinated(s, i, argumentArray)
 			return
 		},
 		"prune-count": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -765,7 +869,12 @@ var (
 				i.ApplicationCommandData().Options[0].IntValue(),
 			}
 
-			go PruneMembersCMD(s, i, argumentArray)
+			if config.Cfg.Modules.Administration == true {
+				go PruneMembersCMD(s, i, argumentArray)
+			} else {
+				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
+			}
+
 			return
 
 		},
@@ -784,7 +893,12 @@ var (
 				i.ApplicationCommandData().Options[2].IntValue(),
 			}
 
-			go SetRoleChannelPermCMD(s, i, argumentArray)
+			if config.Cfg.Modules.Administration == true {
+				go SetRoleChannelPermCMD(s, i, argumentArray)
+			} else {
+				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
+			}
+
 			return
 
 		},
@@ -802,8 +916,12 @@ var (
 				i.ApplicationCommandData().Options[1].UserValue(s).Mention(),
 				i.ApplicationCommandData().Options[2].IntValue(),
 			}
+			if config.Cfg.Modules.Administration == true {
+				go SetUserChannelPermCMD(s, i, argumentArray)
+			} else {
+				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
+			}
 
-			go SetUserChannelPermCMD(s, i, argumentArray)
 			return
 		},
 		"redirect": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -819,7 +937,12 @@ var (
 				i.ApplicationCommandData().Options[0].ChannelValue(s).Mention(),
 			}
 
-			go RedirectDiscussionCMD(s, i, argumentArray)
+			if config.Cfg.Modules.Administration == true {
+				go RedirectDiscussionCMD(s, i, argumentArray)
+			} else {
+				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
+			}
+
 			return
 		},
 		"slow": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -835,7 +958,12 @@ var (
 				i.ApplicationCommandData().Options[0].UintValue(),
 			}
 
-			go SlowModeChannelCMD(s, i, argumentArray)
+			if config.Cfg.Modules.Administration == true {
+				go SlowModeChannelCMD(s, i, argumentArray)
+			} else {
+				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
+			}
+
 			return
 		},
 		"voicechannelmodify": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -1053,9 +1181,10 @@ func initialization(s *discordgo.Session) {
 
 var ReadyInfoPublic *discordgo.Ready
 
+// Ready Runs when the bot starts and engages all the commands
 func Ready(s *discordgo.Session, readyInfo *discordgo.Ready) {
 	initialization(s)
-	ReadyInfoPublic = readyInfo
+	go UpdateReadyInfo(readyInfo)
 
 	for i := range readyInfo.Guilds {
 		for _, v := range BotCommands {
@@ -1064,5 +1193,14 @@ func Ready(s *discordgo.Session, readyInfo *discordgo.Ready) {
 				log.Panicf("Cannot create '%v' command: %v", v.Name, err)
 			}
 		}
+	}
+}
+
+// UpdateReadyInfo This should autoupdate the information about members every 60 seconds.
+func UpdateReadyInfo(readyInfo *discordgo.Ready) {
+
+	for {
+		ReadyInfoPublic = readyInfo
+		time.Sleep(60 * time.Second)
 	}
 }

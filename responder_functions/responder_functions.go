@@ -7,14 +7,13 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/medzernik/SlovakiaDiscordBotGo/command"
 	"github.com/medzernik/SlovakiaDiscordBotGo/config"
-
 	"strconv"
 
 	"time"
 )
 
-const Version string = "0.7.1"
-const VersionFeatureName string = "The Command Update"
+const Version string = "0.8.0"
+const VersionFeatureName string = "The Cleanup Update"
 
 const TargetTypeRoleID discordgo.PermissionOverwriteType = 0
 const TargetTypeMemberID discordgo.PermissionOverwriteType = 1
@@ -88,43 +87,6 @@ func GetGuildInfo(s *discordgo.Session, guildID string) *discordgo.GuildPreview 
 		s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[ERR]** Error getting preview info about guild: "+guildID)
 	}
 	return guildInfo
-}
-
-// CheckRegularSpamAttack Checks the server for spam attacks
-func CheckRegularSpamAttack(s *discordgo.Session, m *discordgo.MessageCreate) {
-	//variable definitons
-	var membersCached []*discordgo.Member
-
-	for i := range ReadyInfoPublic.Guilds {
-		if ReadyInfoPublic.Guilds[i].ID == m.GuildID {
-			membersCached = ReadyInfoPublic.Guilds[i].Members
-		}
-	}
-
-	var tempMsg string
-	var spamCounter int64
-	var checkInterval time.Duration = 90
-	var timeToCheckUsers = 10 * -1.0
-
-	for {
-		//iterate over the members_cached array. Maximum limit is 1000.
-		for i := range membersCached {
-			userTimeJoin, _ := membersCached[i].JoinedAt.Parse()
-			timeVar := userTimeJoin.Sub(time.Now()).Minutes()
-
-			if timeVar > timeToCheckUsers {
-				tempMsg += "**[ALERT]** RAID PROTECTION ALERT!: User" + membersCached[i].User.Username + "join age: " + strconv.FormatFloat(timeToCheckUsers, 'f', 0, 64) + "\n"
-				spamCounter += 1
-			}
-
-		}
-		if spamCounter > 4 {
-			s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[WARN]** Possible RAID ATTACK detected!!! (<@&513275201375698954>) ("+command.ParseStringToMentionID(config.Cfg.RoleAdmin.RoleAdminID+strconv.FormatInt(spamCounter, 10)+" users joined in the last "+strconv.FormatFloat(timeToCheckUsers, 'f', 0, 64)+" hours)"))
-		}
-		spamCounter = 0
-		time.Sleep(checkInterval * time.Second)
-	}
-
 }
 
 func Fox(s *discordgo.Session, m *discordgo.MessageCreate) {

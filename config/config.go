@@ -11,12 +11,23 @@ import (
 // Config Configuration type structure to use in memory.
 type Config struct {
 	ServerInfo struct {
-		Prefix        string `yaml:"prefix"`
 		GuildIDNumber string `yaml:"guildIDNumber"`
 		WeatherAPIKey string `yaml:"weatherAPIKey"`
 		ServerToken   string `yaml:"serverToken"`
 		BotStatus     string `yaml:"botStatus"`
+		BotLogo       string `yaml:"botLogo"`
+		BotName       string `yaml:"botName"`
 	} `yaml:"serverInfo"`
+	Modules struct {
+		Administration     bool `yaml:"administration"`
+		Logging            bool `yaml:"logging"`
+		Lottery            bool `yaml:"lottery"`
+		Planning           bool `yaml:"planning"`
+		Weather            bool `yaml:"weather"`
+		Purge              bool `yaml:"purge"`
+		COVIDSlovakInfo    bool `yaml:"COVIDSlovakInfo"`
+		TimedChannelUnlock bool `yaml:"timedChannelUnlock"`
+	}
 	RoleAdmin struct {
 		RoleAdminID string `yaml:"roleAdminID"`
 		RoleModID   string `yaml:"roleModID"`
@@ -46,6 +57,15 @@ type Config struct {
 		TimeHourLock         int          `yaml:"timeHourLock"`
 		TimeMinuteLock       int          `yaml:"timeMinuteLock"`
 	} `yaml:"autoLocker"`
+	LotteryChecker struct {
+		Enabled         bool         `yaml:"enabled"`
+		TimeDayStart    time.Weekday `yaml:"timeDayStart"`
+		TimeHourStart   int          `yaml:"timeHourStart"`
+		TimeMinuteStart int          `yaml:"timeMinuteStart"`
+		TimeDayEnd      time.Weekday `yaml:"timeDayEnd"`
+		TimeHourEnd     int          `yaml:"timeHourEnd"`
+		TimeMinuteEnd   int          `yaml:"timeMinuteEnd"`
+	}
 }
 
 var Cfg Config
