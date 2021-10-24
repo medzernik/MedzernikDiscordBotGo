@@ -1,4 +1,4 @@
-# Medzernik Discord Bot in Go
+# CleverFox Discord Bot in Go
 This is a discord bot written entirely in golang using the discordgo library. 
 
 The bot itself has a custom command parser and many custom functions. It is a featured bot you can use on your server.
