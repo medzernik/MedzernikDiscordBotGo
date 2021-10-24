@@ -35,6 +35,7 @@ roles.
 # Current syntax:
 
 **prefix:** `/` *(Discord command system)*
+
 ![image](https://user-images.githubusercontent.com/1900179/138592653-3ec239f6-a80c-481b-8960-fa513fa78acb.png)
 
 # commands:
