@@ -27,17 +27,6 @@ func init() {
 	flag.Parse()
 }
 
-/*
-func init() {
-	var err error
-	s, err = discordgo.New("Bot " + *BotToken)
-	if err != nil {
-		log.Fatalf("Invalid bot parameters: %v", err)
-	}
-}
-
-*/
-
 var (
 	BotCommands = []*discordgo.ApplicationCommand{
 		{
