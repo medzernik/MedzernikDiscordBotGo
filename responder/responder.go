@@ -77,7 +77,7 @@ func PasswordLottery(s *discordgo.Session) {
 				fmt.Println(stringResult[0])
 
 				if stringResult[0] != stringResultCache {
-					command.SendTextEmbedCommand(s, config.Cfg.ChannelLog.GamePlannedLog, responder_functions.CommandStatusBot.OK+"HESLO DO LOTÉRIE", stringResult[0], discordgo.EmbedTypeRich)
+					command.SendTextEmbedCommand(s, config.Cfg.ChannelLog.GamePlannedLog, command.StatusBot.OK+"HESLO DO LOTÉRIE", stringResult[0], discordgo.EmbedTypeRich)
 					stringResultCache = stringResult[0]
 				}
 

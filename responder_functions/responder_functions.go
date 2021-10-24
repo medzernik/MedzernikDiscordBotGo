@@ -18,25 +18,6 @@ const VersionFeatureName string = "The Cleanup Update"
 const TargetTypeRoleID discordgo.PermissionOverwriteType = 0
 const TargetTypeMemberID discordgo.PermissionOverwriteType = 1
 
-type CommandStatus struct {
-	OK      string
-	ERR     string
-	SYNTAX  string
-	WARN    string
-	AUTH    string
-	AUTOFIX string
-}
-
-// CommandStatusBot is a variable to pass to the messageEmbed to make an emoji
-var CommandStatusBot CommandStatus = CommandStatus{
-	OK:      "",
-	ERR:     ":bangbang: ERROR",
-	SYNTAX:  ":question: SYNTAX",
-	WARN:    ":warning: WARNING",
-	AUTH:    ":no_entry: AUTHENTICATION",
-	AUTOFIX: ":wrench: AUTOCORRECTING",
-}
-
 /*
 // GamePlanInsert Inserts the game into the database
 func GamePlanInsert(c *command.Command, s **discordgo.Session, m **discordgo.MessageCreate) {

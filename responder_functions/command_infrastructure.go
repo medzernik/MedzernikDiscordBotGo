@@ -6,6 +6,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/medzernik/SlovakiaDiscordBotGo/command"
 	"github.com/medzernik/SlovakiaDiscordBotGo/config"
+	"github.com/medzernik/SlovakiaDiscordBotGo/covid_slovakia"
 	"log"
 	"strings"
 	"time"
@@ -506,7 +507,7 @@ var (
 			if config.Cfg.Modules.Administration == true {
 				go MuteCMD(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
 			return
 		},
@@ -526,7 +527,7 @@ var (
 			if config.Cfg.Modules.Administration == true {
 				go MuteCMD(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
 			return
 		},
@@ -544,7 +545,7 @@ var (
 			if config.Cfg.Modules.Administration == true {
 				go UnmuteCMD(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
 			return
 		},
@@ -565,7 +566,7 @@ var (
 			if config.Cfg.Modules.Administration == true {
 				go KickUserCMD(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
 			return
 		},
@@ -589,7 +590,7 @@ var (
 			if config.Cfg.Modules.Administration == true {
 				go BanUserCMD(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
 			return
 
@@ -619,7 +620,7 @@ var (
 			if config.Cfg.Modules.Planning == true {
 				go PlannedGamesCMD(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "Planning module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Planning module is disabled.", discordgo.EmbedTypeRich)
 			}
 
 			return
@@ -642,7 +643,7 @@ var (
 			if config.Cfg.Modules.Planning == true {
 				go PlanGameCMD(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "Planning module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Planning module is disabled.", discordgo.EmbedTypeRich)
 			}
 
 			return
@@ -686,12 +687,13 @@ var (
 			}
 
 			if config.Cfg.ServerInfo.WeatherAPIKey == "" {
-				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" API KEY NOT SET", "Please set the API key in the config.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" API KEY NOT SET", "Please set the API key in the config.", discordgo.EmbedTypeRich)
 				return
 			} else if config.Cfg.Modules.Weather == true {
 				go GetWeatherCMD(s, i, argumentArray)
+				return
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+"  MODULE DISABLED", "Weather module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+"  MODULE DISABLED", "Weather module is disabled.", discordgo.EmbedTypeRich)
 			}
 
 			return
@@ -712,7 +714,7 @@ var (
 			if config.Cfg.Modules.Purge == true {
 				go PurgeMessagesCMD(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "Purge module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Purge module is disabled.", discordgo.EmbedTypeRich)
 			}
 
 			return
@@ -730,7 +732,7 @@ var (
 			if config.Cfg.Modules.Purge == true {
 				go PurgeMessagesCMDMessage(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "Purge module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Purge module is disabled.", discordgo.EmbedTypeRich)
 			}
 
 			return
@@ -749,7 +751,7 @@ var (
 			if config.Cfg.Modules.Purge == true {
 				go PurgeMessagesCMDMessageOnlyAuthor(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "Purge module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Purge module is disabled.", discordgo.EmbedTypeRich)
 			}
 
 			return
@@ -783,9 +785,9 @@ var (
 			}
 			if authorisedAdmin == true {
 				go config.LoadConfig()
-				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.OK+" CONFIG RELOADING", "", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.OK+" CONFIG RELOADING", "", discordgo.EmbedTypeRich)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.AUTH+" Insufficient permissions", "", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.AUTH+" Insufficient permissions", "", discordgo.EmbedTypeRich)
 			}
 
 			return
@@ -799,9 +801,9 @@ var (
 			})
 
 			if config.Cfg.Modules.COVIDSlovakInfo == true {
-				go COVIDVaccinesAvailable(s, i)
+				go covid_slovakia.COVIDVaccinesAvailable(s, i)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "COVID SVK Info module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "COVID SVK Info module is disabled.", discordgo.EmbedTypeRich)
 			}
 
 			return
@@ -822,9 +824,9 @@ var (
 
 			*/
 			if config.Cfg.Modules.COVIDSlovakInfo == true {
-				go COVIDNumberOfVaccinated(s, i, argumentArray)
+				go covid_slovakia.COVIDNumberOfVaccinated(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "COVID SVK Info module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "COVID SVK Info module is disabled.", discordgo.EmbedTypeRich)
 			}
 
 			return
@@ -861,7 +863,7 @@ var (
 			if config.Cfg.Modules.Administration == true {
 				go PruneMembersCMD(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
 
 			return
@@ -885,7 +887,7 @@ var (
 			if config.Cfg.Modules.Administration == true {
 				go SetRoleChannelPermCMD(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
 
 			return
@@ -908,7 +910,7 @@ var (
 			if config.Cfg.Modules.Administration == true {
 				go SetUserChannelPermCMD(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
 
 			return
@@ -929,7 +931,7 @@ var (
 			if config.Cfg.Modules.Administration == true {
 				go RedirectDiscussionCMD(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
 
 			return
@@ -950,7 +952,7 @@ var (
 			if config.Cfg.Modules.Administration == true {
 				go SlowModeChannelCMD(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, CommandStatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
 
 			return

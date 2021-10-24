@@ -1,4 +1,4 @@
-package responder_functions
+package command
 
 import "github.com/bwmarrin/discordgo"
 

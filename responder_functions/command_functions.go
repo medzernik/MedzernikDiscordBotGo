@@ -4,20 +4,15 @@ package responder_functions
 import (
 	"bufio"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	owm "github.com/briandowns/openweathermap"
 	"github.com/bwmarrin/discordgo"
 	_ "github.com/dustin/go-humanize"
-	"github.com/go-echarts/go-echarts/v2/charts"
-	"github.com/go-echarts/go-echarts/v2/opts"
 	"github.com/medzernik/SlovakiaDiscordBotGo/command"
 	"github.com/medzernik/SlovakiaDiscordBotGo/config"
 	"github.com/medzernik/SlovakiaDiscordBotGo/database"
-	"io/ioutil"
 	"log"
 	"math/rand"
-	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -47,14 +42,14 @@ func AgeJoinedCMD(s *discordgo.Session, m *discordgo.InteractionCreate, cmd []in
 		if membersCached[i].User.ID == userId {
 			userName = membersCached[i].User.Username
 		} else if membersCached[i].User.ID != userId && membersCached[i].User.ID == "" {
-			command.SendTextEmbedCommand(s, m.ChannelID, CommandStatusBot.ERR, m.Data.Type().String()+" : not a number or a mention", discordgo.EmbedTypeRich)
+			command.SendTextEmbedCommand(s, m.ChannelID, command.StatusBot.ERR, m.Data.Type().String()+" : not a number or a mention", discordgo.EmbedTypeRich)
 			return
 		}
 	}
 
 	userTimeRaw, err := SnowflakeTimestamp(userId)
 	if err != nil {
-		command.SendTextEmbedCommand(s, m.ChannelID, CommandStatusBot.ERR, m.Data.Type().String()+" : not a number or a mention", discordgo.EmbedTypeRich)
+		command.SendTextEmbedCommand(s, m.ChannelID, command.StatusBot.ERR, m.Data.Type().String()+" : not a number or a mention", discordgo.EmbedTypeRich)
 		return
 	}
 
@@ -73,7 +68,7 @@ func AgeJoinedCMD(s *discordgo.Session, m *discordgo.InteractionCreate, cmd []in
 	sekundyString := strconv.FormatInt(sekundy, 10)
 
 	//send the embed
-	command.SendTextEmbedCommand(s, m.ChannelID, CommandStatusBot.OK+userName, command.ParseStringToMentionID(userId)+" "+
+	command.SendTextEmbedCommand(s, m.ChannelID, command.StatusBot.OK+userName, command.ParseStringToMentionID(userId)+" "+
 		" has an account age of:\n"+
 		""+rokyString+" rokov\n"+
 		""+dnyString+" dni\n"+
@@ -99,7 +94,7 @@ func MuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interfa
 
 	//Verify, if user has any rights at all
 	if authorisedAdmin == false && authorisedTrusted == false {
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTH, "Error muting a user - insufficient rights.", discordgo.EmbedTypeRich)
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.AUTH, "Error muting a user - insufficient rights.", discordgo.EmbedTypeRich)
 		return
 	}
 
@@ -133,11 +128,11 @@ func MuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interfa
 					s.GuildMemberMute(cmd.GuildID, MuteUserString[j], true)
 					err2 := s.GuildMemberRoleAdd(cmd.GuildID, MuteUserString[j], muteRoleID)
 					if err2 != nil {
-						command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error muting a user - cannot assign the MuteRole."+
+						command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "Error muting a user - cannot assign the MuteRole."+
 							" "+config.Cfg.MuteFunction.MuteRoleID, discordgo.EmbedTypeRich)
 						return
 					}
-					command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"MUTED", "Muted user "+command.ParseStringToMentionID(membersCached[i].User.ID)+" (ID: "+
+					command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK+"MUTED", "Muted user "+command.ParseStringToMentionID(membersCached[i].User.ID)+" (ID: "+
 						""+membersCached[i].User.ID+")", discordgo.EmbedTypeRich)
 					s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[LOG]** Administrator user "+cmd.Member.User.Username+" Muted user: "+
 						""+command.ParseStringToMentionID(membersCached[i].User.ID))
@@ -160,11 +155,11 @@ func MuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interfa
 
 					err2 := s.GuildMemberRoleAdd(cmd.GuildID, MuteUserString[j], muteRoleID)
 					if err2 != nil {
-						command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error muting a user - cannot assign the MuteRole."+
+						command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "Error muting a user - cannot assign the MuteRole."+
 							" "+config.Cfg.MuteFunction.MuteRoleID, discordgo.EmbedTypeRich)
 						return
 					}
-					command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"MUTED", "Muted user younger than "+
+					command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK+"MUTED", "Muted user younger than "+
 						""+strconv.FormatInt(int64(timeToCheckUsers*-1.0), 10)+MuteUserString[j], discordgo.EmbedTypeRich)
 
 					s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[LOG]** Trusted user "+command.ParseStringToMentionID(cmd.User.Username)+" Muted user: "+
@@ -173,7 +168,7 @@ func MuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interfa
 
 					//muting cannot be done if the time limit has been passed
 				} else if membersCached[i].User.ID == MuteUserString[j] && timevar < timeToCheckUsers {
-					command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTH, "Trusted users cannot mute anyone who has joined more than "+
+					command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.AUTH, "Trusted users cannot mute anyone who has joined more than "+
 						""+strconv.FormatInt(int64(timeToCheckUsers*-1.0), 10)+" hours ago.", discordgo.EmbedTypeRich)
 					return
 				}
@@ -181,11 +176,11 @@ func MuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interfa
 		}
 
 	} else if config.Cfg.MuteFunction.TrustedMutingEnabled == false && authorisedTrusted == true && authorisedAdmin == false {
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.WARN, "Muting by Trusted users is currently disabled"+
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.WARN, "Muting by Trusted users is currently disabled"+
 			" "+config.Cfg.MuteFunction.MuteRoleID, discordgo.EmbedTypeRich)
 		return
 	} else {
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTH, "Undefined permissions error"+
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.AUTH, "Undefined permissions error"+
 			" "+config.Cfg.MuteFunction.MuteRoleID, discordgo.EmbedTypeRich)
 		return
 	}
@@ -204,7 +199,7 @@ func UnmuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []inter
 
 	//Verify, if user has any rights at all
 	if authorisedAdmin == false {
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTH, "Error unmuting a user - insufficient rights.", discordgo.EmbedTypeRich)
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.AUTH, "Error unmuting a user - insufficient rights.", discordgo.EmbedTypeRich)
 		return
 	}
 
@@ -236,11 +231,11 @@ func UnmuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []inter
 					s.GuildMemberMute(cmd.GuildID, UnmuteUserString[j], false)
 					err2 := s.GuildMemberRoleRemove(cmd.GuildID, UnmuteUserString[j], muteRoleID)
 					if err2 != nil {
-						command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error Unmuting a user - cannot remove the MuteRole."+
+						command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "Error Unmuting a user - cannot remove the MuteRole."+
 							" "+config.Cfg.MuteFunction.MuteRoleID, discordgo.EmbedTypeRich)
 						return
 					}
-					command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"UNMUTED", "Unmuted user "+command.ParseStringToMentionID(membersCached[i].User.ID)+" (ID: "+
+					command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK+"UNMUTED", "Unmuted user "+command.ParseStringToMentionID(membersCached[i].User.ID)+" (ID: "+
 						""+membersCached[i].User.ID+")", discordgo.EmbedTypeRich)
 					s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[LOG]** Administrator user "+cmd.Member.User.Username+" Unmuted user: "+
 						""+command.ParseStringToMentionID(membersCached[i].User.ID))
@@ -251,11 +246,11 @@ func UnmuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []inter
 		}
 
 	} else if config.Cfg.MuteFunction.TrustedMutingEnabled == false && authorisedAdmin == false {
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.WARN, "Unmuting by Trusted users is currently disabled"+
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.WARN, "Unmuting by Trusted users is currently disabled"+
 			" "+config.Cfg.MuteFunction.MuteRoleID, discordgo.EmbedTypeRich)
 		return
 	} else {
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTH, "Undefined permissions error"+
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.AUTH, "Undefined permissions error"+
 			" "+config.Cfg.MuteFunction.MuteRoleID, discordgo.EmbedTypeRich)
 		return
 	}
@@ -272,7 +267,7 @@ func KickUserCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []int
 	}
 
 	if authorisedAdmin == false {
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTH, "Error kicking a user - insufficient rights.", discordgo.EmbedTypeRich)
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.AUTH, "Error kicking a user - insufficient rights.", discordgo.EmbedTypeRich)
 		return
 	}
 
@@ -307,12 +302,12 @@ func KickUserCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []int
 					//perform the kick itself
 					err := s.GuildMemberDeleteWithReason(cmd.GuildID, KickUserString, reason)
 					if err != nil {
-						command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error kicking user ID "+membersCached[i].User.ID, discordgo.EmbedTypeRich)
+						command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "Error kicking user ID "+membersCached[i].User.ID, discordgo.EmbedTypeRich)
 						return
 					}
 
 					//log the kick
-					command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"KICKED", "Kicked user "+membersCached[i].User.Username+"for "+
+					command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK+"KICKED", "Kicked user "+membersCached[i].User.Username+"for "+
 						""+reason, discordgo.EmbedTypeRich)
 					s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "User "+KickUserString+" ,was kicked for: "+fmt.Sprintf("%s", m[1])+" .Kicked by "+cmd.Member.Nick)
 				} else {
@@ -327,13 +322,13 @@ func KickUserCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []int
 					//perform the kick itself
 					err := s.GuildMemberDelete(cmd.GuildID, KickUserString)
 					if err != nil {
-						command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error kicking user ID "+membersCached[i].User.ID, discordgo.EmbedTypeRich)
+						command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "Error kicking user ID "+membersCached[i].User.ID, discordgo.EmbedTypeRich)
 						return
 					}
 
 					//log the kick
 					//TODO: Fix the KickUserString -> stringf(m[0])
-					command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"KICKED", "Kicked user "+membersCached[i].User.Username, discordgo.EmbedTypeRich)
+					command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK+"KICKED", "Kicked user "+membersCached[i].User.Username, discordgo.EmbedTypeRich)
 					s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "User "+KickUserString+" "+fmt.Sprintf("%s", m[0])+" Kicked by "+cmd.Member.Nick)
 				}
 			}
@@ -355,7 +350,7 @@ func BanUserCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []inte
 	}
 
 	if authorisedAdmin == false {
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTH, "Error banning a user - insufficient rights.", discordgo.EmbedTypeRich)
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.AUTH, "Error banning a user - insufficient rights.", discordgo.EmbedTypeRich)
 		return
 	}
 
@@ -391,10 +386,10 @@ func BanUserCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []inte
 
 					err := s.GuildBanCreateWithReason(cmd.GuildID, BanUserString, reason, int(daysDelete))
 					if err != nil {
-						command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error banning user ID "+membersCached[i].User.ID, discordgo.EmbedTypeRich)
+						command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "Error banning user ID "+membersCached[i].User.ID, discordgo.EmbedTypeRich)
 						return
 					}
-					command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"BANNED", "Banned user "+membersCached[i].User.Username+"for "+
+					command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK+"BANNED", "Banned user "+membersCached[i].User.Username+"for "+
 						""+reason, discordgo.EmbedTypeRich)
 				} else {
 					userNotifChanID, err0 := s.UserChannelCreate(BanUserString)
@@ -406,10 +401,10 @@ func BanUserCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []inte
 
 					err1 := s.GuildBanCreate(cmd.GuildID, BanUserString, int(daysDelete))
 					if err1 != nil {
-						command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error banning user ID "+membersCached[i].User.ID, discordgo.EmbedTypeRich)
+						command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "Error banning user ID "+membersCached[i].User.ID, discordgo.EmbedTypeRich)
 						return
 					}
-					command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"BANNED", "Banning user "+membersCached[i].User.Username, discordgo.EmbedTypeRich)
+					command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK+"BANNED", "Banning user "+membersCached[i].User.Username, discordgo.EmbedTypeRich)
 					//TODO: Fix the BanUserString -> stringf(m[0])
 					s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "User "+BanUserString+" "+fmt.Sprintf("%s", m[0])+" Banned by "+cmd.Member.Nick)
 				}
@@ -462,9 +457,9 @@ func CheckUsersCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []i
 			}
 		}
 		//print out the amount of members_cached (max is currently 1000)
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"RECENT USERS", mainOutputMsg+"\n**IDs of the users (copyfriendly):**\n"+IDOutputMsg, discordgo.EmbedTypeRich)
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK+"RECENT USERS", mainOutputMsg+"\n**IDs of the users (copyfriendly):**\n"+IDOutputMsg, discordgo.EmbedTypeRich)
 	} else if authorisedAdmin == false {
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTH, "You do not have the permission to use this command", discordgo.EmbedTypeRich)
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.AUTH, "You do not have the permission to use this command", discordgo.EmbedTypeRich)
 		return
 	}
 	return
@@ -492,7 +487,7 @@ func PlannedGamesCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m [
 	database.DisplayAllGamesPlanned(sqliteDatabase, &plannedGames)
 
 	//send info to channel
-	command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"PLANNED GAMES", plannedGames, discordgo.EmbedTypeRich)
+	command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK+"PLANNED GAMES", plannedGames, discordgo.EmbedTypeRich)
 	return
 }
 
@@ -513,13 +508,13 @@ func GamePlanInsertCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m
 	//Put hours into timeHours
 	timeHour, err := strconv.Atoi(splitTimeArgument[0])
 	if err != nil {
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error converting hours", discordgo.EmbedTypeRich)
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "Error converting hours", discordgo.EmbedTypeRich)
 		return
 	}
 	//put minutes into timeMinute
 	timeMinute, err := strconv.Atoi(splitTimeArgument[1])
 	if err != nil {
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error converting minutes", discordgo.EmbedTypeRich)
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "Error converting minutes", discordgo.EmbedTypeRich)
 		//(*s).ChannelMessageSend((*m).ChannelID, "**[ERR]** Error converting minutes")
 		//fmt.Printf("%s", err)
 		return
@@ -534,7 +529,7 @@ func GamePlanInsertCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m
 	var plannedGames string
 	database.DisplayGamePlanned(sqliteDatabase, &plannedGames)
 
-	command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"PLANNED A GAME", plannedGames, discordgo.EmbedTypeRich)
+	command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK+"PLANNED A GAME", plannedGames, discordgo.EmbedTypeRich)
 	return
 }
 
@@ -543,7 +538,7 @@ func TopicCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interf
 	fileHandle, err := os.Open("topic_questions.txt")
 	if err != nil {
 		fmt.Println("error reading the file: ", err)
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error reading the file topic_questions.txt", discordgo.EmbedTypeRich)
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "Error reading the file topic_questions.txt", discordgo.EmbedTypeRich)
 		return
 	}
 	defer func(fileHandle *os.File) {
@@ -574,7 +569,7 @@ func TopicCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interf
 		return
 	}
 
-	command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"TOPIC", splitTopic[n], discordgo.EmbedTypeRich)
+	command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK+"TOPIC", splitTopic[n], discordgo.EmbedTypeRich)
 	return
 }
 
@@ -599,7 +594,7 @@ func GetWeatherCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []i
 	w, err := owm.NewCurrent("C", "en", config.Cfg.ServerInfo.WeatherAPIKey)
 	if err != nil {
 		fmt.Println("Error processing the request")
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error processing the request", discordgo.EmbedTypeRich)
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "Error processing the request", discordgo.EmbedTypeRich)
 	}
 
 	var commandString string = fmt.Sprintf("%s", m[0])
@@ -607,7 +602,7 @@ func GetWeatherCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []i
 	err2 := w.CurrentByName(commandString)
 	if err2 != nil {
 		log.Println(err2)
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "The city "+commandString+" does not exist", discordgo.EmbedTypeRich)
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "The city "+commandString+" does not exist", discordgo.EmbedTypeRich)
 		return
 	}
 
@@ -627,7 +622,7 @@ func GetWeatherCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []i
 		sunset:     time.Unix(int64(w.Sys.Sunset), 0).Format(time.Kitchen),
 	}
 
-	embed := NewEmbed().
+	embed := command.NewEmbed().
 		SetTitle("WEATHER IN: "+strings.ToUpper(weatherData.name)).
 		SetDescription(":cloud: **"+strings.ToUpper(weatherData.condition)+"**").
 		AddField("**TEMPERATURE**",
@@ -663,13 +658,13 @@ func PurgeMessagesCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m 
 
 		numMessages := m[0].(int64)
 		if numMessages > 99 || numMessages < 1 {
-			command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.SYNTAX, "The min-max of the number is 1-100", discordgo.EmbedTypeRich)
+			command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.SYNTAX, "The min-max of the number is 1-100", discordgo.EmbedTypeRich)
 			return
 		}
 
 		messageArrayComplete, err1 := s.ChannelMessages(cmd.ChannelID, int(numMessages), cmd.ID, "", "")
 		if err1 != nil {
-			command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Cannot get the ID of messages", discordgo.EmbedTypeRich)
+			command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "Cannot get the ID of messages", discordgo.EmbedTypeRich)
 			return
 		}
 
@@ -679,17 +674,17 @@ func PurgeMessagesCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m 
 
 		err2 := s.ChannelMessagesBulkDelete(cmd.ChannelID, messageArrayToDelete)
 		if err2 != nil {
-			command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error deleting the requested messages...", discordgo.EmbedTypeRich)
+			command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "Error deleting the requested messages...", discordgo.EmbedTypeRich)
 			return
 		}
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"PURGED", "Purged "+strconv.FormatInt(int64(len(messageArrayToDelete)), 10)+" "+
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK+"PURGED", "Purged "+strconv.FormatInt(int64(len(messageArrayToDelete)), 10)+" "+
 			"messages", discordgo.EmbedTypeRich)
 
 		s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[LOG]** User "+cmd.Member.Nick+" deleted "+strconv.FormatInt(int64(len(messageArrayToDelete)), 10)+" messages in channel "+"<#"+cmd.ChannelID+">")
 
 		return
 	} else {
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTH, "Insufficient permissions.", discordgo.EmbedTypeRich)
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.AUTH, "Insufficient permissions.", discordgo.EmbedTypeRich)
 		return
 	}
 
@@ -709,7 +704,7 @@ func PurgeMessagesCMDMessage(s *discordgo.Session, cmd *discordgo.InteractionCre
 
 		messageArrayComplete, err1 := s.ChannelMessages(cmd.ChannelID, 0, cmd.ID, m[0].(string), "")
 		if err1 != nil {
-			command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Cannot get the ID of messages", discordgo.EmbedTypeRich)
+			command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "Cannot get the ID of messages", discordgo.EmbedTypeRich)
 			return
 		}
 
@@ -719,17 +714,17 @@ func PurgeMessagesCMDMessage(s *discordgo.Session, cmd *discordgo.InteractionCre
 
 		err2 := s.ChannelMessagesBulkDelete(cmd.ChannelID, messageArrayToDelete)
 		if err2 != nil {
-			command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error deleting the requested messages...", discordgo.EmbedTypeRich)
+			command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "Error deleting the requested messages...", discordgo.EmbedTypeRich)
 			return
 		}
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"PURGED", "Purged "+strconv.FormatInt(int64(len(messageArrayToDelete)), 10)+" "+
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK+"PURGED", "Purged "+strconv.FormatInt(int64(len(messageArrayToDelete)), 10)+" "+
 			"messages", discordgo.EmbedTypeRich)
 
 		s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[LOG]** User "+cmd.Member.Nick+" deleted "+strconv.FormatInt(int64(len(messageArrayToDelete)), 10)+" messages in channel "+"<#"+cmd.ChannelID+">")
 
 		return
 	} else {
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTH, "Insufficient permissions.", discordgo.EmbedTypeRich)
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.AUTH, "Insufficient permissions.", discordgo.EmbedTypeRich)
 		return
 	}
 
@@ -749,7 +744,7 @@ func PurgeMessagesCMDMessageOnlyAuthor(s *discordgo.Session, cmd *discordgo.Inte
 
 		messageArrayComplete, err1 := s.ChannelMessages(cmd.ChannelID, 0, cmd.ID, m[0].(string), "")
 		if err1 != nil {
-			command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Cannot get the ID of messages", discordgo.EmbedTypeRich)
+			command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "Cannot get the ID of messages", discordgo.EmbedTypeRich)
 			return
 		}
 
@@ -766,10 +761,10 @@ func PurgeMessagesCMDMessageOnlyAuthor(s *discordgo.Session, cmd *discordgo.Inte
 
 		err2 := s.ChannelMessagesBulkDelete(cmd.ChannelID, messageArrayToDelete)
 		if err2 != nil {
-			command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error deleting the requested messages...", discordgo.EmbedTypeRich)
+			command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "Error deleting the requested messages...", discordgo.EmbedTypeRich)
 			return
 		}
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"PURGED", "Purged "+
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK+"PURGED", "Purged "+
 			""+strconv.FormatInt(int64(len(messageArrayToDelete)), 10)+" messages from user: "+
 			""+messageArrayCompleteLastIndex[0].Author.Mention(), discordgo.EmbedTypeRich)
 
@@ -777,7 +772,7 @@ func PurgeMessagesCMDMessageOnlyAuthor(s *discordgo.Session, cmd *discordgo.Inte
 
 		return
 	} else {
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTH, "Insufficient permissions.", discordgo.EmbedTypeRich)
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.AUTH, "Insufficient permissions.", discordgo.EmbedTypeRich)
 		return
 	}
 
@@ -816,7 +811,7 @@ func MembersCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []inte
 
 	memberListLength := GetMemberCount(cmd)
 
-	command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+strconv.FormatUint(uint64(memberListLength), 10), ""+
+	command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK+strconv.FormatUint(uint64(memberListLength), 10), ""+
 		"There are "+strconv.FormatUint(uint64(memberListLength), 10)+" members on the server", discordgo.EmbedTypeRich)
 
 	return
@@ -828,17 +823,17 @@ func PruneCountCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []i
 
 	if pruneDaysInt < 7 || pruneDaysInt > 30 {
 		pruneDaysInt = 0
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.WARN, "Command is limited to range 7-30 for safety reasons", discordgo.EmbedTypeRich)
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.WARN, "Command is limited to range 7-30 for safety reasons", discordgo.EmbedTypeRich)
 		return
 	}
 
 	pruneDaysCount, err := s.GuildPruneCount(cmd.GuildID, uint32(pruneDaysInt))
 	if err != nil {
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error checking members to prune.", discordgo.EmbedTypeRich)
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "Error checking members to prune.", discordgo.EmbedTypeRich)
 		return
 	}
 
-	command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+strconv.FormatUint(uint64(pruneDaysCount), 10), ""+
+	command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK+strconv.FormatUint(uint64(pruneDaysCount), 10), ""+
 		"There are "+strconv.FormatUint(uint64(pruneDaysCount), 10)+" members to prune", discordgo.EmbedTypeRich)
 
 	return
@@ -859,7 +854,7 @@ func PruneMembersCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m [
 		var pruneDaysCountUInt = uint32(pruneDaysCountInt)
 
 		if pruneDaysCountInt == 0 {
-			command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.SYNTAX, "Cannot prune time of 0 days. Allowed frame is 7-30", discordgo.EmbedTypeRich)
+			command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.SYNTAX, "Cannot prune time of 0 days. Allowed frame is 7-30", discordgo.EmbedTypeRich)
 			s.ChannelMessageSend(cmd.ChannelID, "**[ERR]** Invalid days to prune (0)")
 			return
 		}
@@ -867,12 +862,12 @@ func PruneMembersCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m [
 		//prunes the members and assigns the result of the pruned members count to a variable
 		prunedMembersCount, err1 := s.GuildPrune(cmd.GuildID, pruneDaysCountUInt)
 		if err1 != nil {
-			command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error pruning members", discordgo.EmbedTypeRich)
+			command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "Error pruning members", discordgo.EmbedTypeRich)
 		}
 
 		//log output
 
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"PRUNED", strconv.FormatInt(int64(prunedMembersCount), 10)+
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK+"PRUNED", strconv.FormatInt(int64(prunedMembersCount), 10)+
 			" members from the server", discordgo.EmbedTypeRich)
 		s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[LOG]** User "+cmd.Member.Nick+
 			" used a prune and kicked "+strconv.FormatInt(int64(prunedMembersCount), 10)+" members")
@@ -880,7 +875,7 @@ func PruneMembersCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m [
 
 		//permission output
 	} else {
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTH, "Insufficient permissions", discordgo.EmbedTypeRich)
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.AUTH, "Insufficient permissions", discordgo.EmbedTypeRich)
 		return
 	}
 
@@ -897,7 +892,7 @@ func SetRoleChannelPermCMD(s *discordgo.Session, cmd *discordgo.InteractionCreat
 
 	//check if user is admin before using the command
 	if authorisedAdmin == false {
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTH, "You do not have the permission to change the channel permissions for a role.", discordgo.EmbedTypeRich)
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.AUTH, "You do not have the permission to change the channel permissions for a role.", discordgo.EmbedTypeRich)
 		return
 	}
 
@@ -913,10 +908,10 @@ func SetRoleChannelPermCMD(s *discordgo.Session, cmd *discordgo.InteractionCreat
 	if permissionAllow == true {
 		err := s.ChannelPermissionSet(cmd.ChannelID, permissionRole, 0, permissionID, 0)
 		if err != nil {
-			command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error setting the permissions on the channel."+err.Error(), discordgo.EmbedTypeRich)
+			command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "Error setting the permissions on the channel."+err.Error(), discordgo.EmbedTypeRich)
 			return
 		}
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"PERMISSIONS ALLOWED", "Permissions "+strconv.FormatInt(permissionID, 10)+" successfully allowed"+
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK+"PERMISSIONS ALLOWED", "Permissions "+strconv.FormatInt(permissionID, 10)+" successfully allowed"+
 			"", discordgo.EmbedTypeRich)
 		s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[OK]** Admin "+cmd.Member.Nick+" allowed permissions "+strconv.FormatInt(permissionID, 10)+""+
 			" for channel "+command.ParseStringToChannelID(cmd.ChannelID)+" to a role "+command.ParseStringToRoleMention(permissionRole))
@@ -926,10 +921,10 @@ func SetRoleChannelPermCMD(s *discordgo.Session, cmd *discordgo.InteractionCreat
 	} else if permissionAllow == false {
 		err := s.ChannelPermissionSet(cmd.ChannelID, permissionRole, 0, 0, permissionID)
 		if err != nil {
-			command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error setting the permissions on the channel."+err.Error(), discordgo.EmbedTypeRich)
+			command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "Error setting the permissions on the channel."+err.Error(), discordgo.EmbedTypeRich)
 			return
 		}
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"PERMISSIONS DENIED", "Permissions "+strconv.FormatInt(permissionID, 10)+" successfully denied"+
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK+"PERMISSIONS DENIED", "Permissions "+strconv.FormatInt(permissionID, 10)+" successfully denied"+
 			"", discordgo.EmbedTypeRich)
 		s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[OK]** Admin "+cmd.Member.Nick+" denied permissions "+strconv.FormatInt(permissionID, 10)+""+
 			" for channel "+command.ParseStringToChannelID(cmd.ChannelID)+" to a role "+command.ParseStringToRoleMention(permissionRole))
@@ -937,7 +932,7 @@ func SetRoleChannelPermCMD(s *discordgo.Session, cmd *discordgo.InteractionCreat
 
 		//if there is an invalid syntax with the allow/deny argument then
 	} else {
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.SYNTAX, "Invalid syntax, .setpermission **<allow,deny>** "+
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.SYNTAX, "Invalid syntax, .setpermission **<allow,deny>** "+
 			"@roletoset INTPERMIDS", discordgo.EmbedTypeRich)
 		return
 	}
@@ -955,7 +950,7 @@ func SetUserChannelPermCMD(s *discordgo.Session, cmd *discordgo.InteractionCreat
 
 	//check if user is admin before using the command
 	if authorisedAdmin == false {
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTH, "You do not have the permission to change the channel permissions for a role.", discordgo.EmbedTypeRich)
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.AUTH, "You do not have the permission to change the channel permissions for a role.", discordgo.EmbedTypeRich)
 		return
 	}
 
@@ -969,10 +964,10 @@ func SetUserChannelPermCMD(s *discordgo.Session, cmd *discordgo.InteractionCreat
 	if permissionAllow == true {
 		err := s.ChannelPermissionSet(cmd.ChannelID, permissionRole, 1, permissionID, 0)
 		if err != nil {
-			command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error setting the permissions on the channel."+err.Error(), discordgo.EmbedTypeRich)
+			command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "Error setting the permissions on the channel."+err.Error(), discordgo.EmbedTypeRich)
 			return
 		}
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"PERMISSIONS ALLOWED", "Permissions "+strconv.FormatInt(permissionID, 10)+" successfully allowed"+
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK+"PERMISSIONS ALLOWED", "Permissions "+strconv.FormatInt(permissionID, 10)+" successfully allowed"+
 			"", discordgo.EmbedTypeRich)
 		s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[OK]** Admin "+cmd.ChannelID+" denied permissions "+strconv.FormatInt(permissionID, 10)+""+
 			" for channel "+command.ParseStringToChannelID(cmd.ChannelID)+" to a user "+command.ParseStringToMentionID(permissionRole))
@@ -982,10 +977,10 @@ func SetUserChannelPermCMD(s *discordgo.Session, cmd *discordgo.InteractionCreat
 	} else if permissionAllow == false {
 		err := s.ChannelPermissionSet(cmd.ChannelID, permissionRole, 1, 0, permissionID)
 		if err != nil {
-			command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error setting the permissions on the channel."+err.Error(), discordgo.EmbedTypeRich)
+			command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "Error setting the permissions on the channel."+err.Error(), discordgo.EmbedTypeRich)
 			return
 		}
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"PERMISSIONS DENIED", "Permissions "+strconv.FormatInt(permissionID, 10)+" successfully denied"+
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK+"PERMISSIONS DENIED", "Permissions "+strconv.FormatInt(permissionID, 10)+" successfully denied"+
 			"", discordgo.EmbedTypeRich)
 		s.ChannelMessageSend(config.Cfg.ChannelLog.ChannelLogID, "**[OK]** Admin "+cmd.Member.Nick+" denied permissions "+strconv.FormatInt(permissionID, 10)+""+
 			" for channel "+command.ParseStringToChannelID(cmd.ChannelID)+" to a user "+command.ParseStringToMentionID(permissionRole))
@@ -1004,13 +999,13 @@ func RedirectDiscussionCMD(s *discordgo.Session, cmd *discordgo.InteractionCreat
 
 	//check if user is admin before using the command
 	if authorisedAdmin == false {
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTH, "You do not have the permission to change the channel slowmode.", discordgo.EmbedTypeRich)
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.AUTH, "You do not have the permission to change the channel slowmode.", discordgo.EmbedTypeRich)
 		return
 	}
 
 	originalChannelInfo, err := s.Channel(cmd.ChannelID)
 	if err != nil {
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Cannot get info of the channel to modify, aborting.", discordgo.EmbedTypeRich)
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "Cannot get info of the channel to modify, aborting.", discordgo.EmbedTypeRich)
 		return
 	}
 
@@ -1031,10 +1026,10 @@ func RedirectDiscussionCMD(s *discordgo.Session, cmd *discordgo.InteractionCreat
 
 	_, err1 := s.ChannelEditComplex(cmd.ChannelID, &slowmodeChannelSet)
 	if err1 != nil {
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error setting the slowmode.", discordgo.EmbedTypeRich)
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "Error setting the slowmode.", discordgo.EmbedTypeRich)
 		return
 	}
-	command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"SLOWMODE SET FOR "+strconv.FormatInt(int64(slowmodeChannelSet.RateLimitPerUser), 10)+" SECONDS", "Continue discussion in "+
+	command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK+"SLOWMODE SET FOR "+strconv.FormatInt(int64(slowmodeChannelSet.RateLimitPerUser), 10)+" SECONDS", "Continue discussion in "+
 		""+command.ParseStringToChannelID(channelIDString), discordgo.EmbedTypeRich)
 
 	return
@@ -1051,7 +1046,7 @@ func SlowModeChannelCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, 
 
 	//check if user is admin before using the command
 	if authorisedAdmin == false {
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTH, "You do not have the permission to change the channel slowmode.", discordgo.EmbedTypeRich)
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.AUTH, "You do not have the permission to change the channel slowmode.", discordgo.EmbedTypeRich)
 		return
 	}
 
@@ -1060,17 +1055,17 @@ func SlowModeChannelCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, 
 
 	//verify inputs
 	if numOfSeconds > 21600 {
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Seconds must be in the valid range (0-21600)", discordgo.EmbedTypeRich)
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "Seconds must be in the valid range (0-21600)", discordgo.EmbedTypeRich)
 		return
 	} else if numOfSeconds == 0 {
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTOFIX, "Due to the bug in discord, setting the number to 1 (smallest possible wait time)", discordgo.EmbedTypeRich)
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.AUTOFIX, "Due to the bug in discord, setting the number to 1 (smallest possible wait time)", discordgo.EmbedTypeRich)
 		numOfSeconds = 0
 	}
 
 	//get the original channel info
 	originalChannelInfo, err := s.Channel(cmd.ChannelID)
 	if err != nil {
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Cannot get info of the channel to modify, aborting.", discordgo.EmbedTypeRich)
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "Cannot get info of the channel to modify, aborting.", discordgo.EmbedTypeRich)
 		return
 	}
 
@@ -1090,12 +1085,12 @@ func SlowModeChannelCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, 
 	//set the slowmode
 	channelEdited, err1 := s.ChannelEditComplex(cmd.ChannelID, &slowmodeChannelSet)
 	if err1 != nil {
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Error setting the slowmode.", discordgo.EmbedTypeRich)
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "Error setting the slowmode.", discordgo.EmbedTypeRich)
 		return
 	}
 
 	//send the confirmation message
-	command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"SLOWMODE "+strconv.FormatUint(numOfSeconds, 10)+""+
+	command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK+"SLOWMODE "+strconv.FormatUint(numOfSeconds, 10)+""+
 		" SECONDS", "Set the channel slowmode to "+strconv.FormatUint(numOfSeconds, 10)+""+
 		" seconds per message", discordgo.EmbedTypeRich)
 
@@ -1110,7 +1105,7 @@ func ChangeVoiceChannelCurrentCMD(s *discordgo.Session, cmd *discordgo.Interacti
 	//find the user current voice channel
 	currentUserInfo, err := FindUserVoiceState(s, command.ParseMentionToString(cmd.Member.Mention()))
 	if err != nil {
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "You are not joined in any "+
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "You are not joined in any "+
 			"voice channel. Or the bot can't see you. Either one.", discordgo.EmbedTypeRich)
 		return
 	}
@@ -1118,7 +1113,7 @@ func ChangeVoiceChannelCurrentCMD(s *discordgo.Session, cmd *discordgo.Interacti
 	//get the original channel info
 	originalChannelInfo, err1 := s.Channel(currentUserInfo.ChannelID)
 	if err1 != nil {
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Cannot get any info of the"+
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "Cannot get any info of the"+
 			"channel you are joined in. Bot probably can't see into the channel.", discordgo.EmbedTypeRich)
 		return
 	}
@@ -1133,7 +1128,7 @@ func ChangeVoiceChannelCurrentCMD(s *discordgo.Session, cmd *discordgo.Interacti
 		bitrate = bitrate * 1000
 	}
 	if bitrate < 8 || bitrate > 384000 {
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.SYNTAX, "Bitrate can be from 8 to 384 kbps", discordgo.EmbedTypeRich)
+		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.SYNTAX, "Bitrate can be from 8 to 384 kbps", discordgo.EmbedTypeRich)
 	}
 
 	var voiceChannelSet discordgo.ChannelEdit = discordgo.ChannelEdit{
@@ -1153,22 +1148,22 @@ func ChangeVoiceChannelCurrentCMD(s *discordgo.Session, cmd *discordgo.Interacti
 		if err2 != nil {
 			switch errorCounter {
 			case 0:
-				command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTOFIX, "Trying lower bitrate... 284kbps", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.AUTOFIX, "Trying lower bitrate... 284kbps", discordgo.EmbedTypeRich)
 				bitrate = 284000
 				errorCounter += 1
 
 			case 1:
-				command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTOFIX, "Trying lower bitrate... 128kbps", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.AUTOFIX, "Trying lower bitrate... 128kbps", discordgo.EmbedTypeRich)
 				bitrate = 128000
 				errorCounter += 1
 
 			case 2:
-				command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.AUTOFIX, "Trying lower bitrate... 96kbps", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.AUTOFIX, "Trying lower bitrate... 96kbps", discordgo.EmbedTypeRich)
 				bitrate = 96000
 				errorCounter += 1
 
 			case 3:
-				command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR, "Some weird error occured", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.ERR, "Some weird error occured", discordgo.EmbedTypeRich)
 				return
 			default:
 				break
@@ -1176,200 +1171,7 @@ func ChangeVoiceChannelCurrentCMD(s *discordgo.Session, cmd *discordgo.Interacti
 		}
 		break
 	}
-	command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"CHANGED NAME AND BITRATE", "**Channel:** "+
+	command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK+"CHANGED NAME AND BITRATE", "**Channel:** "+
 		""+name+"\n**Bitrate:** "+strconv.FormatInt(int64(bitrate), 10), discordgo.EmbedTypeRich)
 	return
-}
-
-// GetCOVIDSlovakInfo TODO: Move this function elsewhere
-//function takes an address of the desired type and then returns the response body in bytes to be unmarshaled later.
-func GetCOVIDSlovakInfo(address string) []byte {
-	// Generated by curl-to-Go: https://mholt.github.io/curl-to-go
-
-	// curl -X GET "https://data.korona.gov.sk/api/vaccines" -H "accept: application/json"
-
-	req, err := http.NewRequest("GET", address, nil)
-	if err != nil {
-		// handle err
-	}
-	req.Header.Set("Accept", "application/json")
-	req.Header.Add("charset", "utf-8")
-	req.Header.Add("Accept-Charset", "utf-8")
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		fmt.Println("ERROR: ", err)
-	}
-	defer resp.Body.Close()
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("ERROR: ", err)
-	}
-	return bodyBytes
-}
-
-// COVIDVaccinesAvailable unmarshales the body into a custom struct and then prints out the result
-func COVIDVaccinesAvailable(s *discordgo.Session, cmd *discordgo.InteractionCreate) {
-	var err error
-
-	type Response struct {
-		Id           int    `json:"id"`
-		Title        string `json:"title"`
-		Manufacturer string `json:"manufacturer"`
-	}
-
-	bodyBytes := GetCOVIDSlovakInfo("https://data.korona.gov.sk/api/vaccines")
-
-	var currentResponse []Response
-	err = json.Unmarshal(bodyBytes, &currentResponse)
-	if err != nil {
-		fmt.Println("ERROR UNMARSHALING DATA: ", err)
-
-	}
-
-	embed := NewEmbed().
-		SetTitle("LIST OF VACCINATION SUBSTANCES").
-		SetDescription("Currently present in Slovakia")
-
-	//var output string
-
-	for i := 0; i < len(currentResponse); i++ {
-		embed = embed.AddField(currentResponse[i].Manufacturer, currentResponse[i].Title)
-
-	}
-
-	//command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"LIST OF VACCINATION SUBSTANCES IN SLOVAKIA", output, discordgo.EmbedTypeRich)
-
-	messageEmbed := embed.InlineAllFields().SetColor(3066993).MessageEmbed
-
-	s.ChannelMessageSendEmbed(cmd.ChannelID, messageEmbed)
-	return
-}
-
-type Page struct {
-	Id          string `json:"id"`
-	Dose1Count  int    `json:"dose1_count"`
-	Dose2Count  int    `json:"dose2_count"`
-	Dose1Sum    int    `json:"dose1_sum"`
-	Dose2Sum    int    `json:"dose2_sum"`
-	UpdatedAt   string `json:"updated_at"`
-	PublishedOn string `json:"published_on"`
-}
-
-type VaccinatedSlovakiaResponse struct {
-	Success    bool   `json:"success"`
-	NextOffset int    `json:"next_offset"`
-	Page       []Page `json:"page"`
-}
-
-// COVIDNumberOfVaccinated Function to output a graph of the current vaccinated people
-func COVIDNumberOfVaccinated(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
-	var err error
-
-	//?updated_since=2021-10-13%2012%3A34%3A56
-
-	var year, month, day = time.Now().AddDate(0, 0, -7).Date()
-	var requestedDate string = strconv.FormatInt(int64(year), 10) + "-" + strconv.FormatInt(int64(month), 10) + "-" + strconv.FormatInt(int64(day), 10) + "%2000%3A00%3A01"
-
-	//var parsedDate string = "2021-10-13%2012%3A34%3A56"
-
-	bodyBytes := GetCOVIDSlovakInfo("https://data.korona.gov.sk/api/vaccinations/in-slovakia?updated_since=" + requestedDate)
-	fmt.Println(string(bodyBytes))
-
-	var currentResponse VaccinatedSlovakiaResponse
-	err = json.Unmarshal(bodyBytes, &currentResponse)
-	if err != nil {
-		fmt.Println("ERROR UNMARSHALING DATA: ", err)
-	}
-
-	if len(currentResponse.Page) == 0 {
-		fmt.Println("Invalid whatever")
-		command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.ERR+" CANNOT GET THE GODDAMN DATA", "Unknown error, go complain to the government to fix it.", discordgo.EmbedTypeRich)
-		return
-	}
-
-	for i := range currentResponse.Page {
-		fmt.Println("--------------")
-		fmt.Println(currentResponse.Page[i].PublishedOn + "\n")
-		fmt.Println(currentResponse.Page[i].Dose2Count)
-	}
-
-	var dose1Count []int
-	var dose2Count []int
-
-	for _, j := range currentResponse.Page {
-		dose1Count = append(dose1Count, j.Dose1Count)
-		dose2Count = append(dose2Count, j.Dose2Count)
-	}
-
-	output := currentResponse.Page[0].Dose2Count
-
-	fmt.Printf("%+v\n", currentResponse)
-
-	command.SendTextEmbedCommand(s, cmd.ChannelID, CommandStatusBot.OK+"VACCINATED PEOPLE ", strconv.FormatInt(int64(output), 10), discordgo.EmbedTypeRich)
-
-	COVIDOutputVaccinatedGraph(currentResponse)
-
-	return
-}
-
-func COVIDOutputVaccinatedGraph(response VaccinatedSlovakiaResponse) {
-	// create a new bar instance
-	bar := charts.NewBar()
-
-	bar.SetGlobalOptions(
-		charts.WithTitleOpts(opts.Title{Title: "toolbox options"}),
-		charts.WithToolboxOpts(opts.Toolbox{
-			Show:  true,
-			Right: "20%",
-			Feature: &opts.ToolBoxFeature{
-				SaveAsImage: &opts.ToolBoxFeatureSaveAsImage{
-					Show:  true,
-					Type:  "png",
-					Title: "Anything you want",
-				},
-				DataView: &opts.ToolBoxFeatureDataView{
-					Show:  true,
-					Title: "DataView",
-					// set the language
-					// Chinese version: ["数据视图", "关闭", "刷新"]
-					Lang: []string{"data view", "turn off", "refresh"},
-				},
-			}},
-		),
-	)
-
-	// set some global options like Title/Legend/ToolTip or anything else
-	bar.SetGlobalOptions(charts.WithTitleOpts(opts.Title{
-		Title:    "Number of vaccinated people in slovakia for the past 7 days",
-		Subtitle: "Blue - first dosage; Green - second dosage",
-	}))
-
-	// Put data into instance
-	bar.SetXAxis([]string{response.Page[0].PublishedOn, response.Page[1].PublishedOn, response.Page[2].PublishedOn, response.Page[3].PublishedOn, response.Page[4].PublishedOn, response.Page[5].PublishedOn, response.Page[6].PublishedOn}).
-		AddSeries("Prva davka", generateBarItems1(response)).
-		AddSeries("Druha davka", generateBarItems2(response))
-	// Where the magic happens
-	f, _ := os.Create("bar.html")
-	bar.Render(f)
-
-	return
-}
-
-// generate random data for bar chart
-func generateBarItems1(response VaccinatedSlovakiaResponse) []opts.BarData {
-	items := make([]opts.BarData, 0)
-	for i := 0; i < 7; i++ {
-		items = append(items, opts.BarData{Name: "Prva davka", Value: response.Page[i].Dose1Count})
-	}
-	return items
-}
-
-// generate random data for bar chart2
-func generateBarItems2(response VaccinatedSlovakiaResponse) []opts.BarData {
-	items := make([]opts.BarData, 0)
-	for i := 0; i < 7; i++ {
-		items = append(items, opts.BarData{Name: "Druha davka", Value: response.Page[i].Dose2Count})
-	}
-	return items
 }
