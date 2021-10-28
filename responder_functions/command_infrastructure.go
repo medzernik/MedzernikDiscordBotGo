@@ -1298,9 +1298,9 @@ func initialization(s *discordgo.Session) {
 var ReadyInfoPublic *discordgo.Ready
 
 // Ready Runs when the bot starts and engages all the commands
-func Ready(s *discordgo.Session, readyInfo *discordgo.Ready) {
+func Ready(s *discordgo.Session, readyInfo *discordgo.Ready) bool {
 	initialization(s)
-	go UpdateReadyInfo(readyInfo)
+	UpdateReadyInfo(readyInfo)
 
 	for i := range readyInfo.Guilds {
 		for _, v := range BotCommands {
@@ -1310,6 +1310,7 @@ func Ready(s *discordgo.Session, readyInfo *discordgo.Ready) {
 			}
 		}
 	}
+	return true
 }
 
 // UpdateReadyInfo This should autoupdate the information about members every 60 seconds.

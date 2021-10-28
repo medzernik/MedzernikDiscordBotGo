@@ -90,6 +90,8 @@ func PasswordLottery(s *discordgo.Session) {
 	//https://www.ockovacie.info/
 }
 
+var ranInit bool = false
+
 //Ready runs when the bot starts. Starts the automatic functions and sets the status of the bot
 func ready(s *discordgo.Session, ready *discordgo.Ready) {
 	//Set the bot status according to the config file
@@ -111,6 +113,9 @@ func ready(s *discordgo.Session, ready *discordgo.Ready) {
 		go responder_functions.TimedChannelUnlock(s)
 	}
 	//Initialize the commands for Discord
-	responder_functions.Ready(s, ready)
+
+	if ranInit == false {
+		ranInit = responder_functions.Ready(s, ready)
+	}
 
 }
