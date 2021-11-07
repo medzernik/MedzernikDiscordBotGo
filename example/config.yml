@@ -11,6 +11,8 @@ serverInfo:
   botLogo: "https://cdn.discordapp.com/avatars/877115622725672991/1b9e83cf7c9f29ed63de3364ed71b452.webp?size=160"
   # Bot name
   botName: "CleverFox"
+  # Log level (0 - Trace, 1 - Debug, 2 - Info, 3 - Warn, 4 - Error, 5 - Fatal)
+  logLevel: ""
 
 # Various modules to enable or disable
 modules:

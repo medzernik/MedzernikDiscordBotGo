@@ -1,25 +1,44 @@
 package logging
 
 import (
-	"log"
+	"github.com/medzernik/SlovakiaDiscordBotGo/config"
+	"github.com/sirupsen/logrus"
 	"os"
 )
 
-var (
-	LoggerWarning *log.Logger
-	LoggerInfo    *log.Logger
-	LoggerError   *log.Logger
-)
+var Log = logrus.New()
 
-func init() {
-	file, err := os.OpenFile("logs.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-	if err != nil {
-		log.Fatal(err)
+func StartLogging() {
+
+	Log.SetFormatter(&logrus.JSONFormatter{})
+
+	//Set Log Level
+	switch config.Cfg.ServerInfo.LogLevel {
+	case "0":
+		Log.SetLevel(logrus.TraceLevel)
+	case "1":
+		Log.SetLevel(logrus.DebugLevel)
+	case "2":
+		Log.SetLevel(logrus.InfoLevel)
+	case "3":
+		Log.SetLevel(logrus.WarnLevel)
+	case "4":
+		Log.SetLevel(logrus.ErrorLevel)
+	case "5":
+		Log.SetLevel(logrus.FatalLevel)
+	default:
+		Log.SetLevel(logrus.InfoLevel)
+
 	}
 
-	LoggerInfo = log.New(file, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
-	LoggerWarning = log.New(file, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
-	LoggerError = log.New(file, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
+	// You could set this to any `io.Writer` such as a file
+	file, err := os.OpenFile("logs.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err == nil {
+		Log.Out = file
+	} else {
+		Log.Info("Failed to log to file, using default stderr")
+	}
 
-	LoggerInfo.Println("Starting bot...")
+	Log.Infof("Starting the bot...")
+
 }

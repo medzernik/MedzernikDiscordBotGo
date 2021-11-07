@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/medzernik/SlovakiaDiscordBotGo/config"
+	"github.com/medzernik/SlovakiaDiscordBotGo/logging"
 	"github.com/medzernik/SlovakiaDiscordBotGo/responder"
 	"os"
 	"os/signal"
@@ -14,6 +15,7 @@ import (
 func main() {
 	//Initialize the config
 	config.LoadConfig()
+	logging.StartLogging()
 	//Logging stuff
 
 	// Create a new Discord session using the provided bot token.

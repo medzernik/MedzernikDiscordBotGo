@@ -17,6 +17,7 @@ type Config struct {
 		BotStatus     string `yaml:"botStatus"`
 		BotLogo       string `yaml:"botLogo"`
 		BotName       string `yaml:"botName"`
+		LogLevel      string `yaml:"logLevel"`
 	} `yaml:"serverInfo"`
 	Modules struct {
 		Administration     bool `yaml:"administration"`
