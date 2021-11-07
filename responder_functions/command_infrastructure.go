@@ -7,6 +7,7 @@ import (
 	"github.com/medzernik/SlovakiaDiscordBotGo/command"
 	"github.com/medzernik/SlovakiaDiscordBotGo/config"
 	"github.com/medzernik/SlovakiaDiscordBotGo/covid_slovakia"
+	"github.com/medzernik/SlovakiaDiscordBotGo/logging"
 	"log"
 	"strings"
 	"time"
@@ -516,6 +517,8 @@ var (
 					Content: "SPUTNIK V 150% UCINNOST GDE KOTLEBA BGATIA OMG GDE HRAZDOVE RUKY",
 				},
 			})
+
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			return
 		},
 		//This command runs the AgeJoinedCMD function
@@ -530,6 +533,7 @@ var (
 				i.ApplicationCommandData().Options[0].UserValue(s).ID,
 			}
 			go AgeJoinedCMD(s, i, argumentArray)
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			return
 		},
 		//This command runs the AgeJoinedCMD function
@@ -549,6 +553,7 @@ var (
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			return
 		},
 		//This command runs the AgeJoinedCMD function
@@ -569,6 +574,7 @@ var (
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			return
 		},
 
@@ -587,6 +593,7 @@ var (
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			return
 		},
 		"kick": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -608,6 +615,7 @@ var (
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			return
 		},
 		"ban": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -632,6 +640,7 @@ var (
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			return
 
 		},
@@ -647,6 +656,7 @@ var (
 				argumentArray = append(argumentArray, i.ApplicationCommandData().Options[0].IntValue())
 			}
 			go CheckUsersCMD(s, i, argumentArray)
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			return
 		},
 		"planned": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -662,7 +672,7 @@ var (
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Planning module is disabled.", discordgo.EmbedTypeRich)
 			}
-
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			return
 		},
 		"plan": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -685,7 +695,7 @@ var (
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Planning module is disabled.", discordgo.EmbedTypeRich)
 			}
-
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			return
 		},
 		"version": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -695,7 +705,7 @@ var (
 					Content: Version + "\n" + VersionFeatureName,
 				},
 			})
-
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			return
 		},
 		"topic": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -710,7 +720,7 @@ var (
 			argumentArray = []interface{}{}
 
 			go TopicCMD(s, i, argumentArray)
-
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			return
 		},
 		"weather": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -735,7 +745,7 @@ var (
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+"  MODULE DISABLED", "Weather module is disabled.", discordgo.EmbedTypeRich)
 			}
-
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			return
 		},
 		"purge": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -756,7 +766,7 @@ var (
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Purge module is disabled.", discordgo.EmbedTypeRich)
 			}
-
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			return
 		},
 		"Purge To Here": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -774,7 +784,7 @@ var (
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Purge module is disabled.", discordgo.EmbedTypeRich)
 			}
-
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			return
 		},
 		"Purge To Here User": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -793,9 +803,10 @@ var (
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Purge module is disabled.", discordgo.EmbedTypeRich)
 			}
-
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			return
 		},
+		//MEMBERS IS CURRENTLY NOT MULTITHREADED
 		"members": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -807,7 +818,9 @@ var (
 
 			argumentArray = []interface{}{}
 
-			go MembersCMD(s, i, argumentArray)
+			//Temporary disabling the multithreading.. perhaps there lies the error?
+			MembersCMD(s, i, argumentArray)
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			return
 		},
 		"reload-config": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -829,7 +842,7 @@ var (
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.AUTH+" Insufficient permissions", "", discordgo.EmbedTypeRich)
 			}
-
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			return
 		},
 		"covid-vaccines-available": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -845,7 +858,7 @@ var (
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "COVID SVK Info module is disabled.", discordgo.EmbedTypeRich)
 			}
-
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			return
 		},
 		"covid-capacity": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -868,7 +881,7 @@ var (
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "COVID SVK Info module is disabled.", discordgo.EmbedTypeRich)
 			}
-
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			return
 		},
 		"covid-number-vaccinated": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -891,7 +904,7 @@ var (
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "COVID SVK Info module is disabled.", discordgo.EmbedTypeRich)
 			}
-
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			return
 		},
 		"covid-patients": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -914,7 +927,7 @@ var (
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "COVID SVK Info module is disabled.", discordgo.EmbedTypeRich)
 			}
-
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			return
 		},
 		"covid-tests": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -937,7 +950,7 @@ var (
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "COVID SVK Info module is disabled.", discordgo.EmbedTypeRich)
 			}
-
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			return
 		},
 		"covid-doctors-ill": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -953,7 +966,7 @@ var (
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "COVID SVK Info module is disabled.", discordgo.EmbedTypeRich)
 			}
-
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			return
 		},
 		"prune-count": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -968,7 +981,7 @@ var (
 			argumentArray = []interface{}{
 				i.ApplicationCommandData().Options[0].IntValue(),
 			}
-
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			go PruneCountCMD(s, i, argumentArray)
 			return
 		},
@@ -990,7 +1003,7 @@ var (
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
-
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			return
 
 		},
@@ -1014,7 +1027,7 @@ var (
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
-
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			return
 
 		},
@@ -1037,7 +1050,7 @@ var (
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
-
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			return
 		},
 		"redirect": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -1058,7 +1071,7 @@ var (
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
-
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			return
 		},
 		"slow": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -1079,7 +1092,7 @@ var (
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
-
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			return
 		},
 		"voicechannelmodify": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -1097,7 +1110,7 @@ var (
 			if len(i.ApplicationCommandData().Options) > 1 {
 				argumentArray = append(argumentArray, i.ApplicationCommandData().Options[1].UintValue())
 			}
-
+			logging.LoggerInfo.Println("Command executed at infrastructure request level")
 			go ChangeVoiceChannelCurrentCMD(s, i, argumentArray)
 			return
 		},
@@ -1300,7 +1313,7 @@ var ReadyInfoPublic *discordgo.Ready
 // Ready Runs when the bot starts and engages all the commands
 func Ready(s *discordgo.Session, readyInfo *discordgo.Ready) bool {
 	initialization(s)
-	UpdateReadyInfo(readyInfo)
+	go UpdateReadyInfo(readyInfo)
 
 	for i := range readyInfo.Guilds {
 		for _, v := range BotCommands {
@@ -1318,6 +1331,6 @@ func UpdateReadyInfo(readyInfo *discordgo.Ready) {
 
 	for {
 		ReadyInfoPublic = readyInfo
-		time.Sleep(60 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 }

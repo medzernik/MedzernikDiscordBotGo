@@ -11,25 +11,10 @@ import (
 	"syscall"
 )
 
-/*
-// Token Variables used for command line parameters (deprecated in my bot)
-var (
-	Token string =
-)
-
-
-func init() {
-
-	flag.StringVar(&Token, "t", "", "Bot Token")
-	flag.Parse()
-
-}
-
-*/
-
 func main() {
 	//Initialize the config
 	config.LoadConfig()
+	//Logging stuff
 
 	// Create a new Discord session using the provided bot token.
 	dg, err := discordgo.New("Bot " + config.Cfg.ServerInfo.ServerToken)
