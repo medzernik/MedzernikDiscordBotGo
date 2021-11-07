@@ -11,6 +11,7 @@ import (
 	"github.com/medzernik/SlovakiaDiscordBotGo/command"
 	"github.com/medzernik/SlovakiaDiscordBotGo/config"
 	"github.com/medzernik/SlovakiaDiscordBotGo/database"
+	"github.com/medzernik/SlovakiaDiscordBotGo/logging"
 	"log"
 	"math/rand"
 	"os"
@@ -86,7 +87,7 @@ func MuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interfa
 
 	authorisedAdmin, errPerm := command.MemberHasPermission(s, cmd.GuildID, cmd.Member.User.ID, discordgo.PermissionAdministrator)
 	if errPerm != nil {
-		fmt.Println(errPerm)
+		logging.Log.Infof("No permissions for Mute command: " + errPerm.Error())
 		return
 	}
 
@@ -95,6 +96,7 @@ func MuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interfa
 	//Verify, if user has any rights at all
 	if authorisedAdmin == false && authorisedTrusted == false {
 		command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.AUTH, "Error muting a user - insufficient rights.", discordgo.EmbedTypeRich)
+		logging.Log.Infof("No permissions for Mute command: " + errPerm.Error())
 		return
 	}
 
