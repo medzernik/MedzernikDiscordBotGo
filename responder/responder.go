@@ -48,6 +48,7 @@ func userUpdate(s *discordgo.Session, m *discordgo.GuildMemberUpdate) {
 	return
 }
 
+//This is a primitive checker for running the basic command initialization the first time. It might have been broken.
 var ranInit bool = false
 
 //Ready runs when the bot starts. Starts the automatic functions and sets the status of the bot
@@ -68,8 +69,8 @@ func ready(s *discordgo.Session, ready *discordgo.Ready) {
 	if config.Cfg.Modules.TimedChannelUnlock == true {
 		go responder_functions.TimedChannelUnlock(s)
 	}
-	//Initialize the commands for Discord
 
+	//Initialize the commands for Discord, but only once... thinking how to redo this.
 	if ranInit == false {
 		ranInit = responder_functions.Ready(s, ready)
 	}

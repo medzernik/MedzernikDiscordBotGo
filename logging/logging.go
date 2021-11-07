@@ -1,3 +1,4 @@
+// Package logging serves to log all messages of the bot into the logs.log file
 package logging
 
 import (
