@@ -7,6 +7,7 @@ import (
 	"github.com/medzernik/SlovakiaDiscordBotGo/config"
 	"github.com/medzernik/SlovakiaDiscordBotGo/logging"
 	"github.com/medzernik/SlovakiaDiscordBotGo/responder"
+	"github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
 	"syscall"
@@ -15,28 +16,35 @@ import (
 func main() {
 	//Initialize the config
 	config.LoadConfig()
-	logging.StartLogging()
-	//Logging stuff
+	logging.Log.Traceln("Loaded the config file.")
 
-	// Create a new Discord session using the provided bot token.
+	//Initialize the logging system
+	errLogging := logging.StartLogging()
+	// If the log can't be created, use stdout.
+	if errLogging != nil {
+		logrus.Errorln("Failed to log to file, using default stderr")
+	} else {
+		logging.Log.Traceln("Loaded the logging system")
+	}
+
+	logging.Log.Infoln("--------------\nStarting the bot...")
+	// Create a new Discord session using the provided bot token. Panic if failed.
 	dg, err := discordgo.New("Bot " + config.Cfg.ServerInfo.ServerToken)
 	if err != nil {
-		fmt.Println("error creating Discord session,", err)
-		return
+		logging.Log.Panicln("error creating Discord session: ", err)
 	}
-	//TODO: Intents still dont work well...
-	//dg.Identify.Intents = discordgo.IntentsGuildMembers | discordgo.IntentsGuilds | discordgo.IntentsAllWithoutPrivileged | discordgo.IntentsDirectMessages | discordgo.IntentsAll
+
+	//Get the intents that are needed
 	dg.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsAll)
 	dg.Identify.Token = config.Cfg.ServerInfo.ServerToken
 	dg.Identify.LargeThreshold = 250
 
 	responder.RegisterPlugin(dg)
 
-	// Open a websocket connection to Discord and begin listening.
+	// Open a websocket connection to Discord and begin listening. Panic if failed.
 	err = dg.Open()
 	if err != nil {
-		fmt.Println("error opening connection,", err)
-		return
+		logging.Log.Panicln("Error opening the websocket!: ", err)
 	}
 
 	// Wait here until CTRL-C or other term signal is received.
@@ -48,8 +56,7 @@ func main() {
 	// Cleanly close down the Discord session.
 	err2 := dg.Close()
 	if err2 != nil {
-		fmt.Println("error closing the session", err)
-		return
+		logging.Log.Panicln("Error closing the session: ", err)
 	}
 
 }

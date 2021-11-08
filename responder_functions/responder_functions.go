@@ -61,6 +61,7 @@ func SnowflakeTimestamp(ID string) (t time.Time, err error) {
 	return
 }
 
+/*
 // GetGuildInfo gets info of a guild (preview) and returns the struct
 func GetGuildInfo(s *discordgo.Session, guildID string) *discordgo.GuildPreview {
 	guildInfo, err := s.GuildPreview(guildID)
@@ -70,10 +71,7 @@ func GetGuildInfo(s *discordgo.Session, guildID string) *discordgo.GuildPreview 
 	return guildInfo
 }
 
-func Fox(s *discordgo.Session, m *discordgo.MessageCreate) {
-	s.ChannelMessageSend(m.ChannelID, "<a:medzernikShake:814055147583438848>")
-	return
-}
+*/
 
 func UnlockTrustedChannel(s *discordgo.Session, perms int64, target discordgo.PermissionOverwriteType) {
 	var roleArrayToUnlock []string

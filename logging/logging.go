@@ -9,7 +9,7 @@ import (
 
 var Log = logrus.New()
 
-func StartLogging() {
+func StartLogging() error {
 
 	Log.SetFormatter(&logrus.JSONFormatter{})
 
@@ -37,9 +37,8 @@ func StartLogging() {
 	if err == nil {
 		Log.Out = file
 	} else {
-		Log.Info("Failed to log to file, using default stderr")
+		return err
 	}
 
-	Log.Infof("Starting the bot...")
-
+	return nil
 }

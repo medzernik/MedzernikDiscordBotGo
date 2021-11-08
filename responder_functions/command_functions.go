@@ -25,7 +25,6 @@ func AgeJoinedCMD(s *discordgo.Session, m *discordgo.InteractionCreate, cmd []in
 
 	//userId := m.ApplicationCommandData().Options[0].UserValue(s).ID
 	userId := fmt.Sprintf("%s", cmd[0])
-	fmt.Println(userId)
 
 	//Every time a command is run, get a list of all users. This serves the purpose to then print the name of the corresponding user.
 	//TODO: cache it in redis

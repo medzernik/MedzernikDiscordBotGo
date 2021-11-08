@@ -551,7 +551,7 @@ var (
 			if config.Cfg.Modules.Administration == true {
 				go MuteCMD(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
 			logging.Log.Infof("Command executed at infrastructure request level")
 			return
@@ -572,7 +572,7 @@ var (
 			if config.Cfg.Modules.Administration == true {
 				go MuteCMD(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
 			logging.Log.Infof("Command executed at infrastructure request level")
 			return
@@ -591,7 +591,7 @@ var (
 			if config.Cfg.Modules.Administration == true {
 				go UnmuteCMD(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
 			logging.Log.Infof("Command executed at infrastructure request level")
 			return
@@ -613,7 +613,7 @@ var (
 			if config.Cfg.Modules.Administration == true {
 				go KickUserCMD(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
 			logging.Log.Infof("Command executed at infrastructure request level")
 			return
@@ -638,7 +638,7 @@ var (
 			if config.Cfg.Modules.Administration == true {
 				go BanUserCMD(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
 			logging.Log.Infof("Command executed at infrastructure request level")
 			return
@@ -670,7 +670,7 @@ var (
 			if config.Cfg.Modules.Planning == true {
 				go PlannedGamesCMD(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Planning module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Planning module is disabled.", discordgo.EmbedTypeRich)
 			}
 			logging.Log.Infof("Command executed at infrastructure request level")
 			return
@@ -693,7 +693,7 @@ var (
 			if config.Cfg.Modules.Planning == true {
 				go PlanGameCMD(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Planning module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Planning module is disabled.", discordgo.EmbedTypeRich)
 			}
 			logging.Log.Infof("Command executed at infrastructure request level")
 			return
@@ -764,7 +764,7 @@ var (
 			if config.Cfg.Modules.Purge == true {
 				go PurgeMessagesCMD(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Purge module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Purge module is disabled.", discordgo.EmbedTypeRich)
 			}
 			logging.Log.Infof("Command executed at infrastructure request level")
 			return
@@ -782,7 +782,7 @@ var (
 			if config.Cfg.Modules.Purge == true {
 				go PurgeMessagesCMDMessage(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Purge module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Purge module is disabled.", discordgo.EmbedTypeRich)
 			}
 			logging.Log.Infof("Command executed at infrastructure request level")
 			return
@@ -801,7 +801,7 @@ var (
 			if config.Cfg.Modules.Purge == true {
 				go PurgeMessagesCMDMessageOnlyAuthor(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Purge module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Purge module is disabled.", discordgo.EmbedTypeRich)
 			}
 			logging.Log.Infof("Command executed at infrastructure request level")
 			return
@@ -856,7 +856,7 @@ var (
 			if config.Cfg.Modules.COVIDSlovakInfo == true {
 				go covid_slovakia.COVIDVaccinesAvailable(s, i)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "COVID SVK Info module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "COVID SVK Info module is disabled.", discordgo.EmbedTypeRich)
 			}
 			logging.Log.Infof("Command executed at infrastructure request level")
 			return
@@ -879,7 +879,7 @@ var (
 			if config.Cfg.Modules.COVIDSlovakInfo == true {
 				go covid_slovakia.COVIDSlovakiaCapacity(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "COVID SVK Info module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "COVID SVK Info module is disabled.", discordgo.EmbedTypeRich)
 			}
 			logging.Log.Infof("Command executed at infrastructure request level")
 			return
@@ -902,7 +902,7 @@ var (
 			if config.Cfg.Modules.COVIDSlovakInfo == true {
 				go covid_slovakia.COVIDNumberOfVaccinated(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "COVID SVK Info module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "COVID SVK Info module is disabled.", discordgo.EmbedTypeRich)
 			}
 			logging.Log.Infof("Command executed at infrastructure request level")
 			return
@@ -925,7 +925,7 @@ var (
 			if config.Cfg.Modules.COVIDSlovakInfo == true {
 				go covid_slovakia.COVIDPatientsStatus(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "COVID SVK Info module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "COVID SVK Info module is disabled.", discordgo.EmbedTypeRich)
 			}
 			logging.Log.Infof("Command executed at infrastructure request level")
 			return
@@ -948,7 +948,7 @@ var (
 			if config.Cfg.Modules.COVIDSlovakInfo == true {
 				go covid_slovakia.COVIDTestsStatus(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "COVID SVK Info module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "COVID SVK Info module is disabled.", discordgo.EmbedTypeRich)
 			}
 			logging.Log.Infof("Command executed at infrastructure request level")
 			return
@@ -964,7 +964,7 @@ var (
 			if config.Cfg.Modules.COVIDSlovakInfo == true {
 				go covid_slovakia.COVIDDoctorsIll(s, i)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "COVID SVK Info module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "COVID SVK Info module is disabled.", discordgo.EmbedTypeRich)
 			}
 			logging.Log.Infof("Command executed at infrastructure request level")
 			return
@@ -1002,7 +1002,7 @@ var (
 			if config.Cfg.Modules.Administration == true {
 				go PruneMembersCMD(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
 			logging.Log.Infof("Command executed at infrastructure request level")
 			return
@@ -1026,7 +1026,7 @@ var (
 			if config.Cfg.Modules.Administration == true {
 				go SetRoleChannelPermCMD(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
 			logging.Log.Infof("Command executed at infrastructure request level")
 			return
@@ -1049,7 +1049,7 @@ var (
 			if config.Cfg.Modules.Administration == true {
 				go SetUserChannelPermCMD(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
 			logging.Log.Infof("Command executed at infrastructure request level")
 			return
@@ -1070,7 +1070,7 @@ var (
 			if config.Cfg.Modules.Administration == true {
 				go RedirectDiscussionCMD(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
 			logging.Log.Infof("Command executed at infrastructure request level")
 			return
@@ -1091,7 +1091,7 @@ var (
 			if config.Cfg.Modules.Administration == true {
 				go SlowModeChannelCMD(s, i, argumentArray)
 			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" MODULE DISABLED", "Administration module is disabled.", discordgo.EmbedTypeRich)
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
 			logging.Log.Infof("Command executed at infrastructure request level")
 			return
