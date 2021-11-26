@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/medzernik/SlovakiaDiscordBotGo/config"
-	"github.com/medzernik/SlovakiaDiscordBotGo/database"
 	"github.com/medzernik/SlovakiaDiscordBotGo/logging"
 	"github.com/medzernik/SlovakiaDiscordBotGo/responder_functions"
 )
@@ -61,10 +60,13 @@ func ready(s *discordgo.Session, ready *discordgo.Ready) {
 	}
 
 	//run the parallel functions, only those enabled in the config file
-	if config.Cfg.Modules.Planning == true {
-		go database.DatabaseOpen()
-		go database.CheckPlannedGames(&s)
-	}
+	/*
+		if config.Cfg.Modules.Planning == true {
+			go database.DatabaseOpen()
+			go database.CheckPlannedGames(&s)
+		}
+
+	*/
 
 	if config.Cfg.Modules.TimedChannelUnlock == true {
 		go responder_functions.TimedChannelUnlock(s)

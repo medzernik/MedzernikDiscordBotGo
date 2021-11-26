@@ -88,6 +88,18 @@ var (
 			},
 		},
 		{
+			Name:        "covid-ventilated",
+			Description: "Number of ventilated patients",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionInteger,
+					Name:        "days",
+					Description: "Days to check for",
+					Required:    false,
+				},
+			},
+		},
+		{
 			Name:        "covid-tests",
 			Description: "Covid antigen test information",
 			Options: []*discordgo.ApplicationCommandOption{
@@ -924,6 +936,29 @@ var (
 
 			if config.Cfg.Modules.COVIDSlovakInfo == true {
 				go covid_slovakia.COVIDPatientsStatus(s, i, argumentArray)
+			} else {
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "COVID SVK Info module is disabled.", discordgo.EmbedTypeRich)
+			}
+			logging.Log.Infof("Command executed at infrastructure request level")
+			return
+		},
+		"covid-ventilated": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "⠀",
+				},
+			})
+			var argumentArray []interface{}
+
+			if len(i.ApplicationCommandData().Options) > 0 {
+				argumentArray = []interface{}{
+					i.ApplicationCommandData().Options[0].UintValue(),
+				}
+			}
+
+			if config.Cfg.Modules.COVIDSlovakInfo == true {
+				go covid_slovakia.COVIDPatientsVentilated(s, i, argumentArray)
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "COVID SVK Info module is disabled.", discordgo.EmbedTypeRich)
 			}

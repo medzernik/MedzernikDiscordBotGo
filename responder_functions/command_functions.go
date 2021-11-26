@@ -10,7 +10,6 @@ import (
 	_ "github.com/dustin/go-humanize"
 	"github.com/medzernik/SlovakiaDiscordBotGo/command"
 	"github.com/medzernik/SlovakiaDiscordBotGo/config"
-	"github.com/medzernik/SlovakiaDiscordBotGo/database"
 	"github.com/medzernik/SlovakiaDiscordBotGo/logging"
 	"log"
 	"math/rand"
@@ -469,7 +468,7 @@ func CheckUsersCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []i
 
 // PlanGameCMD Plans a game for a person with a timed reminder
 func PlanGameCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
-	go GamePlanInsertCMD(s, cmd, m)
+	//go GamePlanInsertCMD(s, cmd, m)
 	return
 }
 
@@ -485,13 +484,14 @@ func PlannedGamesCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m [
 	}(sqliteDatabase)
 
 	var plannedGames string
-	database.DisplayAllGamesPlanned(sqliteDatabase, &plannedGames)
+	//database.DisplayAllGamesPlanned(sqliteDatabase, &plannedGames)
 
 	//send info to channel
 	command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK+"PLANNED GAMES", plannedGames, discordgo.EmbedTypeRich)
 	return
 }
 
+/*
 // GamePlanInsertCMD Inserts the game into the database
 func GamePlanInsertCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 	//open database and then close it (defer)
@@ -522,17 +522,19 @@ func GamePlanInsertCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m
 	}
 	//get current date and replace hours and minutes with user variables
 	gameTimestamp := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), timeHour, timeMinute, time.Now().Second(), 0, time.Now().Location())
-	gameTimestampInt := gameTimestamp.Unix()
+	//gameTimestampInt := gameTimestamp.Unix()
 
 	//export to database
-	database.InsertGame(sqliteDatabase, gameTimestampInt, fmt.Sprintf("%s", m[1]), fmt.Sprintf("%s", m[2]))
+	//database.InsertGame(sqliteDatabase, gameTimestampInt, fmt.Sprintf("%s", m[1]), fmt.Sprintf("%s", m[2]))
 
 	var plannedGames string
-	database.DisplayGamePlanned(sqliteDatabase, &plannedGames)
+	//database.DisplayGamePlanned(sqliteDatabase, &plannedGames)
 
 	command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK+"PLANNED A GAME", plannedGames, discordgo.EmbedTypeRich)
 	return
 }
+
+*/
 
 // TopicCMD Outputs a random topic for discussion found in topic_questions.txt
 func TopicCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {

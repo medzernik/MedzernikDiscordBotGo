@@ -12,8 +12,8 @@ import (
 	"time"
 )
 
-const Version string = "0.8.9"
-const VersionFeatureName string = "The Logging Update (WIP)"
+const Version string = "0.9.0"
+const VersionFeatureName string = "The Logging Update"
 
 const TargetTypeRoleID discordgo.PermissionOverwriteType = 0
 const TargetTypeMemberID discordgo.PermissionOverwriteType = 1

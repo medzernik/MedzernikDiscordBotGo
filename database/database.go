@@ -1,6 +1,7 @@
 // Package database contains the basic commands for interacting with a simple SQLite database. It is used to store various data from users for a reuse.
 package database
 
+/*
 import (
 	"database/sql"
 	"fmt"
@@ -66,10 +67,10 @@ func Databaserun() {
 // createTableGamePlan creates a game planning table
 func createTableGamePlan(db *sql.DB) {
 	createGamePlanningDB := `CREATE TABLE gameplanning (
-		"idGames" integer NOT NULL PRIMARY KEY AUTOINCREMENT,		
+		"idGames" integer NOT NULL PRIMARY KEY AUTOINCREMENT,
 		"time" INTEGER,
 		"gamename" TEXT,
-		"mentions" TEXT		
+		"mentions" TEXT
 	  );` // SQL Statement for Create Table
 
 	log.Println("Create game table...")
@@ -204,3 +205,5 @@ func CheckPlannedGames(s **discordgo.Session) {
 		time.Sleep(checkInterval * time.Second)
 	}
 }
+
+*/
