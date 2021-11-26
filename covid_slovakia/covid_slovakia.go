@@ -422,7 +422,7 @@ func COVIDPatientsStatus(s *discordgo.Session, cmd *discordgo.InteractionCreate,
 	//call the API to call the date request
 	patientsInfoBytes := GetCOVIDSlovakInfo("https://data.korona.gov.sk/api/hospital-patients/in-slovakia?updated_since=" + requestedDate)
 
-	//unmarshaling of the received data
+	//unmarshalling of the received data
 	var patientsInfoUnmarshaled PatientsInfo
 	err = json.Unmarshal(patientsInfoBytes, &patientsInfoUnmarshaled)
 	if err != nil {
