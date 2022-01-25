@@ -16,7 +16,7 @@ serverInfo:
 
 # Various modules to enable or disable
 modules:
-  # Administration module includes: kick, ban, mute, purgeUsers
+  # Administration module includes: kick, ban, timeout, purgeUsers
   administration: false
   # Not used right now
   logging: false
