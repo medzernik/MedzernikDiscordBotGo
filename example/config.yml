@@ -61,11 +61,6 @@ channelLog:
   channelLogID: ""
   gamePlannedLog: ""
 
-# Mute functions
-muteFunction:
-  muteRoleID: ""
-  trustedMutingEnabled: false
-
 # ChannelAutoUnlock/Lock. Autolocks and unlocks the TrustedChannel
 autoLocker:
   #Enabled

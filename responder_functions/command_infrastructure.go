@@ -112,20 +112,7 @@ var (
 			},
 		},
 		{
-			Name:        "mute",
-			Description: "mutes a user (adds a mute role)",
-			Options: []*discordgo.ApplicationCommandOption{
-
-				{
-					Type:        discordgo.ApplicationCommandOptionUser,
-					Name:        "user-mention",
-					Description: "user-mention",
-					Required:    true,
-				},
-			},
-		},
-		{
-			Name: "Mute User",
+			Name: "Timeout User (10m)",
 			Type: discordgo.UserApplicationCommand,
 		},
 		{
@@ -137,18 +124,25 @@ var (
 			Type: discordgo.MessageApplicationCommand,
 		},
 		{
-			Name:        "unmute",
-			Description: "umutes a user (removes a mute role)",
+			Name:        "timeout",
+			Description: "Times a user out for a specified time",
 			Options: []*discordgo.ApplicationCommandOption{
 
 				{
 					Type:        discordgo.ApplicationCommandOptionUser,
 					Name:        "user-mention",
-					Description: "user-mention",
+					Description: "User to timeout",
+					Required:    true,
+				},
+				{
+					Type:        discordgo.ApplicationCommandOptionInteger,
+					Name:        "time-minutes",
+					Description: "Time in minutes",
 					Required:    true,
 				},
 			},
 		},
+
 		{
 			Name:        "kick",
 			Description: "kicks a user (optional reason)",
@@ -548,28 +542,9 @@ var (
 			logging.Log.Infof("Command executed at infrastructure request level")
 			return
 		},
-		//This command runs the AgeJoinedCMD function
-		"mute": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Content: "⠀",
-				},
-			})
-			argumentArray := []interface{}{
-				i.ApplicationCommandData().Options[0].UserValue(s).ID,
-			}
 
-			if config.Cfg.Modules.Administration == true {
-				go MuteCMD(s, i, argumentArray)
-			} else {
-				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Administration module is disabled.", discordgo.EmbedTypeRich)
-			}
-			logging.Log.Infof("Command executed at infrastructure request level")
-			return
-		},
 		//This command runs the AgeJoinedCMD function
-		"Mute User": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		"Timeout User (10m)": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
@@ -579,10 +554,11 @@ var (
 
 			argumentArray := []interface{}{
 				i.ApplicationCommandData().TargetID,
+				10,
 			}
 
 			if config.Cfg.Modules.Administration == true {
-				go MuteCMD(s, i, argumentArray)
+				go Timeout(s, i, argumentArray)
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
@@ -590,7 +566,7 @@ var (
 			return
 		},
 
-		"unmute": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		"timeout": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
@@ -599,9 +575,10 @@ var (
 			})
 			argumentArray := []interface{}{
 				i.ApplicationCommandData().Options[0].UserValue(s).ID,
+				i.ApplicationCommandData().Options[1].IntValue(),
 			}
 			if config.Cfg.Modules.Administration == true {
-				go UnmuteCMD(s, i, argumentArray)
+				go Timeout(s, i, argumentArray)
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}

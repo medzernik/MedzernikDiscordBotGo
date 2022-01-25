@@ -64,18 +64,15 @@ modules:
 
 # commands:
 
-## muting / umuting [ADMIN] [TRUSTED]
+## timeout [ADMIN]
 
-`/mute @mention`
+`/timeout @mention duration_in_minutes`
 
-`/unmute @mention`
-
-### (Muting is also available as a right-click command)
+### (Quick timeout for 10 minutes is also available as a right-click command)
 ![image](https://user-images.githubusercontent.com/1900179/138592669-fd5ce32a-a7a6-4570-8816-930da9659a11.png)
 
 
-mutes or unmutes a user. Checks if the user is either an Admin/Mod, or at least a Trusted user. For a trusted user, only
-muting of users that have joined less than 24 hours ago is allowed.
+Timeouts a user. Checks if the user is either an Admin.
 
 ## age check
 

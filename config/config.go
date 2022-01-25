@@ -44,10 +44,6 @@ type Config struct {
 		ChannelLogID   string `yaml:"channelLogID"`
 		GamePlannedLog string `yaml:"gamePlannedLog"`
 	} `yaml:"channelLog"`
-	MuteFunction struct {
-		MuteRoleID           string `yaml:"muteRoleID"`
-		TrustedMutingEnabled bool   `yaml:"trustedMutingEnabled"`
-	} `yaml:"muteFunction"`
 	AutoLocker struct {
 		Enabled              bool         `yaml:"enabled"`
 		AutoUnlockTrustedID1 bool         `yaml:"autoUnlockTrusted1"`
