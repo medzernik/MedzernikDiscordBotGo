@@ -552,9 +552,11 @@ var (
 				},
 			})
 
+			var defaultDuration int64 = 10
+
 			argumentArray := []interface{}{
 				i.ApplicationCommandData().TargetID,
-				10,
+				defaultDuration,
 			}
 
 			if config.Cfg.Modules.Administration == true {
