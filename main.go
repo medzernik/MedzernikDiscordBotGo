@@ -54,6 +54,7 @@ func main() {
 	<-sc
 
 	// Cleanly close down the Discord session.
+
 	err2 := dg.Close()
 	if err2 != nil {
 		logging.Log.Panicln("Error closing the session: ", err)

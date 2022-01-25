@@ -22,7 +22,7 @@ func RegisterPlugin(s *discordgo.Session) {
 
 var (
 	BotToken = flag.String("token", config.Cfg.ServerInfo.ServerToken, "Bot access token")
-	Cleanup  = flag.Bool("cleanup", true, "Cleanup of commands")
+	Cleanup  = flag.Bool("rmcmd", true, "Cleanup of commands")
 )
 
 func init() {
@@ -516,6 +516,7 @@ var (
 		//This command just runs a basic test
 		"slovakia": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			FoxTest(s, i)
+			DeleteCommands(s)
 
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -587,6 +588,7 @@ var (
 			logging.Log.Infof("Command executed at infrastructure request level")
 			return
 		},
+
 		"kick": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -1329,6 +1331,7 @@ var ReadyInfoPublic *discordgo.Ready
 // Ready Runs when the bot starts and engages all the commands
 func Ready(s *discordgo.Session, readyInfo *discordgo.Ready) bool {
 	initialization(s)
+
 	go UpdateReadyInfo(readyInfo)
 
 	for i := range readyInfo.Guilds {
@@ -1339,6 +1342,7 @@ func Ready(s *discordgo.Session, readyInfo *discordgo.Ready) bool {
 			}
 		}
 	}
+
 	return true
 }
 
@@ -1348,5 +1352,16 @@ func UpdateReadyInfo(readyInfo *discordgo.Ready) {
 	for {
 		ReadyInfoPublic = readyInfo
 		time.Sleep(10 * time.Second)
+	}
+}
+
+func DeleteCommands(s *discordgo.Session) {
+	if *Cleanup {
+		for _, cmd := range BotCommands {
+			err := s.ApplicationCommandDelete(s.State.User.ID, "", cmd.ID)
+			if err != nil {
+				fmt.Printf("Cannot delete %q command: %v", cmd.Name, err)
+			}
+		}
 	}
 }
