@@ -147,7 +147,7 @@ func MuteCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interfa
 	if authorisedTrusted == true && authorisedAdmin == false && config.Cfg.MuteFunction.TrustedMutingEnabled == true {
 		for i := range membersCached {
 			for j := range MuteUserString {
-				userTimeJoin, _ := membersCached[i].JoinedAt.Parse()
+				userTimeJoin := membersCached[i].JoinedAt
 				timevar := userTimeJoin.Sub(time.Now()).Hours()
 				if membersCached[i].User.ID == MuteUserString[j] && timevar > timeToCheckUsers {
 					//Error checking
@@ -445,7 +445,7 @@ func CheckUsersCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []i
 
 		//iterate over the members_cached array. Maximum limit is 1000.
 		for i := range membersCached {
-			userTimeJoin, _ := membersCached[i].JoinedAt.Parse()
+			userTimeJoin := membersCached[i].JoinedAt
 			var timeVar int64 = int64(userTimeJoin.Sub(time.Now()).Hours())
 
 			if timeVar > timeToCheckUsers {
