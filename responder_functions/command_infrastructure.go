@@ -13,16 +13,19 @@ import (
 	"time"
 )
 
-func RegisterPlugin(s *discordgo.Session) {
+/*
+func registerPlugin(s *discordgo.Session) {
 	s.AddHandler(Ready)
 
 }
 
+*/
+
 // Bot parameters
 
 var (
-	BotToken = flag.String("token", config.Cfg.ServerInfo.ServerToken, "Bot access token")
-	Cleanup  = flag.Bool("rmcmd", true, "Cleanup of commands")
+	//botToken = flag.String("token", config.Cfg.ServerInfo.ServerToken, "Bot access token")
+	cleanup = flag.Bool("rmcmd", true, "Cleanup of commands")
 )
 
 func init() {
@@ -30,7 +33,7 @@ func init() {
 }
 
 var (
-	BotCommands = []*discordgo.ApplicationCommand{
+	botCommands = []*discordgo.ApplicationCommand{
 		{
 			Name: "slovakia",
 			// All commands and options must have a description
@@ -516,7 +519,7 @@ var (
 		//This command just runs a basic test
 		"slovakia": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			FoxTest(s, i)
-			DeleteCommands(s)
+			deleteCommands(s)
 
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -539,7 +542,7 @@ var (
 			argumentArray := []interface{}{
 				i.ApplicationCommandData().Options[0].UserValue(s).ID,
 			}
-			go AgeJoinedCMD(s, i, argumentArray)
+			go ageJoinedCMD(s, i, argumentArray)
 			logging.Log.Infof("Command executed at infrastructure request level")
 			return
 		},
@@ -561,7 +564,7 @@ var (
 			}
 
 			if config.Cfg.Modules.Administration == true {
-				go Timeout(s, i, argumentArray)
+				go timeout(s, i, argumentArray)
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
@@ -581,7 +584,7 @@ var (
 				i.ApplicationCommandData().Options[1].IntValue(),
 			}
 			if config.Cfg.Modules.Administration == true {
-				go Timeout(s, i, argumentArray)
+				go timeout(s, i, argumentArray)
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
@@ -604,7 +607,7 @@ var (
 			}
 
 			if config.Cfg.Modules.Administration == true {
-				go KickUserCMD(s, i, argumentArray)
+				go kickUserCMD(s, i, argumentArray)
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
@@ -629,7 +632,7 @@ var (
 				argumentArray = append(argumentArray, i.ApplicationCommandData().Options[2].UintValue())
 			}
 			if config.Cfg.Modules.Administration == true {
-				go BanUserCMD(s, i, argumentArray)
+				go banUserCMD(s, i, argumentArray)
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
@@ -648,7 +651,7 @@ var (
 			if len(i.ApplicationCommandData().Options) > 0 {
 				argumentArray = append(argumentArray, i.ApplicationCommandData().Options[0].IntValue())
 			}
-			go CheckUsersCMD(s, i, argumentArray)
+			go checkUsersCMD(s, i, argumentArray)
 			logging.Log.Infof("Command executed at infrastructure request level")
 			return
 		},
@@ -659,9 +662,9 @@ var (
 					Content: "⠀",
 				},
 			})
-			var argumentArray []interface{}
+
 			if config.Cfg.Modules.Planning == true {
-				go PlannedGamesCMD(s, i, argumentArray)
+				go plannedGamesCMD(s, i)
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Planning module is disabled.", discordgo.EmbedTypeRich)
 			}
@@ -684,7 +687,7 @@ var (
 			}
 
 			if config.Cfg.Modules.Planning == true {
-				go PlanGameCMD(s, i, argumentArray)
+				go planGameCMD(s, i, argumentArray)
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Planning module is disabled.", discordgo.EmbedTypeRich)
 			}
@@ -708,11 +711,8 @@ var (
 					Content: "⠀",
 				},
 			})
-			var argumentArray []interface{}
 
-			argumentArray = []interface{}{}
-
-			go TopicCMD(s, i, argumentArray)
+			go topicCMD(s, i)
 			logging.Log.Infof("Command executed at infrastructure request level")
 			return
 		},
@@ -733,7 +733,7 @@ var (
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+" API KEY NOT SET", "Please set the API key in the config.", discordgo.EmbedTypeRich)
 				return
 			} else if config.Cfg.Modules.Weather == true {
-				go GetWeatherCMD(s, i, argumentArray)
+				go getWeatherCMD(s, i, argumentArray)
 				return
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN+"  MODULE DISABLED", "Weather module is disabled.", discordgo.EmbedTypeRich)
@@ -755,7 +755,7 @@ var (
 			}
 
 			if config.Cfg.Modules.Purge == true {
-				go PurgeMessagesCMD(s, i, argumentArray)
+				go purgeMessagesCMD(s, i, argumentArray)
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Purge module is disabled.", discordgo.EmbedTypeRich)
 			}
@@ -773,7 +773,7 @@ var (
 				i.ApplicationCommandData().TargetID,
 			}
 			if config.Cfg.Modules.Purge == true {
-				go PurgeMessagesCMDMessage(s, i, argumentArray)
+				go purgeMessagesCMDMessage(s, i, argumentArray)
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Purge module is disabled.", discordgo.EmbedTypeRich)
 			}
@@ -792,7 +792,7 @@ var (
 			}
 
 			if config.Cfg.Modules.Purge == true {
-				go PurgeMessagesCMDMessageOnlyAuthor(s, i, argumentArray)
+				go purgeMessagesCMDMessageOnlyAuthor(s, i, argumentArray)
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Purge module is disabled.", discordgo.EmbedTypeRich)
 			}
@@ -807,12 +807,9 @@ var (
 					Content: "⠀",
 				},
 			})
-			var argumentArray []interface{}
 
-			argumentArray = []interface{}{}
-
-			//Temporary disabling the multithreading.. perhaps there lies the error?
-			MembersCMD(s, i, argumentArray)
+			//Temporary disabling the multithreading. perhaps there lies the error?
+			membersCMD(s, i)
 			logging.Log.Infof("Command executed at infrastructure request level")
 			return
 		},
@@ -998,7 +995,7 @@ var (
 				i.ApplicationCommandData().Options[0].IntValue(),
 			}
 
-			go PruneCountCMD(s, i, argumentArray)
+			go pruneCountCMD(s, i, argumentArray)
 			logging.Log.Infof("Command executed at infrastructure request level")
 			return
 		},
@@ -1016,7 +1013,7 @@ var (
 			}
 
 			if config.Cfg.Modules.Administration == true {
-				go PruneMembersCMD(s, i, argumentArray)
+				go pruneMembersCMD(s, i, argumentArray)
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
@@ -1040,7 +1037,7 @@ var (
 			}
 
 			if config.Cfg.Modules.Administration == true {
-				go SetRoleChannelPermCMD(s, i, argumentArray)
+				go setRoleChannelPermCMD(s, i, argumentArray)
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
@@ -1063,7 +1060,7 @@ var (
 				i.ApplicationCommandData().Options[2].IntValue(),
 			}
 			if config.Cfg.Modules.Administration == true {
-				go SetUserChannelPermCMD(s, i, argumentArray)
+				go setUserChannelPermCMD(s, i, argumentArray)
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
@@ -1084,7 +1081,7 @@ var (
 			}
 
 			if config.Cfg.Modules.Administration == true {
-				go RedirectDiscussionCMD(s, i, argumentArray)
+				go redirectDiscussionCMD(s, i, argumentArray)
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
@@ -1105,7 +1102,7 @@ var (
 			}
 
 			if config.Cfg.Modules.Administration == true {
-				go SlowModeChannelCMD(s, i, argumentArray)
+				go slowModeChannelCMD(s, i, argumentArray)
 			} else {
 				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.WARN, "Administration module is disabled.", discordgo.EmbedTypeRich)
 			}
@@ -1128,12 +1125,12 @@ var (
 				argumentArray = append(argumentArray, i.ApplicationCommandData().Options[1].UintValue())
 			}
 
-			go ChangeVoiceChannelCurrentCMD(s, i, argumentArray)
+			go changeVoiceChannelCurrentCMD(s, i, argumentArray)
 			logging.Log.Infof("Command executed at infrastructure request level")
 			return
 		},
 
-		//BELOW THIS STARTS THE EXAMPLE FILE
+		//BELOW THESE STARTS THE EXAMPLE FILE
 		"basic-command-with-files": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -1220,9 +1217,9 @@ var (
 		},
 		"responses": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			// Responses to a command are very important.
-			// First of all, because you need to react to the interaction
+			// First, because you need to react to the interaction
 			// by sending the response in 3 seconds after receiving, otherwise
-			// interaction will be considered invalid and you can no longer
+			// interaction will be considered invalid, and you can no longer
 			// use the interaction token and ID for responding to the user's request
 
 			content := ""
@@ -1326,16 +1323,17 @@ func initialization(s *discordgo.Session) {
 	})
 }
 
+// ReadyInfoPublic Variable for later use
 var ReadyInfoPublic *discordgo.Ready
 
 // Ready Runs when the bot starts and engages all the commands
 func Ready(s *discordgo.Session, readyInfo *discordgo.Ready) bool {
 	initialization(s)
 
-	go UpdateReadyInfo(readyInfo)
+	go updateReadyInfo(readyInfo)
 
 	for i := range readyInfo.Guilds {
-		for _, v := range BotCommands {
+		for _, v := range botCommands {
 			_, err := s.ApplicationCommandCreate(s.State.User.ID, readyInfo.Guilds[i].ID, v)
 			if err != nil {
 				log.Panicf("Cannot create '%v' command: %v", v.Name, err)
@@ -1346,8 +1344,8 @@ func Ready(s *discordgo.Session, readyInfo *discordgo.Ready) bool {
 	return true
 }
 
-// UpdateReadyInfo This should autoupdate the information about members every 60 seconds.
-func UpdateReadyInfo(readyInfo *discordgo.Ready) {
+// updateReadyInfo This should autoupdate the information about members every 60 seconds.
+func updateReadyInfo(readyInfo *discordgo.Ready) {
 
 	for {
 		ReadyInfoPublic = readyInfo
@@ -1355,9 +1353,9 @@ func UpdateReadyInfo(readyInfo *discordgo.Ready) {
 	}
 }
 
-func DeleteCommands(s *discordgo.Session) {
-	if *Cleanup {
-		for _, cmd := range BotCommands {
+func deleteCommands(s *discordgo.Session) {
+	if *cleanup {
+		for _, cmd := range botCommands {
 			err := s.ApplicationCommandDelete(s.State.User.ID, "", cmd.ID)
 			if err != nil {
 				fmt.Printf("Cannot delete %q command: %v", cmd.Name, err)

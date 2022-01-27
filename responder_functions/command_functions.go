@@ -18,8 +18,8 @@ import (
 	"time"
 )
 
-// AgeJoinedCMD Checks the age of the user on join
-func AgeJoinedCMD(s *discordgo.Session, m *discordgo.InteractionCreate, cmd []interface{}) {
+// ageJoinedCMD Checks the age of the user on join
+func ageJoinedCMD(s *discordgo.Session, m *discordgo.InteractionCreate, cmd []interface{}) {
 
 	//userId := m.ApplicationCommandData().Options[0].UserValue(s).ID
 	userId := fmt.Sprintf("%s", cmd[0])
@@ -76,7 +76,7 @@ func AgeJoinedCMD(s *discordgo.Session, m *discordgo.InteractionCreate, cmd []in
 	return
 }
 
-func Timeout(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
+func timeout(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 	IDString := command.ParseMentionToString(m[0].(string))
 	Until := time.Now().Add(time.Duration(m[1].(int64)) * time.Minute)
 
@@ -89,13 +89,13 @@ func Timeout(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interfa
 	}
 
 	command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK+" User timed out",
-		"Timed out "+command.ParseStringToMentionID(m[0].(string))+" for "+strconv.FormatInt(int64(m[1].(int64)), 10)+" minutes"+"\n (Until: "+
+		"Timed out "+command.ParseStringToMentionID(m[0].(string))+" for "+strconv.FormatInt(m[1].(int64), 10)+" minutes"+"\n (Until: "+
 			Until.Format(time.RFC822)+")",
 		discordgo.EmbedTypeRich)
 	return
 }
 
-func KickUserCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
+func kickUserCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 	var reasonExists bool
 	var reason string
 	authorisedAdmin, errPerm := command.MemberHasPermission(s, cmd.GuildID, cmd.Member.User.ID, discordgo.PermissionAdministrator)
@@ -176,8 +176,8 @@ func KickUserCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []int
 	return
 }
 
-// BanUserCMD bans a user
-func BanUserCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
+// banUserCMD bans a user
+func banUserCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 	var reason string
 	var reasonExists bool = false
 	var daysDelete uint64 = 7
@@ -253,8 +253,8 @@ func BanUserCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []inte
 	return
 }
 
-// CheckUsersCMD Checks the age of users
-func CheckUsersCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
+// checkUsersCMD Checks the age of users
+func checkUsersCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 	var timeToCheckUsers int64
 	if len(m) > 0 {
 		timeToCheckUsers = m[0].(int64)
@@ -304,14 +304,14 @@ func CheckUsersCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []i
 
 }
 
-// PlanGameCMD Plans a game for a person with a timed reminder
-func PlanGameCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
+// planGameCMD Plans a game for a person with a timed reminder
+func planGameCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 	//go GamePlanInsertCMD(s, cmd, m)
 	return
 }
 
-// PlannedGamesCMD Checks the planned games and outputs them into the guild
-func PlannedGamesCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
+// plannedGamesCMD Checks the planned games and outputs them into the guild
+func plannedGamesCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate) {
 	//open database and then close it (defer)
 	sqliteDatabase, _ := sql.Open("sqlite3", "./sqlite-database.db")
 	defer func(sqliteDatabase *sql.DB) {
@@ -374,8 +374,8 @@ func GamePlanInsertCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m
 
 */
 
-// TopicCMD Outputs a random topic for discussion found in topic_questions.txt
-func TopicCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
+// topicCMD Outputs a random topic for discussion found in topic_questions.txt
+func topicCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate) {
 	fileHandle, err := os.Open("topic_questions.txt")
 	if err != nil {
 		fmt.Println("error reading the file: ", err)
@@ -414,8 +414,8 @@ func TopicCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interf
 	return
 }
 
-// GetWeatherCMD outputs weather information from openWeatherMap
-func GetWeatherCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
+// getWeatherCMD outputs weather information from openWeatherMap
+func getWeatherCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 	type wData struct {
 		name       string
 		weather    string
@@ -485,8 +485,8 @@ func GetWeatherCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []i
 
 }
 
-// PurgeMessagesCMD Purges messages 1-100 in the current channel
-func PurgeMessagesCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
+// purgeMessagesCMD Purges messages 1-100 in the current channel
+func purgeMessagesCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 
 	authorisedAdmin, errPerm := command.MemberHasPermission(s, cmd.GuildID, cmd.Member.User.ID, discordgo.PermissionAdministrator)
 	if errPerm != nil {
@@ -531,8 +531,8 @@ func PurgeMessagesCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m 
 
 }
 
-// PurgeMessagesCMDMessage This function purges messages for the Application MessageCommand interface
-func PurgeMessagesCMDMessage(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
+// purgeMessagesCMDMessage This function purges messages for the Application MessageCommand interface
+func purgeMessagesCMDMessage(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 
 	authorisedAdmin, errPerm := command.MemberHasPermission(s, cmd.GuildID, cmd.Member.User.ID, discordgo.PermissionAdministrator)
 	if errPerm != nil {
@@ -571,8 +571,8 @@ func PurgeMessagesCMDMessage(s *discordgo.Session, cmd *discordgo.InteractionCre
 
 }
 
-// PurgeMessagesCMDMessageOnlyAuthor This function serves to purge messages of only the clicked author through the ApplicationMessageCommand interface
-func PurgeMessagesCMDMessageOnlyAuthor(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
+// purgeMessagesCMDMessageOnlyAuthor This function serves to purge messages of only the clicked author through the ApplicationMessageCommand interface
+func purgeMessagesCMDMessageOnlyAuthor(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 
 	authorisedAdmin, errPerm := command.MemberHasPermission(s, cmd.GuildID, cmd.Member.User.ID, discordgo.PermissionAdministrator)
 	if errPerm != nil {
@@ -619,7 +619,7 @@ func PurgeMessagesCMDMessageOnlyAuthor(s *discordgo.Session, cmd *discordgo.Inte
 
 }
 
-func GetMemberCount(cmd *discordgo.InteractionCreate) int {
+func getMemberCount(cmd *discordgo.InteractionCreate) int {
 	var memberListLength int
 
 	for i := range ReadyInfoPublic.Guilds {
@@ -633,7 +633,8 @@ func GetMemberCount(cmd *discordgo.InteractionCreate) int {
 	return 0
 }
 
-func GetMemberList(cmd *discordgo.InteractionCreate) []*discordgo.Member {
+/*
+func getMemberList(cmd *discordgo.InteractionCreate) []*discordgo.Member {
 	var membersList []*discordgo.Member
 
 	for i := range ReadyInfoPublic.Guilds {
@@ -647,10 +648,12 @@ func GetMemberList(cmd *discordgo.InteractionCreate) []*discordgo.Member {
 	return nil
 }
 
-// MembersCMD outputs the number of current members of the server. No returns
-func MembersCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
+*/
 
-	memberListLength := GetMemberCount(cmd)
+// membersCMD outputs the number of current members of the server. No returns
+func membersCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate) {
+
+	memberListLength := getMemberCount(cmd)
 
 	command.SendTextEmbedCommand(s, cmd.ChannelID, command.StatusBot.OK+strconv.FormatUint(uint64(memberListLength), 10), ""+
 		"There are "+strconv.FormatUint(uint64(memberListLength), 10)+" members on the server", discordgo.EmbedTypeRich)
@@ -658,8 +661,8 @@ func MembersCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []inte
 	return
 }
 
-// PruneCountCMD outputs the number of users that could be pruned
-func PruneCountCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
+// pruneCountCMD outputs the number of users that could be pruned
+func pruneCountCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 	pruneDaysInt := m[0].(int64)
 
 	if pruneDaysInt < 7 || pruneDaysInt > 30 {
@@ -680,8 +683,8 @@ func PruneCountCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []i
 	return
 }
 
-// PruneMembersCMD prunes members
-func PruneMembersCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
+// pruneMembersCMD prunes members
+func pruneMembersCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 	authorisedAdmin, errPerm := command.MemberHasPermission(s, cmd.GuildID, cmd.Member.User.ID, discordgo.PermissionAdministrator)
 	if errPerm != nil {
 		fmt.Println(errPerm)
@@ -722,8 +725,8 @@ func PruneMembersCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m [
 
 }
 
-// SetRoleChannelPermCMD sets a channel permission using an int value
-func SetRoleChannelPermCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
+// setRoleChannelPermCMD sets a channel permission using an int value
+func setRoleChannelPermCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 
 	authorisedAdmin, errPerm := command.MemberHasPermission(s, cmd.GuildID, cmd.Member.User.ID, discordgo.PermissionAdministrator)
 	if errPerm != nil {
@@ -780,8 +783,8 @@ func SetRoleChannelPermCMD(s *discordgo.Session, cmd *discordgo.InteractionCreat
 
 }
 
-// SetUserChannelPermCMD sets a channel permission using an int value
-func SetUserChannelPermCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
+// setUserChannelPermCMD sets a channel permission using an int value
+func setUserChannelPermCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 
 	authorisedAdmin, errPerm := command.MemberHasPermission(s, cmd.GuildID, cmd.Member.User.ID, discordgo.PermissionAdministrator)
 	if errPerm != nil {
@@ -829,8 +832,8 @@ func SetUserChannelPermCMD(s *discordgo.Session, cmd *discordgo.InteractionCreat
 	}
 }
 
-//RedirectDiscussionCMD  sets a channel to a big slowmode for 10 minutes and then redirects the conversation elsewhere. When threads become available, sets the thread and more...
-func RedirectDiscussionCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
+//redirectDiscussionCMD  sets a channel to a big slowmode for 10 minutes and then redirects the conversation elsewhere. When threads become available, sets the thread and more...
+func redirectDiscussionCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 
 	authorisedAdmin, errPerm := command.MemberHasPermission(s, cmd.GuildID, cmd.Member.User.ID, discordgo.PermissionAdministrator)
 	if errPerm != nil {
@@ -876,8 +879,8 @@ func RedirectDiscussionCMD(s *discordgo.Session, cmd *discordgo.InteractionCreat
 	return
 }
 
-// SlowModeChannelCMD sets a channel to a desired slowmode. 0 is a bugged value, so at least sets to 1 second.
-func SlowModeChannelCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
+// slowModeChannelCMD sets a channel to a desired slowmode. 0 is a bugged value, so at least sets to 1 second.
+func slowModeChannelCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 
 	authorisedAdmin, errPerm := command.MemberHasPermission(s, cmd.GuildID, cmd.Member.User.ID, discordgo.PermissionAdministrator)
 	if errPerm != nil {
@@ -940,8 +943,8 @@ func SlowModeChannelCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, 
 	return
 }
 
-// ChangeVoiceChannelCurrentCMD I hate it when the bot creates a temp voice and I have to change the name and shit all the time
-func ChangeVoiceChannelCurrentCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
+// changeVoiceChannelCurrentCMD I hate it when the bot creates a temp voice, and I have to change the name and all the time
+func changeVoiceChannelCurrentCMD(s *discordgo.Session, cmd *discordgo.InteractionCreate, m []interface{}) {
 
 	//find the user current voice channel
 	currentUserInfo, err := FindUserVoiceState(s, command.ParseMentionToString(cmd.Member.Mention()))
