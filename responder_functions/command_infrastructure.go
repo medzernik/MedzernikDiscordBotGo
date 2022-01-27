@@ -21,7 +21,7 @@ func registerPlugin(s *discordgo.Session) {
 
 */
 
-// Bot parameters
+// Bot parameter
 
 var (
 	//botToken = flag.String("token", config.Cfg.ServerInfo.ServerToken, "Bot access token")
