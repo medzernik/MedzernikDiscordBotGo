@@ -1,6 +1,6 @@
 module github.com/medzernik/SlovakiaDiscordBotGo
 
-go 1.17
+go 1.18
 
 require (
 	github.com/briandowns/openweathermap v0.16.0
