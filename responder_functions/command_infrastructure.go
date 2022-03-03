@@ -661,9 +661,23 @@ var (
 			return
 		},
 		"kill": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			//command.MemberHasPermission(s, i.GuildID, i.User.ID)
+			//get the owner info from the server it was ran at
+			//TODO: make a confirmation button?
+			GuildOwnerCheck, err := s.Guild(i.GuildID)
+			if err != nil {
+				logging.Log.Infof(err.Error())
+				return
+			}
 
-			os.Exit(0)
+			if i.User.ID == GuildOwnerCheck.OwnerID {
+				logging.Log.Infof("Bot shutting down at the request of the owner.")
+				//Kill the bot
+				os.Exit(0)
+			} else {
+				logging.Log.Infof("User ID: " + i.User.ID + " name: " + i.User.Username + " Tried to shut down the bot.")
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.AUTH, "Not the server owner.", discordgo.EmbedTypeRich)
+				return
+			}
 
 		},
 		"planned": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
