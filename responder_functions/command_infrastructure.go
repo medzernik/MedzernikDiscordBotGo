@@ -9,6 +9,7 @@ import (
 	"github.com/medzernik/SlovakiaDiscordBotGo/covid_slovakia"
 	"github.com/medzernik/SlovakiaDiscordBotGo/logging"
 	"log"
+	"os"
 	"strings"
 	"time"
 )
@@ -61,6 +62,10 @@ var (
 		{
 			Name:        "version",
 			Description: "Bot version and feature update",
+		},
+		{
+			Name:        "kill",
+			Description: "Kills the bot remotely",
 		},
 		{
 			Name:        "covid-capacity",
@@ -654,6 +659,12 @@ var (
 			go checkUsersCMD(s, i, argumentArray)
 			logging.Log.Infof("Command executed at infrastructure request level")
 			return
+		},
+		"kill": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			//command.MemberHasPermission(s, i.GuildID, i.User.ID)
+
+			os.Exit(0)
+
 		},
 		"planned": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
