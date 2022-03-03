@@ -112,40 +112,6 @@ func LockTrustedChannel(s *discordgo.Session, perms int64, target discordgo.Perm
 
 var LockChannelToday bool = false
 
-// TimedChannelUnlock automatically locks and unlocks a trusted channel
-func TimedChannelUnlock(s *discordgo.Session) {
-	if config.Cfg.AutoLocker.Enabled == false {
-		return
-	}
-
-	var checkInterval time.Duration = 60
-	var perms int64 = 2251673408
-
-	fmt.Println("[INIT OK] Channel unlock system module initialized")
-
-	for {
-		if time.Now().Weekday() == config.Cfg.AutoLocker.TimeDayUnlock && time.Now().Hour() == config.Cfg.AutoLocker.TimeHourUnlock && time.Now().Minute() == config.Cfg.AutoLocker.TimeMinuteUnlock {
-			//Unlock the channel
-			//TargetType 0 = roleID, 1 = memberID
-			UnlockTrustedChannel(s, perms, TargetTypeRoleID)
-
-			fmt.Println("[OK] Opened the channel " + config.Cfg.RoleTrusted.ChannelTrustedID)
-		} else if time.Now().Weekday() == config.Cfg.AutoLocker.TimeDayLock && time.Now().Hour() == config.Cfg.AutoLocker.TimeHourLock && time.Now().Minute() == config.Cfg.AutoLocker.TimeMinuteLock {
-			//Lock the channel
-			//TargetType 0 = roleID, 1 = memberID
-			LockTrustedChannel(s, perms, TargetTypeRoleID)
-			fmt.Println("[OK] Closed the channel because regular time" + config.Cfg.RoleTrusted.ChannelTrustedID)
-		} else if time.Now().Hour() == config.Cfg.AutoLocker.TimeHourLock && time.Now().Minute() == config.Cfg.AutoLocker.TimeMinuteLock && LockChannelToday == true && (time.Now().Weekday() != time.Sunday || time.Now().Weekday() != time.Saturday) {
-			LockTrustedChannel(s, perms, TargetTypeRoleID)
-			LockChannelToday = false
-			fmt.Println("[OK] Closed the channel because special event ended " + config.Cfg.RoleTrusted.ChannelTrustedID)
-		}
-
-		time.Sleep(checkInterval * time.Second)
-	}
-
-}
-
 // OneTimeChannelUnlock when a new trusted user is given a role, unlock the channel as a reward.
 //TODO: Make this also automatically lock the channel
 func OneTimeChannelUnlock(s *discordgo.Session, m *discordgo.MessageCreate) {
