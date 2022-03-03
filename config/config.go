@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"os"
-	"time"
 )
 
 // Config Configuration type structure to use in memory.
@@ -44,25 +43,6 @@ type Config struct {
 		ChannelLogID   string `yaml:"channelLogID"`
 		GamePlannedLog string `yaml:"gamePlannedLog"`
 	} `yaml:"channelLog"`
-	AutoLocker struct {
-		Enabled              bool         `yaml:"enabled"`
-		AutoUnlockTrustedID1 bool         `yaml:"autoUnlockTrusted1"`
-		TimeDayUnlock        time.Weekday `yaml:"timeDayUnlock"`
-		TimeHourUnlock       int          `yaml:"timeHourUnlock"`
-		TimeMinuteUnlock     int          `yaml:"timeMinuteUnlock"`
-		TimeDayLock          time.Weekday `yaml:"timeDayLock"`
-		TimeHourLock         int          `yaml:"timeHourLock"`
-		TimeMinuteLock       int          `yaml:"timeMinuteLock"`
-	} `yaml:"autoLocker"`
-	LotteryChecker struct {
-		Enabled         bool         `yaml:"enabled"`
-		TimeDayStart    time.Weekday `yaml:"timeDayStart"`
-		TimeHourStart   int          `yaml:"timeHourStart"`
-		TimeMinuteStart int          `yaml:"timeMinuteStart"`
-		TimeDayEnd      time.Weekday `yaml:"timeDayEnd"`
-		TimeHourEnd     int          `yaml:"timeHourEnd"`
-		TimeMinuteEnd   int          `yaml:"timeMinuteEnd"`
-	}
 }
 
 var Cfg Config

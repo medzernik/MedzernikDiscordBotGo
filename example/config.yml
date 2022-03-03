@@ -61,32 +61,6 @@ channelLog:
   channelLogID: ""
   gamePlannedLog: ""
 
-# ChannelAutoUnlock/Lock. Autolocks and unlocks the TrustedChannel
-autoLocker:
-  #Enabled
-  enabled: false
-  # Autounlock when a new trusted user ID1 gets his role
-  autoUnlockTrusted1: false
-  # Unlock time. Use 0-23 and 0-59 format respectively. Day is a number 0-Sunday, 6 - Saturday
-  timeDayUnlock: 0
-  timeHourUnlock: 0
-  timeMinuteUnlock: 0
-  # Lock time. Use 0-23 and 0-59 format respectively. Day is a number 0-Sunday, 6 - Saturday
-  timeDayLock: 0
-  timeHourLock: 0
-  timeMinuteLock: 0
-
-lotteryTime:
-  # Enables the checker to run between specific times only. Disabling means it runs every 180 seconds
-  enabled: true
-  #time start
-  timeDayStart: 6
-  timeHourStart: 20
-  timeMinuteStart: 30
-  #time end
-  timeDayEnd: 6
-  timeHourEnd: 21
-  timeMinuteEnd: 40
 
 
 
