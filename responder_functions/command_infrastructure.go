@@ -661,27 +661,33 @@ var (
 		},
 		"kill": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
-			guildInfo, err := s.Guild(i.Interaction.GuildID)
-			if err != nil {
-				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.ERR, "Error."+err.Error(), discordgo.EmbedTypeRich)
-				logging.Log.Error("Error getting guild info", err)
-				return
-			}
+			/*
+				guildInfo, err := s.Guild(i.Interaction.GuildID)
+				if err != nil {
+					command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.ERR, "Error."+err.Error(), discordgo.EmbedTypeRich)
+					logging.Log.Error("Error getting guild info", err)
+					return
+				}
 
-			var enabled bool = false
+			*/
 
-			if guildInfo.Owner == true {
-				logging.Log.Infof("Bot shutting down at the request of the owner.")
-				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.OK, "Check successfull. Would terminate.", discordgo.EmbedTypeRich)
+			//var enabled bool = false
 
-				//Kill the bot
-				//os.Exit(0)
-			} else {
-				logging.Log.Infof("User ID: " + i.User.ID + " name: " + i.User.Username + " Tried to shut down the bot.")
-				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.AUTH, "Not the server owner.", discordgo.EmbedTypeRich)
-			}
+			/*
+				if guildInfo.Owner == true {
+					logging.Log.Infof("Bot shutting down at the request of the owner.")
+					command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.OK, "Check successfull. Would terminate.", discordgo.EmbedTypeRich)
 
-			err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					//Kill the bot
+					//os.Exit(0)
+				} else {
+					logging.Log.Infof("User ID: " + i.User.ID + " name: " + i.User.Username + " Tried to shut down the bot.")
+					command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.AUTH, "Not the server owner.", discordgo.EmbedTypeRich)
+				}
+
+			*/
+
+			err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
 					Content: "Huh. I see, maybe some of these resources might help you?",
@@ -693,10 +699,10 @@ var (
 									Emoji: discordgo.ComponentEmoji{
 										Name: "⚠️",
 									},
-									Label:    "Kill the bot",
-									Style:    discordgo.DangerButton,
-									CustomID: "kill",
-									Disabled: enabled,
+									Label: "Kill the bot",
+									Style: discordgo.DangerButton,
+									//CustomID: "kill",
+									Disabled: true,
 								},
 							},
 						},
