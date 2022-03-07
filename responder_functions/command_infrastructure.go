@@ -9,6 +9,7 @@ import (
 	"github.com/medzernik/SlovakiaDiscordBotGo/covid_slovakia"
 	"github.com/medzernik/SlovakiaDiscordBotGo/logging"
 	"log"
+	"os"
 	"strings"
 	"time"
 )
@@ -671,7 +672,7 @@ var (
 			var disabled bool = true
 
 			if guildInfo.OwnerID == i.Member.User.ID {
-				logging.Log.Info("Bot shutting down at the request of the owner.")
+				logging.Log.Info("Bot shutting down at the request of the owner...")
 				//command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.OK, "Check successfull. Would terminate.", discordgo.EmbedTypeRich)
 				disabled = false
 
@@ -696,7 +697,7 @@ var (
 									},
 									Label:    "Kill the bot",
 									Style:    discordgo.DangerButton,
-									CustomID: "kill",
+									CustomID: "terminate",
 									Disabled: disabled,
 								},
 							},
@@ -710,19 +711,16 @@ var (
 				return
 			}
 
-			/*
-				response, err := s.InteractionResponse("877115622725672991", i.Interaction)
-				if err != nil {
-					logging.Log.Warn(err)
-					fmt.Println(err.Error())
-					return
-				}
-
-				fmt.Println("response:\n", response)
-
-			*/
 			return
 
+		},
+
+		"terminate": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			logging.Log.Info("Terminating session.")
+			command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.OK, "Terminating the bot.", discordgo.EmbedTypeRich)
+
+			//Kill the bot
+			os.Exit(0)
 		},
 		"planned": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
