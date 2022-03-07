@@ -727,6 +727,7 @@ var (
 			if err2 != nil {
 				logging.Log.Panicln("Error closing the session: ", err2)
 			}
+			time.Sleep(2 * time.Second)
 			os.Exit(0)
 		},
 		"planned": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
