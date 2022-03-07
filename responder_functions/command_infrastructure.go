@@ -717,6 +717,9 @@ var (
 
 		"terminate": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			logging.Log.Info("Terminating session.")
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponsePong,
+			})
 			command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.OK, "Terminating the bot.", discordgo.EmbedTypeRich)
 
 			//Kill the bot
