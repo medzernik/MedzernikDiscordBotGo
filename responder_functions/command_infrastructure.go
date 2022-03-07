@@ -660,7 +660,28 @@ var (
 			return
 		},
 		"kill": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+
+			guildInfo, err := s.Guild(i.Interaction.GuildID)
+			if err != nil {
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.ERR, "Error."+err.Error(), discordgo.EmbedTypeRich)
+				logging.Log.Error("Error getting guild info", err)
+				return
+			}
+
+			var enabled bool = false
+
+			if guildInfo.Owner == true {
+				logging.Log.Infof("Bot shutting down at the request of the owner.")
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.OK, "Check successfull. Would terminate.", discordgo.EmbedTypeRich)
+
+				//Kill the bot
+				//os.Exit(0)
+			} else {
+				logging.Log.Infof("User ID: " + i.User.ID + " name: " + i.User.Username + " Tried to shut down the bot.")
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.AUTH, "Not the server owner.", discordgo.EmbedTypeRich)
+			}
+
+			err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
 					Content: "Huh. I see, maybe some of these resources might help you?",
@@ -675,6 +696,7 @@ var (
 									Label:    "Kill the bot",
 									Style:    discordgo.DangerButton,
 									CustomID: "kill",
+									Disabled: enabled,
 								},
 							},
 						},
@@ -686,19 +708,6 @@ var (
 				fmt.Println(err.Error())
 				return
 			}
-
-			/*
-				if i.User.ID == GuildOwnerCheck.OwnerID {
-					logging.Log.Infof("Bot shutting down at the request of the owner.")
-					//Kill the bot
-					//os.Exit(0)
-				} else {
-					logging.Log.Infof("User ID: " + i.User.ID + " name: " + i.User.Username + " Tried to shut down the bot.")
-					command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.AUTH, "Not the server owner.", discordgo.EmbedTypeRich)
-					return
-				}
-
-			*/
 
 		},
 		"planned": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
