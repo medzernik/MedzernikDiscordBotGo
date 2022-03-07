@@ -661,36 +661,31 @@ var (
 		},
 		"kill": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
-			/*
-				guildInfo, err := s.Guild(i.Interaction.GuildID)
-				if err != nil {
-					command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.ERR, "Error."+err.Error(), discordgo.EmbedTypeRich)
-					logging.Log.Error("Error getting guild info", err)
-					return
-				}
+			guildInfo, err := s.Guild(i.Interaction.GuildID)
+			if err != nil {
+				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.ERR, "Error."+err.Error(), discordgo.EmbedTypeRich)
+				logging.Log.Error("Error getting guild info", err)
+				return
+			}
 
-			*/
+			var disabled bool = true
 
-			//var enabled bool = false
+			if guildInfo.OwnerID == i.Member.User.ID {
+				logging.Log.Info("Bot shutting down at the request of the owner.")
+				//command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.OK, "Check successfull. Would terminate.", discordgo.EmbedTypeRich)
+				disabled = false
 
-			/*
-				if guildInfo.Owner == true {
-					logging.Log.Infof("Bot shutting down at the request of the owner.")
-					command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.OK, "Check successfull. Would terminate.", discordgo.EmbedTypeRich)
+				//Kill the bot
+				//os.Exit(0)
+			} else {
+				logging.Log.Info("User ID: " + i.Member.User.ID + " name: " + i.Member.User.Username + " Tried to shut down the bot.")
+				//command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.AUTH, "Not the server owner.", discordgo.EmbedTypeRich)
+			}
 
-					//Kill the bot
-					//os.Exit(0)
-				} else {
-					logging.Log.Infof("User ID: " + i.User.ID + " name: " + i.User.Username + " Tried to shut down the bot.")
-					command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.AUTH, "Not the server owner.", discordgo.EmbedTypeRich)
-				}
-
-			*/
-
-			err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
-					Content: "Huh. I see, maybe some of these resources might help you?",
+					Content: "Press the button to kill the bot. Works only for the owner.",
 					Flags:   1 << 6,
 					Components: []discordgo.MessageComponent{
 						discordgo.ActionsRow{
@@ -699,10 +694,10 @@ var (
 									Emoji: discordgo.ComponentEmoji{
 										Name: "⚠️",
 									},
-									Label: "Kill the bot",
-									Style: discordgo.DangerButton,
-									//CustomID: "kill",
-									Disabled: true,
+									Label:    "Kill the bot",
+									Style:    discordgo.DangerButton,
+									CustomID: "kill",
+									Disabled: disabled,
 								},
 							},
 						},
@@ -714,6 +709,19 @@ var (
 				fmt.Println(err.Error())
 				return
 			}
+
+			/*
+				response, err := s.InteractionResponse("877115622725672991", i.Interaction)
+				if err != nil {
+					logging.Log.Warn(err)
+					fmt.Println(err.Error())
+					return
+				}
+
+				fmt.Println("response:\n", response)
+
+			*/
+			return
 
 		},
 		"planned": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -1377,9 +1385,19 @@ var (
 )
 
 func initialization(s *discordgo.Session) {
+
+	// Components are part of interactions, so we register InteractionCreate handler
 	s.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-		if h, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {
-			h(s, i)
+		switch i.Type {
+		case discordgo.InteractionApplicationCommand:
+			if h, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {
+				h(s, i)
+			}
+		case discordgo.InteractionMessageComponent:
+
+			if h, ok := commandHandlers[i.MessageComponentData().CustomID]; ok {
+				h(s, i)
+			}
 		}
 	})
 }
