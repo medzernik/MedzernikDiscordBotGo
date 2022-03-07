@@ -9,7 +9,6 @@ import (
 	"github.com/medzernik/SlovakiaDiscordBotGo/covid_slovakia"
 	"github.com/medzernik/SlovakiaDiscordBotGo/logging"
 	"log"
-	"os"
 	"strings"
 	"time"
 )
@@ -661,23 +660,45 @@ var (
 			return
 		},
 		"kill": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			//get the owner info from the server it was ran at
-			//TODO: make a confirmation button?
-			GuildOwnerCheck, err := s.Guild(i.GuildID)
+			err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "Huh. I see, maybe some of these resources might help you?",
+					Flags:   1 << 6,
+					Components: []discordgo.MessageComponent{
+						discordgo.ActionsRow{
+							Components: []discordgo.MessageComponent{
+								discordgo.Button{
+									Emoji: discordgo.ComponentEmoji{
+										Name: "⚠️",
+									},
+									Label:    "Kill the bot",
+									Style:    discordgo.DangerButton,
+									CustomID: "kill",
+								},
+							},
+						},
+					},
+				},
+			})
 			if err != nil {
-				logging.Log.Infof(err.Error())
+				logging.Log.Warn(err)
+				fmt.Println(err.Error())
 				return
 			}
 
-			if i.User.ID == GuildOwnerCheck.OwnerID {
-				logging.Log.Infof("Bot shutting down at the request of the owner.")
-				//Kill the bot
-				os.Exit(0)
-			} else {
-				logging.Log.Infof("User ID: " + i.User.ID + " name: " + i.User.Username + " Tried to shut down the bot.")
-				command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.AUTH, "Not the server owner.", discordgo.EmbedTypeRich)
-				return
-			}
+			/*
+				if i.User.ID == GuildOwnerCheck.OwnerID {
+					logging.Log.Infof("Bot shutting down at the request of the owner.")
+					//Kill the bot
+					//os.Exit(0)
+				} else {
+					logging.Log.Infof("User ID: " + i.User.ID + " name: " + i.User.Username + " Tried to shut down the bot.")
+					command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.AUTH, "Not the server owner.", discordgo.EmbedTypeRich)
+					return
+				}
+
+			*/
 
 		},
 		"planned": func(s *discordgo.Session, i *discordgo.InteractionCreate) {

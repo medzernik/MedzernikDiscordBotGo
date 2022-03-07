@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/briandowns/openweathermap v0.16.0
-	github.com/bwmarrin/discordgo v0.24.0
+	github.com/bwmarrin/discordgo v0.24.1-0.20220307103834-ee34db7ade01
 	github.com/dustin/go-humanize v1.0.0
 	github.com/guptarohit/asciigraph v0.5.3
 	github.com/sirupsen/logrus v1.8.1
