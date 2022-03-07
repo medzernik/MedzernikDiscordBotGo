@@ -57,7 +57,7 @@ func main() {
 
 	err2 := dg.Close()
 	if err2 != nil {
-		logging.Log.Panicln("Error closing the session: ", err)
+		logging.Log.Panicln("Error closing the session: ", err2)
 	}
 
 }

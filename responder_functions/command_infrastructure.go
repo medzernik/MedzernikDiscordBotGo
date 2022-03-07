@@ -720,6 +720,10 @@ var (
 			command.SendTextEmbedCommand(s, i.ChannelID, command.StatusBot.OK, "Terminating the bot.", discordgo.EmbedTypeRich)
 
 			//Kill the bot
+			err2 := s.Close()
+			if err2 != nil {
+				logging.Log.Panicln("Error closing the session: ", err2)
+			}
 			os.Exit(0)
 		},
 		"planned": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
