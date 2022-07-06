@@ -1,6 +1,8 @@
 # CleverFox Discord Bot in Go
 This is a discord bot written entirely in golang using the discordgo library. 
 
+# The bot is being moved to CleverFox 2 and CleverFox Rust Edition. Please see my other repositories for the bot. Feature parity will be slowly achieved first with the Go edition and then later with Rust Edition.
+
 The bot itself has a custom command parser and many custom functions. It is a featured bot you can use on your server.
 
 # Instructions for Self-Hosting
